@@ -50,7 +50,7 @@ class FloatTheOrb:
 
             # Draw Sprites
             all_sprites_list.draw(screen)
-            
+
             # Update screen
             pygame.display.flip()
 

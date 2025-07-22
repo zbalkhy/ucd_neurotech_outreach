@@ -1,7 +1,7 @@
 from streaming.dataSubscriber import DataSubscriber
 import numpy as np
 import scipy.stats as stats
-from scipy import signal, interpolate
+from scipy import signal
 
 class AlphaPowerCalculator():
     def __init__(self, window_size, fs):
@@ -23,7 +23,6 @@ class AlphaPowerCalculator():
     
     def read_chunk(self):
         new_chunk = self.dataSubscriber.pull_chunk()
-        
         # possible to not have any new data
         if new_chunk.size == 0:
             return

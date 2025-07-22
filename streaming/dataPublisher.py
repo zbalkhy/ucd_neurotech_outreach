@@ -1,10 +1,12 @@
-import numpy as np
 import time
-from random import random as rand
-import scipy.stats as stats
-from pylsl import StreamInfo, StreamOutlet, local_clock
+import numpy as np
 import pandas as pd
+import scipy.stats as stats
 from scipy import interpolate
+from random import random as rand
+from pylsl import StreamInfo, StreamOutlet, local_clock
+
+
 
 class DataPublisher:
     def __init__(self):
@@ -37,7 +39,7 @@ class DataPublisher:
         X = X.apply(stats.zscore, axis=0)
         X = X.applymap(lambda x: np.nan if (abs(x) > 4) else x )
 
-        # recalculate outliers with ignoring nans since the first calculation was biased with the huge outliers!
+        # recalculate outliers ignoring nans since the first calculation was biased with the huge outliers!
         X = X.apply(stats.zscore, nan_policy='omit', axis=0)
         X = X.applymap(lambda x: np.nan if (abs(x) > 4) else x )
 
