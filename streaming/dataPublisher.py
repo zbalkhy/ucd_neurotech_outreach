@@ -1,5 +1,3 @@
-"""Example program to demonstrate how to send a multi-channel time series to
-LSL."""
 import numpy as np
 import time
 from random import random as rand

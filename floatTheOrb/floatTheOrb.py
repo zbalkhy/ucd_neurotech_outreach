@@ -7,34 +7,7 @@ from .orb import Orb
 
 class FloatTheOrb:
     def __init__(self):
-        self.consumer = None 
-        self.carryOn = True
-
-    def __checkForNewDecision__(self) -> int:
-        #TODO:: this is terrible
-        newDecision = self.consumer.poll(timeout_ms=0)
-        print("Pong:")
-        if newDecision:
-            for p in newDecision:
-                for msg in newDecision[p]:
-                    print(msg.value)
-                    return msg.value
-        return -1
-
-    def InitializeAndRun(self):
-        self.Initialize()
-        self.Run()
-
-    def Initialize(self):
-        # TODO: turn this into an lsl reveiver
-        #self.consumer = KafkaConsumer(self.decisionTopic, 
-        #                    bootstrap_servers=self.kafkaServers,
-        #                    value_deserializer=lambda m: json.loads(m.decode('ascii')))
-        print("Pong:")
-        #while not self.consumer.assignment():
-            #print("not topics")
-        #print("partition assigned")
-        #self.consumer.seek_to_end()
+        return
 
     def Run(self):
         print("Pong:running")
@@ -77,13 +50,6 @@ class FloatTheOrb:
 
             # Draw Sprites
             all_sprites_list.draw(screen)
-
-            #Display scores:
-            #font = pygame.font.Font(None, 74)
-            #text = font.render(str(scoreA), 1, WHITE)
-            #screen.blit(text, (10, 390))
-            #text = font.render(str(scoreB), 1, WHITE)
-            #screen.blit(text, (10, 270))
             
             # Update screen
             pygame.display.flip()

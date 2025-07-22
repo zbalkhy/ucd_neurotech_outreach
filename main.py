@@ -5,4 +5,4 @@ if __name__ == "__main__":
     pygame.init()
     floatTheOrb = FloatTheOrb()
 
-    floatTheOrb.InitializeAndRun()
+    floatTheOrb.Run()
