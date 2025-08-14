@@ -5,6 +5,7 @@ from scipy import signal
 
 class AlphaPowerCalculator():
     def __init__(self, window_size, fs):
+        # include a step for moving average filter
         self.dataSubscriber = DataSubscriber()
         self.window_size = window_size
         self.sampleRate = fs

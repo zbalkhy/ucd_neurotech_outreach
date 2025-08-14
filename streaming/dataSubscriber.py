@@ -5,10 +5,9 @@ import numpy as np
 class DataSubscriber():
     def __init__(self):
         self.currentChunk = None
-
+        
         streams = resolve_streams()
         self.inlet = StreamInlet(streams[0])
-
 
     def pull_chunk(self) -> np.ndarray:
         chunk, timestamp = self.inlet.pull_chunk()

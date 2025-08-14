@@ -28,13 +28,11 @@ class Plotter():
             # if there isn't enough data to fill a new chunk, then assume we have continuous data and tack it on to the end
             new_chunk = np.hstack((self.current_chunk, new_chunk))
             self.current_chunk = new_chunk[new_chunk.size - self.window_size:]
-        print(self.current_chunk.size)
 
     def filter_chunk(self):
         # we're just doing a butter band pass over the alpha ranges.
         b, a = signal.butter(6, [8 / self.sampleRate * 2, 13 / self.sampleRate * 2], btype='bandpass')
         self.current_chunk = signal.filtfilt(b, a, self.current_chunk) / max(abs(signal.filtfilt(b, a, self.current_chunk))) * max(abs(self.current_chunk))
-
 
     def get_fft(self, chunk):
         freqs = np.fft.fftfreq(chunk.shape[0], d=1/128)
@@ -48,13 +46,12 @@ class Plotter():
         fft_xlims = (5,30)
         x = np.arange(0, self.window_size)
 
-        fft_min = 0#np.min(fft[np.where((freqs >= fft_xlims[0]) & (freqs <= fft_xlims[1]))])
-        fft_max = 10#np.max(fft[np.where((freqs >= fft_xlims[0]) & (freqs <= fft_xlims[1]))])
+        fft_min = np.min(fft[np.where((freqs >= fft_xlims[0]) & (freqs <= fft_xlims[1]))])
+        fft_max = np.max(fft[np.where((freqs >= fft_xlims[0]) & (freqs <= fft_xlims[1]))])
 
         O2_max = np.max(self.current_chunk)
         O2_min = np.min(self.current_chunk)
 
-        # You probably won't need this if you're embedding things in a tkinter plot...
         plt.ion()
 
         fig = plt.figure(figsize = (10,4))

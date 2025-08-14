@@ -17,8 +17,7 @@ class FloatTheOrb:
         screen = pygame.display.set_mode(size)
         pygame.display.set_caption("Float the Orb!")
 
-        # Set up orb
-
+        # Set up the orb
         orb = Orb(WHITE, 40, 40)
         orb.rect.x = 345
         orb.rect.bottom = SCREEN_HEIGHT
@@ -31,9 +30,9 @@ class FloatTheOrb:
         clock = pygame.time.Clock()
 
         float_factor = 0
+        
         # Game loop
         while carryOn:
-
             # Main event loop
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -41,10 +40,9 @@ class FloatTheOrb:
                 elif event.type==pygame.KEYDOWN:
                     if event.key==pygame.K_x:
                         carryOn = False
-
             # Game logic
             all_sprites_list.update()
-
+            
             # Fill background
             screen.fill(BLACK)
 

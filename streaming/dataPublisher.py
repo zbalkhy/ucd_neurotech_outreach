@@ -6,8 +6,6 @@ from scipy import interpolate
 from random import random as rand
 from pylsl import StreamInfo, StreamOutlet, local_clock
 
-
-
 class DataPublisher:
     def __init__(self):
         self.sampleRate = 250

@@ -37,7 +37,6 @@ class Orb(pygame.sprite.Sprite):
         # it should be a litte erratic at first, but eventaully it will calm down. 
         # a solution to this would be to have a data collection period to start with to determin min/max
         power = self.alphaPowerCalculator.get_power()
-        print("power: ", power)
         if power > self.max_alpha and power < 5000: # hard code because this is a demo, and not real yet
             self.max_alpha = power
         if power < self.min_alpha:
@@ -47,9 +46,6 @@ class Orb(pygame.sprite.Sprite):
         # This value is arbitrary.
         self.float_factor = -(GRAVITY*1.5)*(power - self.min_alpha)/(self.max_alpha - self.min_alpha)
         print("float_factor: ", self.float_factor)
-        print("min: ", self.min_alpha)
-        print("max: ", self.max_alpha)
-        
 
     def handle_collision(self):
         if self.rect.bottom >= SCREEN_HEIGHT and abs(self.float_factor) < abs(GRAVITY):
