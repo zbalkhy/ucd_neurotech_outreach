@@ -1,1 +1,0 @@
-from .alphaPowerCalculator import AlphaPowerCalculator
