@@ -8,6 +8,7 @@ class Editor():
     def __init__(self, root):
         self.root = root
         self.frame = tk.Frame(self.root)
+        
         # Define colors for the variouse types of tokens
         self.normal = self._from_rgb((234, 234, 234))
         self.keywords = self._from_rgb((234, 95, 95))
@@ -26,6 +27,9 @@ class Editor():
             ['\'.*?\'', self.string],
             ['#.*?$', self.comments],]
         
+        # import keywords are not handled yet but this regex should get us therequit
+        # import_pattern = r'^\s*from\s+(\S+)\s+import\s+(\S+)(?:\s+as\s+(\S+))?'
+
         # Make the Text Widget
         # Add a hefty border width so we can achieve a little bit of padding
         self.editArea = tk.Text(
@@ -48,29 +52,21 @@ class Editor():
             fill=tk.BOTH,
             expand=1
         )
+
         self.button_execute = tk.Button(master=root, text="execute_code", command=self.execute_python)
         self.button_execute.pack(side=tk.BOTTOM)
         self.changes()
         return
     
+    def _from_rgb(self, rgb):
+        """translates an rgb tuple of int to a tkinter friendly color code"""
+        return "#%02x%02x%02x" % rgb
 
     def execute_python(self):
         exec(self.get_text())
 
-    def _from_rgb(self, rgb):
-        """translates an rgb tuple of int to a tkinter friendly color code"""
-        return "#%02x%02x%02x" % rgb
-    
     def get_text(self):
         return self.editArea.get('1.0', tk.END)
-    
-    def execute(self, event=None):
-        # Write the Content to the Temporary File
-        with open('run.py', 'w', encoding='utf-8') as f:
-            f.write(self.get_text())
-
-        # Start the File in a new CMD Window
-        os.system('"python run.py"')
 
     def search_re(self, pattern, text, groupid=0):
         matches = []
