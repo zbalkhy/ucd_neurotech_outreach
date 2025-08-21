@@ -58,8 +58,8 @@ class Editor():
         self.changes()
         return
     
+    # Translates an rgb tuple of int to a tkinter friendly color code
     def _from_rgb(self, rgb):
-        """translates an rgb tuple of int to a tkinter friendly color code"""
         return "#%02x%02x%02x" % rgb
 
     def execute_python(self):
