@@ -20,9 +20,12 @@ class Plotter():
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)  
         self.canvas.draw()
 
+        # disable toolbar for now since we likeley wont 
         # pack_toolbar=False will make it easier to use a layout manager later on.
-        self.toolbar = NavigationToolbar2Tk(self.canvas, root, pack_toolbar=False)
-        self.toolbar.update()  
+        #self.toolbar = NavigationToolbar2Tk(self.canvas, root, pack_toolbar=False)
+        #self.toolbar.update()  
+        
+        
         self.canvas.mpl_connect(
             "key_press_event", lambda event: print(f"you pressed {event.key}"))
         self.canvas.mpl_connect("key_press_event", key_press_handler)
@@ -34,7 +37,7 @@ class Plotter():
         # The canvas is rather flexible in its size, so we pack it last which makes
         # sure the UI controls are displayed as long as possible.
         self.button_pause.pack(side=tk.BOTTOM)
-        self.toolbar.pack(side=tk.BOTTOM, fill=tk.X)
+        #self.toolbar.pack(side=tk.BOTTOM, fill=tk.X)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         
         self.plot()
