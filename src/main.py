@@ -1,6 +1,7 @@
 import tkinter as tk
 from deviceConnector import DeviceConnector
 from plotter import Plotter
+from floatTheOrbGame import FloatTheOrb
 from collections import deque
 from common import RAW_DATA, QUEUE_LENGTH
 from threading import Lock
@@ -27,6 +28,12 @@ if __name__ == "__main__":
     plotter_window = tk.Toplevel(root)
     plotter_window.wm_title("plotter")
     plotter = Plotter(plotter_window, user_context)
+
+    # create game
+    game_window = tk.Toplevel(root)
+    float_the_orb = FloatTheOrb(game_window, user_context, user_context_lock)
+    float_the_orb.start_pygame()
+    #float_the_orb.play_thread()
 
     root.mainloop()
 
