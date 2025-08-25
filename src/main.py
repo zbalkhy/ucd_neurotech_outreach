@@ -31,9 +31,9 @@ if __name__ == "__main__":
 
     # create game
     game_window = tk.Toplevel(root)
-    float_the_orb = FloatTheOrb(game_window, user_context, user_context_lock)
+    game_window.wm_title("game")
+    float_the_orb = FloatTheOrb(game_window, user_context, user_context_lock)    
     float_the_orb.start_pygame()
-    #float_the_orb.play_thread()
 
     root.mainloop()
 

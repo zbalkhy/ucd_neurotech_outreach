@@ -25,7 +25,6 @@ class Plotter():
         #self.toolbar = NavigationToolbar2Tk(self.canvas, root, pack_toolbar=False)
         #self.toolbar.update()  
         
-        
         self.canvas.mpl_connect(
             "key_press_event", lambda event: print(f"you pressed {event.key}"))
         self.canvas.mpl_connect("key_press_event", key_press_handler)

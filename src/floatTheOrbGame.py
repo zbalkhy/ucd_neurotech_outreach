@@ -7,10 +7,7 @@ from threading import Lock
 from common import *
 import tkinter as tk
 
-# https://stackoverflow.com/questions/55755305/im-embedding-a-pygame-window-into-tkinter-how-do-i-manipulate-the-pygame-windo
-# must embed pygame and use tkinter window main loop
 class Orb(pygame.sprite.Sprite):
-
     def __init__(self, color, width, height, user_context: dict):
         super().__init__()
 
@@ -19,6 +16,7 @@ class Orb(pygame.sprite.Sprite):
         self.image = pygame.Surface([width, height])
         self.image.fill(BLACK)
         self.image.set_colorkey(BLACK)
+        
         # Draw orb
         pygame.draw.rect(self.image, color, [0, 0, width, height])
 
@@ -45,7 +43,6 @@ class Orb(pygame.sprite.Sprite):
         # float factor is calculated from power based on a "rolling" normalization of the power
         # it should be a litte erratic at first, but eventaully it will calm down. 
         # a solution to this would be to have a data collection period to start with to determin min/max
-        #power = self.alphaPowerCalculator.get_power()
         if len(self.user_context[RAW_DATA]):
             power = self.user_context[RAW_DATA][-1]
         else:
@@ -59,7 +56,6 @@ class Orb(pygame.sprite.Sprite):
         # normalize so that the float factor is between 0 and twice the force of gravity.
         # This value is arbitrary.
         self.float_factor = power #-(GRAVITY*1.5)*(power - self.min_alpha)/(self.max_alpha - self.min_alpha)
-        #print("float_factor: ", self.float_factor)
 
     def handle_collision(self):
         if self.rect.bottom >= SCREEN_HEIGHT and abs(self.float_factor) < abs(GRAVITY):
@@ -94,13 +90,6 @@ class FloatTheOrb(object):
         self.user_context_lock = user_context_lock
         self.game_started = False
         return
-    
-
-    def play_thread(self):
-        if not self.game_started:
-                self.data_thread = threading.Thread(target=self.play, 
-                                            kwargs={})
-                self.data_thread.start()
 
     def start_pygame(self):
         pygame.init()
@@ -127,7 +116,6 @@ class FloatTheOrb(object):
             pygame.display.flip()
         
             self.root.after(60, self.update)
-
 
     def play_tk(self):
         # Set up the orb
