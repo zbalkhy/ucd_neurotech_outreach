@@ -2,7 +2,6 @@
 RAW_DATA = 'raw_data'
 QUEUE_LENGTH = 100
 
-
 # float the orb game
 BLACK = (0,0,0)
 WHITE = (255,255,255)

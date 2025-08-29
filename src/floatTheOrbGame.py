@@ -82,7 +82,7 @@ class Orb(pygame.sprite.Sprite):
         self.rect.x += self.velocity[0]
         self.rect.y += self.velocity[1]
 
-class FloatTheOrb(object):
+class FloatTheOrb():
     def __init__(self, root: tk.Toplevel, user_context: dict, user_context_lock: Lock):
         self.root = root
         self.frame = tk.Frame(self.root)
