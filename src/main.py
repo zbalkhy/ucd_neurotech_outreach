@@ -33,7 +33,7 @@ if __name__ == "__main__":
     game_window = tk.Toplevel(root)
     game_window.wm_title("game")
     float_the_orb = FloatTheOrb(game_window, user_context, user_context_lock)    
-    #float_the_orb.start_pygame()
+    float_the_orb.start_pygame()
 
     # clicking (x) on main window prevents program from quiting while commands are being queued.
     # we'll need a quit event to propagate through the program to kill any future queued commands.
