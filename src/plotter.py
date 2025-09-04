@@ -9,15 +9,14 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
 from matplotlib.figure import Figure
 
 class Plotter():
-    def __init__(self, root, user_context):
+    def __init__(self, frame: tk.Frame, user_context: dict):
         self.user_context = user_context
-        self.root = root
-        self.frame = tk.Frame(self.root)
+        self.frame = frame
         self.fig = Figure(figsize=(5, 4), dpi=100)
         self.continue_plotting = True
 
         # create a tk.DrawingArea.
-        self.canvas = FigureCanvasTkAgg(self.fig, master=root)  
+        self.canvas = FigureCanvasTkAgg(self.fig, master=frame)  
         self.canvas.draw()
 
         # disable toolbar for now since we likeley wont 
@@ -29,7 +28,7 @@ class Plotter():
             "key_press_event", lambda event: print(f"you pressed {event.key}"))
         self.canvas.mpl_connect("key_press_event", key_press_handler)
 
-        self.button_pause = tk.Button(master=root, text="Play/Pause", command=self.play_pause)
+        self.button_pause = tk.Button(master=frame, text="Play/Pause", command=self.play_pause)
         
         # Packing order is important. Widgets are processed sequentially and if there
         # is no space left, because the window is too small, they are not displayed.
@@ -69,4 +68,4 @@ class Plotter():
         self.canvas.draw()
         self.canvas.flush_events()
         if self.continue_plotting:
-            self.root.after(1, self.plot)
+            self.frame.after(1, self.plot)

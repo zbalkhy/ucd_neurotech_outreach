@@ -83,12 +83,15 @@ class Orb(pygame.sprite.Sprite):
         self.rect.y += self.velocity[1]
 
 class FloatTheOrb():
-    def __init__(self, root: tk.Toplevel, user_context: dict, user_context_lock: Lock):
-        self.root = root
-        self.frame = tk.Frame(self.root)
+    def __init__(self, frame: tk.Frame, user_context: dict, user_context_lock: Lock):
+        self.frame = frame
         self.user_context = user_context
         self.user_context_lock = user_context_lock
         self.game_started = False
+
+         # create a quit button
+        self.button_sin = tk.Button(master=self.frame, text="Play Game", command=self.start_pygame)
+        self.button_sin.pack(side=tk.BOTTOM)
         return
 
     def start_pygame(self):
@@ -96,7 +99,7 @@ class FloatTheOrb():
         self.win = pygame.display.set_mode(PYGAME_WINDOW_SIZE)
         self.win.fill(BLACK)
         
-        self.root.after(60, self.play_tk)
+        self.frame.after(60, self.play_tk)
 
     def update(self):
         quit_pygame = False
@@ -115,7 +118,7 @@ class FloatTheOrb():
             self.all_sprites_list.draw(pygame.display.get_surface())
             pygame.display.flip()
         
-            self.root.after(60, self.update)
+            self.frame.after(60, self.update)
 
     def play_tk(self):
         # Set up the orb
@@ -127,8 +130,4 @@ class FloatTheOrb():
         self.all_sprites_list = pygame.sprite.Group()
         self.all_sprites_list.add(orb)
 
-        self.root.after(60, self.update)
-
-if __name__ == "__main__":
-    floatTheOrb = FloatTheOrb()
-    floatTheOrb.Run()
+        self.frame.after(60, self.update)
