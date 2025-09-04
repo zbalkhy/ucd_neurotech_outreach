@@ -3,8 +3,11 @@ from deviceConnector import DeviceConnector
 from plotter import Plotter
 from floatTheOrbGame import FloatTheOrb
 from collections import deque
-from common import RAW_DATA, QUEUE_LENGTH, create_grid
+from common import RAW_DATA, QUEUE_LENGTH, create_grid, EVENTS
 from threading import Lock
+from eventClass import EventClass
+from eventType import EventType
+
 
 frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Blank"]]
 
@@ -13,7 +16,8 @@ frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Blank"]
 if __name__ == "__main__":
     
     # initialize user context
-    user_context = {RAW_DATA: deque(maxlen=QUEUE_LENGTH)}
+    event_object = EventClass()
+    user_context = {RAW_DATA: deque(maxlen=QUEUE_LENGTH), EVENTS: event_object}
     user_context_lock = Lock()
     
     # create root and frame for the main window
@@ -21,11 +25,11 @@ if __name__ == "__main__":
     root.wm_title('main window')
     frames = create_grid(root,2,2, frame_names)
 
-    #def on_closing():
-    #    if tk.messagebox.askokcancel("Quit", "Do you want to quit?"):
-    #        root.destroy()
+    def on_closing():
+        event_object.notify(None, EventType.PROGRAMEXIT)
+        root.destroy()
 
-    #root.protocol("WM_DELETE_WINDOW", on_closing)
+    root.protocol("WM_DELETE_WINDOW", on_closing)
 
     # create device connector
     device_connector = DeviceConnector(frames[0][0], user_context, user_context_lock)

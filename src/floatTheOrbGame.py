@@ -6,6 +6,8 @@ import threading
 from threading import Lock
 from common import *
 import tkinter as tk
+from eventClass import EventClass
+from eventType import EventType
 
 class Orb(pygame.sprite.Sprite):
     def __init__(self, color, width, height, user_context: dict):
@@ -82,18 +84,27 @@ class Orb(pygame.sprite.Sprite):
         self.rect.x += self.velocity[0]
         self.rect.y += self.velocity[1]
 
-class FloatTheOrb():
+class FloatTheOrb(EventClass):
     def __init__(self, frame: tk.Frame, user_context: dict, user_context_lock: Lock):
         self.frame = frame
         self.user_context = user_context
         self.user_context_lock = user_context_lock
         self.game_started = False
 
+        # subscribe to events
+        self.user_context[EVENTS].add_observer(self)
+
          # create a quit button
         self.button_sin = tk.Button(master=self.frame, text="Play Game", command=self.start_pygame)
         self.button_sin.pack(side=tk.BOTTOM)
+        self.quit_pygame: bool = False
+        super().__init__()
         return
 
+    def on_notify(self, eventData: any, event: EventType) -> None:
+            if event == EventType.PROGRAMEXIT:
+                self.quit_pygame = True
+    
     def start_pygame(self):
         pygame.init()
         self.win = pygame.display.set_mode(PYGAME_WINDOW_SIZE)
@@ -102,15 +113,14 @@ class FloatTheOrb():
         self.frame.after(60, self.play_tk)
 
     def update(self):
-        quit_pygame = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                quit_pygame = True
+                self.quit_pygame = True
             elif event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_x:
-                    quit_pygame=True
+                    self.quit_pygame=True
 
-        if quit_pygame:
+        if self.quit_pygame:
             pygame.quit()
         else:
             self.all_sprites_list.update()

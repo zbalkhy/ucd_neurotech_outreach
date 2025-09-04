@@ -6,6 +6,7 @@ RETRY_SEC = 1.5
 # user context
 RAW_DATA = 'raw_data'
 QUEUE_LENGTH = 100
+EVENTS = 'event_object' 
 
 # float the orb game
 BLACK = (0,0,0)

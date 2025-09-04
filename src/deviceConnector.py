@@ -39,7 +39,7 @@ class DeviceConnector():
             text="Connect Device",
             command=self.connect_device,
             width=18,
-        ).pack(pady=10, padx=30, fill="x")
+        ).pack(pady=10, padx=30, anchor="w")
         
         # New Device Frame
         self.device_list_Frame = tk.Frame(frame, borderwidth=1, relief="solid")
