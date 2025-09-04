@@ -42,11 +42,11 @@ if __name__ == "__main__":
     root.wm_title('main window')
     frames = create_grid(root,2,2)
 
-    def on_closing():
-        if tk.messagebox.askokcancel("Quit", "Do you want to quit?"):
-            root.destroy()
+    #def on_closing():
+    #    if tk.messagebox.askokcancel("Quit", "Do you want to quit?"):
+    #        root.destroy()
 
-    root.protocol("WM_DELETE_WINDOW", on_closing)
+    #root.protocol("WM_DELETE_WINDOW", on_closing)
 
     # create device connector
     device_connector = DeviceConnector(frames[0][0], user_context, user_context_lock)

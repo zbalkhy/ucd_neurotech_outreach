@@ -18,6 +18,7 @@ class DeviceStreamer():
         Generator that yields (t_ms:int, value:float) from 't_ms,value' lines.
         Auto-reconnects on errors/disconnects. 
         """
+        print("stream thread")
         buf = b""
         while True:
             s = None
@@ -64,12 +65,13 @@ class DeviceStreamer():
         try:
             for t_ms, val in self.generate_sample(): #t_ms i time in ms and val is voltage in uv
                 # Put whatever you code is here
-                self.user_context[RAW_DATA].append(np.sin(0.01*np.pi*val))
+                self.user_context[RAW_DATA].append(val)
         except:
             pass
                      
     def stream_thread(self):
-        if not self.stream_thread:
-            self._stream_thread = threading.Thread(target=self.stream, 
-                                        kwargs={'user_context': self.user_context})
+        print("stream thread")
+        if self._stream_thread == None:
+            print("stream thread")
+            self._stream_thread = threading.Thread(target=self.stream)
             self._stream_thread.start()

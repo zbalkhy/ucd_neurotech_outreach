@@ -62,7 +62,7 @@ class Plotter():
 
         # plot data
         ax.plot(np.array(data))
-        ax.set_ylim([-1,1])
+        ax.set_ylim([-100,100])
         
         # refresh canvas
         self.canvas.draw()

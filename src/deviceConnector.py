@@ -4,32 +4,45 @@ import threading
 import numpy as np
 from threading import Lock
 from time import sleep
-from common import RAW_DATA
+from common import RAW_DATA, RETRY_SEC
 import socket
 import time
+from deviceStreamer import DeviceStreamer
 
 class DeviceConnector():
     def __init__(self, frame: tk.Tk, user_context: dict, user_context_lock: Lock):
+        
         # set frame for the tk window
         self.frame = frame
         self.user_context = user_context
         self.user_context_lock = user_context_lock
         self.data_thread = None
+        self.devices = []
         
-        # Create an input box (Entry widget)
-        self.entry = tk.Entry(self.frame)
-        self.entry.pack(expand=True, pady=10)
+        # Input device IP
+        tk.Label(self.frame, text="DeviceIP").pack(anchor="w", padx=30)
+        self.IP_entry = tk.Entry(self.frame)
+        self.IP_entry.pack(anchor="w", padx=30)
+        
+        # Input device port
+        tk.Label(self.frame, text="Device Port").pack(anchor="w", padx=30)
+        self.port_entry = tk.Entry(self.frame)
+        self.port_entry.pack(anchor="w", padx=30)
 
-        # Create a submit button
-        self.submit_button = tk.Button(self.frame, text="Submit", command=self.submit_action)
-        self.submit_button.pack(pady=5)
-
-        # Label to display result
-        self.label = tk.Label(self.frame, text="")
-        self.label.pack(pady=10)
+        # 
+        
+        # Sign in button
+        tk.Button(
+            self.frame,
+            text="Connect Device",
+            command=self.connect_device,
+            width=18,
+        ).pack(pady=10, padx=30, fill="x")
         
         # create a quit button
-        self.button_sin = tk.Button(master=self.frame, text="Generate sine", command=self.start_sin_thread)
+        self.button_sin = tk.Button(master=self.frame, 
+                                    text="Generate sine", 
+                                    command=self.start_sin_thread)
         
         # place the button at the bottom of the window
         self.button_sin.pack(side=tk.BOTTOM)
@@ -38,11 +51,13 @@ class DeviceConnector():
         with self.user_context_lock:
             self.user_context[key] = value
 
-
-    def submit_action(self):
-        user_input = self.entry.get()  # get text from input box
-        print("You entered:", user_input)  # do something with it
-        self.label.config(text=f"You entered: {user_input}")  # update label
+    def connect_device(self):
+        IP_address = self.IP_entry.get()
+        port = self.port_entry.get()
+        print(IP_address)
+        new_device = DeviceStreamer(IP_address, int(port), RETRY_SEC, self.user_context)  
+        self.devices.append(new_device)
+        new_device.stream_thread()
 
     def make_sin(self, user_context):
         t=0
