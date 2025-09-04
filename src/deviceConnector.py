@@ -4,7 +4,7 @@ import threading
 import numpy as np
 from threading import Lock
 from time import sleep
-from common import RAW_DATA, RETRY_SEC
+from common import RAW_DATA, RETRY_SEC, create_grid
 import socket
 import time
 from deviceStreamer import DeviceStreamer
@@ -18,34 +18,39 @@ class DeviceConnector():
         self.user_context_lock = user_context_lock
         self.data_thread = None
         self.devices = []
+
+        # New Device Frame
+        self.new_device_frame = tk.Frame(frame, borderwidth=1, relief="solid")
+        self.new_device_frame.pack(side="top", fill="both", expand=True)
         
-        # Input device IP
-        tk.Label(self.frame, text="DeviceIP").pack(anchor="w", padx=30)
-        self.IP_entry = tk.Entry(self.frame)
+        ## Input device IP
+        tk.Label(self.new_device_frame, text="DeviceIP").pack(anchor="w", padx=30)
+        self.IP_entry = tk.Entry(self.new_device_frame)
         self.IP_entry.pack(anchor="w", padx=30)
         
-        # Input device port
-        tk.Label(self.frame, text="Device Port").pack(anchor="w", padx=30)
-        self.port_entry = tk.Entry(self.frame)
+        ## Input device port
+        tk.Label(self.new_device_frame, text="Device Port").pack(anchor="w", padx=30)
+        self.port_entry = tk.Entry(self.new_device_frame)
         self.port_entry.pack(anchor="w", padx=30)
-
-        # 
         
-        # Sign in button
+        # Connect Button
         tk.Button(
-            self.frame,
+            self.new_device_frame,
             text="Connect Device",
             command=self.connect_device,
             width=18,
         ).pack(pady=10, padx=30, fill="x")
         
-        # create a quit button
-        self.button_sin = tk.Button(master=self.frame, 
+        # New Device Frame
+        self.device_list_Frame = tk.Frame(frame, borderwidth=1, relief="solid")
+        self.device_list_Frame.pack(side="top", fill="both", expand=True)
+        # sine generator
+        self.button_sin = tk.Button(master=self.device_list_Frame, 
                                     text="Generate sine", 
                                     command=self.start_sin_thread)
         
         # place the button at the bottom of the window
-        self.button_sin.pack(side=tk.BOTTOM)
+        self.button_sin.pack()
     
     def _update_user_context(self, key, value):
         with self.user_context_lock:
@@ -62,7 +67,7 @@ class DeviceConnector():
     def make_sin(self, user_context):
         t=0
         while True:
-            user_context[RAW_DATA].append(np.sin(0.01*np.pi*t))
+            user_context[RAW_DATA].append(15*np.sin(0.01*np.pi*t))
             t+=1
             sleep(0.004)
     

@@ -3,33 +3,12 @@ from deviceConnector import DeviceConnector
 from plotter import Plotter
 from floatTheOrbGame import FloatTheOrb
 from collections import deque
-from common import RAW_DATA, QUEUE_LENGTH
+from common import RAW_DATA, QUEUE_LENGTH, create_grid
 from threading import Lock
 
 frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Blank"]]
 
-def create_grid(root, rows, cols):
-    # Make the grid expandable
-    for i in range(rows):
-        root.rowconfigure(i, weight=1)
-    for j in range(cols):
-        root.columnconfigure(j, weight=1)
 
-    # Create frames dynamically
-    frames = []
-    for i in range(rows):
-        row_frames = []
-        for j in range(cols):
-            frame = tk.Frame(root, borderwidth=2, relief="solid")
-            frame.grid(row=i, column=j, sticky="nsew", padx=5, pady=5)
-
-            # Example content: label with coordinates
-            label = tk.Label(frame, text=frame_names[i][j], bg=frame["bg"])
-            label.pack(expand=False)
-
-            row_frames.append(frame)
-        frames.append(row_frames)
-    return frames
 
 if __name__ == "__main__":
     
@@ -40,7 +19,7 @@ if __name__ == "__main__":
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')
-    frames = create_grid(root,2,2)
+    frames = create_grid(root,2,2, frame_names)
 
     #def on_closing():
     #    if tk.messagebox.askokcancel("Quit", "Do you want to quit?"):
