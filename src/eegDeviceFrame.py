@@ -9,7 +9,7 @@ import socket
 import time
 from deviceStreamer import DeviceStreamer
 
-class DeviceConnector():
+class EegDeviceFrame():
     def __init__(self, frame: tk.Tk, user_context: dict, user_context_lock: Lock):
         
         # set frame for the tk window

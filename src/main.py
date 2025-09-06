@@ -1,5 +1,5 @@
 import tkinter as tk
-from deviceConnector import DeviceConnector
+from eegDeviceFrame import EegDeviceFrame
 from plotter import Plotter
 from floatTheOrbGame import FloatTheOrb
 from collections import deque
@@ -9,7 +9,7 @@ from eventClass import EventClass
 from eventType import EventType
 
 
-frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Blank"]]
+frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Data Collection"]]
 
 
 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     root.protocol("WM_DELETE_WINDOW", on_closing)
 
     # create device connector
-    device_connector = DeviceConnector(frames[0][0], user_context, user_context_lock)
+    device_connector = EegDeviceFrame(frames[0][0], user_context, user_context_lock)
 
     # create plotter
     plotter = Plotter(frames[0][1], user_context)
