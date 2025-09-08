@@ -7,6 +7,7 @@ class StreamType(Enum):
     DEVICE = 1
     FILTER = 2
     CONTROL = 3
+    SOFTWARE = 4
 
 class DataStream(Thread):
     def __init__(self, stream_name: str, 

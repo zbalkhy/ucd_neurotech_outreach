@@ -2,10 +2,11 @@ import tkinter as tk
 from eegDeviceFrame import EegDeviceFrame
 from plotter import Plotter
 from floatTheOrbGame import FloatTheOrb
-from collections import deque
-from common import RAW_DATA, QUEUE_LENGTH, create_grid, EVENTS
+from common import create_grid
 from userModel import UserModel
 from eegDeviceViewModel import EegDeviceViewModel
+from dataStream import DataStream, StreamType
+from softwareStream import SoftwareStream
 
 frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Data Collection"]]
 
@@ -24,7 +25,10 @@ if __name__ == "__main__":
     
     # initialize user model
     user_model = UserModel()
-    
+    data_stream = SoftwareStream("test", StreamType.SOFTWARE)
+    data_stream.start()
+    user_model.add_stream(data_stream)
+
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')

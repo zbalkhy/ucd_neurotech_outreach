@@ -6,8 +6,6 @@ import threading
 from threading import Lock
 from common import *
 import tkinter as tk
-from eventClass import EventClass
-from eventType import EventType
 
 class Orb(pygame.sprite.Sprite):
     def __init__(self, color, width, height, user_context: dict):

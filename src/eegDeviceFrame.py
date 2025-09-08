@@ -1,9 +1,6 @@
 import tkinter as tk
-#from collections import deque
 import numpy as np
 from threading import Thread, Lock
-from time import sleep
-from common import RAW_DATA
 from eegDeviceViewModel import EegDeviceViewModel
 
 class EegDeviceFrame():

@@ -13,7 +13,7 @@ class UserModel(object):
             return None
     
     def get_streams(self) -> list[DataStream]:
-        return self.data_streams.values()
+        return list(self.data_streams.values())
     
     def add_stream(self, stream: DataStream) -> None:
         self.data_streams[stream.stream_name] = stream
