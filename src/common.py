@@ -4,9 +4,7 @@ from tkinter import Frame, Label
 RETRY_SEC = 1.5
 
 # user context
-RAW_DATA = 'raw_data'
 QUEUE_LENGTH = 100
-EVENTS = 'event_object' 
 
 # float the orb game
 BLACK = (0,0,0)
@@ -16,7 +14,7 @@ SCREEN_HEIGHT = 700
 GRAVITY = 0.05
 PYGAME_WINDOW_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
 
-def create_grid(root, rows, cols, grid_names):
+def create_grid(root, rows: int, cols: int, grid_names: list[list[str]]) -> list[list[Frame]]:
     # Make the grid expandable
     for i in range(rows):
         root.rowconfigure(i, weight=1)

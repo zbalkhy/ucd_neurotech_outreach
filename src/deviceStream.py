@@ -4,14 +4,16 @@ from common import QUEUE_LENGTH
 from dataStream import DataStream, StreamType
 
 class DeviceStream(DataStream):
-    def __init__(self, host: str, port: int, retry_sec: int, stream_name: str, stream_type: StreamType, queue_length: int = QUEUE_LENGTH):
+    def __init__(self, host: str, port: int, retry_sec: int, 
+                 stream_name: str, stream_type: StreamType, 
+                 queue_length: int = QUEUE_LENGTH):
             self.host: str = host
             self.port: int = port
             self.retry_sec: int = retry_sec
             
             super().__init__(stream_name, stream_type, queue_length)
 
-    def _try_close_socket(self, s):
+    def _try_close_socket(self, s) -> None:
         try:
             if s: s.shutdown(socket.SHUT_RDWR)
         except:
@@ -61,7 +63,7 @@ class DeviceStream(DataStream):
                 time.sleep(self.retry_sec)
     
     
-    def _stream(self):
+    def _stream(self) -> None:
         try:
             for t_ms, val in self.generate_sample(): #t_ms i time in ms and val is voltage in uv
                 self.data.append(val)

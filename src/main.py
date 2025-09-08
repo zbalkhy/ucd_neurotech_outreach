@@ -1,14 +1,14 @@
 import tkinter as tk
-from eegDeviceFrame import EegDeviceFrame
 from plotter import Plotter
 from floatTheOrbGame import FloatTheOrb
 from common import create_grid
 from userModel import UserModel
-from eegDeviceViewModel import EegDeviceViewModel
+from eegDeviceFrame import EEGDeviceFrame
+from eegDeviceViewModel import EEGDeviceViewModel
 from dataStream import DataStream, StreamType
 from softwareStream import SoftwareStream
 
-frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Data Collection"]]
+frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Experiment"]]
 
 def on_closing():
     # send shutdown event to each stream thread
@@ -17,7 +17,8 @@ def on_closing():
     
     # wait for each thread to exit before shutdown
     for data_stream in user_model.get_streams():
-        data_stream.join()
+        if data_stream.ident is not None or data_stream.is_alive():
+            data_stream.join()
     
     root.destroy()
 
@@ -25,7 +26,7 @@ if __name__ == "__main__":
     
     # initialize user model
     user_model = UserModel()
-    data_stream = SoftwareStream("test", StreamType.SOFTWARE)
+    data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
     data_stream.start()
     user_model.add_stream(data_stream)
 
@@ -37,8 +38,8 @@ if __name__ == "__main__":
     root.protocol("WM_DELETE_WINDOW", on_closing)
 
     # create device connector
-    device_frame_viewmodel = EegDeviceViewModel(user_model)
-    device_connector = EegDeviceFrame(frames[0][0], device_frame_viewmodel)
+    device_frame_viewmodel = EEGDeviceViewModel(user_model)
+    device_connector = EEGDeviceFrame(frames[0][0], device_frame_viewmodel)
 
     # create plotter
     plotter = Plotter(frames[0][1], user_model)

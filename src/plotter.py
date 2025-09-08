@@ -1,13 +1,13 @@
 import tkinter as tk
 import numpy as np
-from collections import deque
-from common import RAW_DATA
+
 # Implement the default Matplotlib key bindings.
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 from userModel import UserModel
+from dataStream import StreamType
 
 class Plotter():
     def __init__(self, frame: tk.Frame, user_model: UserModel):
@@ -53,8 +53,12 @@ class Plotter():
         ''' plot raw data '''
 
         # pull data from data queue
-        data = list(self.user_model.get_streams()[0].get_stream())
-        
+        # hard code software stream for now
+        data = []
+        for stream in self.user_model.get_streams():
+            if stream.stream_type == StreamType.SOFTWARE:
+                data = list(stream.get_stream())
+                break
         # instead of ax.hold(False)
         self.fig.clear()
 

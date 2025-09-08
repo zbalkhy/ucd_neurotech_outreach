@@ -1,6 +1,10 @@
 from __future__ import annotations #needed for class self reference in addObserver and removeObserver
-from eventType import EventType
 from collections import deque
+from enum import Enum
+
+class EventType(Enum):
+    DEVICELISTUPDATE = 1
+
 
 """ This class implements an event sending / receiving mechanism. 
     It is inteded to be used as a base class for other classes which need event functionality
@@ -22,16 +26,16 @@ class EventClass(object):
 
     def subscribe_to_subject(self, subject: EventClass) -> None:
         self.subjects.append(subject)
-        subject.addObserver(self)
+        subject.add_observer(self)
     
     def unsubscribe_from_subject(self, subject: EventClass) -> None:
         self.subjects.remove(subject)
-        subject.removeObserver(self)
+        subject.remove_observer(self)
     
     def on_notify(self, eventData: any, event: EventType ) -> None:
         # This function is meant to be implemented by the inheriting class.
         return
     
-    def notify(self, eventData: any, event: EventType) ->None:
+    def notify(self, eventData: any, event: EventType) -> None:
         for observer in self.observers:
             observer.on_notify(eventData, event)

@@ -1,17 +1,16 @@
 import os
 from common import BLACK, WHITE, PYGAME_WINDOW_SIZE, SCREEN_HEIGHT, SCREEN_WIDTH, GRAVITY
 import pygame
-import platform
-import threading
 from threading import Lock
 from common import *
 import tkinter as tk
-
+from userModel import UserModel
+from eventClass import *
 class Orb(pygame.sprite.Sprite):
-    def __init__(self, color, width, height, user_context: dict):
+    def __init__(self, color, width, height, user_context: UserModel):
         super().__init__()
 
-        self.user_context = user_context
+        self.user_context: UserModel = user_context
 
         self.image = pygame.Surface([width, height])
         self.image.fill(BLACK)
