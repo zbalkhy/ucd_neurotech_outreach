@@ -1,8 +1,7 @@
 import tkinter as tk
 #from collections import deque
-import threading
 import numpy as np
-from threading import Lock
+from threading import Thread, Lock
 from time import sleep
 from common import RAW_DATA, RETRY_SEC, create_grid
 import socket
@@ -10,14 +9,14 @@ import time
 from deviceStreamer import DeviceStreamer
 
 class EegDeviceFrame():
-    def __init__(self, frame: tk.Tk, user_context: dict, user_context_lock: Lock):
+    def __init__(self, frame: tk.Frame, user_context: dict, user_context_lock: Lock):
         
-        # set frame for the tk window
-        self.frame = frame
-        self.user_context = user_context
-        self.user_context_lock = user_context_lock
-        self.data_thread = None
-        self.devices = []
+        # set class variables
+        self.frame: tk.Frame = frame
+        self.user_context: dict = user_context
+        self.user_context_lock: Lock = user_context_lock
+        self.data_thread: Thread = None
+        self.devices: list = []
 
         # New Device Frame
         self.new_device_frame = tk.Frame(frame, borderwidth=1, relief="solid")
@@ -73,7 +72,7 @@ class EegDeviceFrame():
     
     def start_sin_thread(self):
         if not self.data_thread:
-            self.data_thread = threading.Thread(target=self.make_sin, 
+            self.data_thread = Thread(target=self.make_sin, 
                                         kwargs={'user_context': self.user_context})
             self.data_thread.start()
 

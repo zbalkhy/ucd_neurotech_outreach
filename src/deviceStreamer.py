@@ -6,7 +6,6 @@ import threading
 from eventClass import EventClass
 from eventType import EventType
 
-
 class DeviceStreamer(EventClass):
     def __init__(self, host: str, port: int, retry_sec: int, user_context: dict):
             self.host: str = host
@@ -37,8 +36,7 @@ class DeviceStreamer(EventClass):
     # Auto-reconnects on errors/disconnects. 
     def generate_sample(self):
         buf = b""
-        while True:
-            if self.shutdown: break
+        while not self.shutdown:
             s = None
             try:
                 s = socket.create_connection((self.host, self.port), timeout=5)
@@ -67,13 +65,11 @@ class DeviceStreamer(EventClass):
             except KeyboardInterrupt:
                 # clean disconnect then bubble up to exit
                 self._try_close_socket(s)
-                if self.shutdown: break
                 print("\n[bye]")
                 raise
             except Exception as e:
                 print(f"[reconnect] {e}; retrying in {self.retry_sec}s…")
                 self._try_close_socket(s)
-                if self.shutdown: break
                 time.sleep(self.retry_sec)
     
     

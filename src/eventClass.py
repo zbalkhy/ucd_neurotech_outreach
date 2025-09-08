@@ -29,7 +29,7 @@ class EventClass(object):
         subject.removeObserver(self)
     
     def on_notify(self, eventData: any, event: EventType ) -> None:
-        # This class is meant to be implemented by the inheriting class.
+        # This function is meant to be implemented by the inheriting class.
         return
     
     def notify(self, eventData: any, event: EventType) ->None:
