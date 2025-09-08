@@ -3,6 +3,8 @@ from common import QUEUE_LENGTH
 import numpy as np
 from time import sleep
 
+# this is a quick class which right now is just a sinusoid stream. 
+# if we eventually decide to add a signal generator module, this will come in handy
 class SoftwareStream(DataStream):
     def __init__(self, stream_name: str, 
                  stream_type: StreamType, 

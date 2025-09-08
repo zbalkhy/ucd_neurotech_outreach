@@ -33,7 +33,7 @@ class EegDeviceFrame():
             width=18,
         ).pack(pady=10, padx=30, anchor="w")
         
-        # Current Devices Frame
+        # Current Devices List
         self.device_list_Frame = tk.Frame(frame, borderwidth=1, relief="solid")
         self.device_list_Frame.pack(side="top", fill="both", expand=True)
        
