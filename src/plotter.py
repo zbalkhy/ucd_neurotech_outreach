@@ -7,10 +7,11 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                NavigationToolbar2Tk)
 from matplotlib.figure import Figure
+from userModel import UserModel
 
 class Plotter():
-    def __init__(self, frame: tk.Frame, user_context: dict):
-        self.user_context = user_context
+    def __init__(self, frame: tk.Frame, user_model: UserModel):
+        self.user_model = user_model
         self.frame = frame
         self.fig = Figure(figsize=(5, 4), dpi=100)
         self.continue_plotting = True
@@ -52,7 +53,7 @@ class Plotter():
         ''' plot raw data '''
 
         # pull data from data queue
-        data = list(self.user_context[RAW_DATA])
+        data = list(self.user_model.get_streams()[0].get_stream())
         
         # instead of ax.hold(False)
         self.fig.clear()

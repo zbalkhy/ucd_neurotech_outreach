@@ -1,16 +1,23 @@
 from dataStream import DataStream
+from threading import Lock
 
 class UserModel(object):
     def __init__(self):
-        self.dataStreams: dict = {}
+        self.data_streams: dict = {}
+        self.lock: Lock = Lock()
     
     def get_stream(self, name: str) -> DataStream:
-        if name in self.dataStreams.keys():
-            return self.dataStreams[name]
+        if name in self.data_streams.keys():
+            return self.data_streams[name]
         else:
             return None
-        
+    
+    def get_streams(self) -> list[DataStream]:
+        return self.data_streams.values()
+    
     def add_stream(self, stream: DataStream) -> None:
-        self.dataStreams[stream.stream_name] = stream
+        self.data_streams[stream.stream_name] = stream
+
+    
 
     

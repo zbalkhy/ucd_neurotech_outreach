@@ -1,29 +1,15 @@
 import socket
 import time
-from common import RAW_DATA, EVENTS
-import numpy as np
-import threading
-from eventClass import EventClass
-from eventType import EventType
+from common import QUEUE_LENGTH
+from dataStream import DataStream, StreamType
 
-class DeviceStreamer(EventClass):
-    def __init__(self, host: str, port: int, retry_sec: int, user_context: dict):
+class DeviceStream(DataStream):
+    def __init__(self, host: str, port: int, retry_sec: int, stream_name: str, stream_type: StreamType, queue_length: int = QUEUE_LENGTH):
             self.host: str = host
             self.port: int = port
             self.retry_sec: int = retry_sec
-            self.user_context: dict = user_context
-            self._stream_thread: threading.Thread = None
-            self.shutdown: bool = False
             
-            # subscribe to events
-            user_context[EVENTS].add_observer(self)
-            
-            super().__init__()
-
-    
-    def on_notify(self, eventData: any, event: EventType) -> None:
-        if event == EventType.PROGRAMEXIT:
-            self.shutdown = True
+            super().__init__(stream_name, stream_type, queue_length)
 
     def _try_close_socket(self, s):
         try:
@@ -36,7 +22,7 @@ class DeviceStreamer(EventClass):
     # Auto-reconnects on errors/disconnects. 
     def generate_sample(self):
         buf = b""
-        while not self.shutdown:
+        while not self.shutdown_event.is_set():
             s = None
             try:
                 s = socket.create_connection((self.host, self.port), timeout=5)
@@ -44,7 +30,7 @@ class DeviceStreamer(EventClass):
                 print(f"[connected] {self.host}:{self.port}")
                 buf = b""
                 while True:
-                    if self.shutdown:
+                    if self.shutdown_event.is_set():
                        self._try_close_socket(s)
                        break
                     chunk = s.recv(4096)
@@ -62,25 +48,22 @@ class DeviceStreamer(EventClass):
                         except Exception:
                             # skip malformed lines
                             pass
+
             except KeyboardInterrupt:
                 # clean disconnect then bubble up to exit
                 self._try_close_socket(s)
                 print("\n[bye]")
                 raise
+
             except Exception as e:
                 print(f"[reconnect] {e}; retrying in {self.retry_sec}s…")
                 self._try_close_socket(s)
                 time.sleep(self.retry_sec)
     
     
-    def stream(self):
+    def _stream(self):
         try:
             for t_ms, val in self.generate_sample(): #t_ms i time in ms and val is voltage in uv
-                self.user_context[RAW_DATA].append(val)
+                self.data.append(val)
         except:
             pass
-                     
-    def stream_thread(self):
-        if self._stream_thread == None:
-            self._stream_thread = threading.Thread(target=self.stream)
-            self._stream_thread.start()

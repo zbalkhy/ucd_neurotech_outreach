@@ -4,41 +4,43 @@ from plotter import Plotter
 from floatTheOrbGame import FloatTheOrb
 from collections import deque
 from common import RAW_DATA, QUEUE_LENGTH, create_grid, EVENTS
-from threading import Lock
-from eventClass import EventClass
-from eventType import EventType
-
+from userModel import UserModel
+from eegDeviceViewModel import EegDeviceViewModel
 
 frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Data Collection"]]
 
-
+def on_closing():
+    # send shutdown event to each stream thread
+    for data_stream in user_model.get_streams():
+        data_stream.shutdown_event.set()
+    
+    # wait for each thread to exit before shutdown
+    for data_stream in user_model.get_streams():
+        data_stream.join()
+    
+    root.destroy()
 
 if __name__ == "__main__":
     
-    # initialize user context
-    event_object = EventClass()
-    user_context = {RAW_DATA: deque(maxlen=QUEUE_LENGTH), EVENTS: event_object}
-    user_context_lock = Lock()
+    # initialize user model
+    user_model = UserModel()
     
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')
     frames = create_grid(root,2,2, frame_names)
 
-    def on_closing():
-        event_object.notify(None, EventType.PROGRAMEXIT)
-        root.destroy()
-
     root.protocol("WM_DELETE_WINDOW", on_closing)
 
     # create device connector
-    device_connector = EegDeviceFrame(frames[0][0], user_context, user_context_lock)
+    device_frame_viewmodel = EegDeviceViewModel(user_model)
+    device_connector = EegDeviceFrame(frames[0][0], device_frame_viewmodel)
 
     # create plotter
-    plotter = Plotter(frames[0][1], user_context)
+    plotter = Plotter(frames[0][1], user_model)
 
     # create game
-    float_the_orb = FloatTheOrb(frames[1][0], user_context, user_context_lock)    
+    #float_the_orb = FloatTheOrb(frames[1][0], user_context, user_context_lock)    
     #float_the_orb.start_pygame()
 
     # clicking (x) on main window prevents program from quiting while commands are being queued.

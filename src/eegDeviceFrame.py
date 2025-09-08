@@ -3,20 +3,16 @@ import tkinter as tk
 import numpy as np
 from threading import Thread, Lock
 from time import sleep
-from common import RAW_DATA, RETRY_SEC, create_grid
-import socket
-import time
-from deviceStreamer import DeviceStreamer
+from common import RAW_DATA
+from eegDeviceViewModel import EegDeviceViewModel
 
 class EegDeviceFrame():
-    def __init__(self, frame: tk.Frame, user_context: dict, user_context_lock: Lock):
+    def __init__(self, frame: tk.Frame, view_model: EegDeviceViewModel):
         
         # set class variables
         self.frame: tk.Frame = frame
-        self.user_context: dict = user_context
-        self.user_context_lock: Lock = user_context_lock
         self.data_thread: Thread = None
-        self.devices: list = []
+        self.view_model = view_model
 
         # New Device Frame
         self.new_device_frame = tk.Frame(frame, borderwidth=1, relief="solid")
@@ -40,39 +36,13 @@ class EegDeviceFrame():
             width=18,
         ).pack(pady=10, padx=30, anchor="w")
         
-        # New Device Frame
+        # Current Devices Frame
         self.device_list_Frame = tk.Frame(frame, borderwidth=1, relief="solid")
         self.device_list_Frame.pack(side="top", fill="both", expand=True)
-        # sine generator
-        self.button_sin = tk.Button(master=self.device_list_Frame, 
-                                    text="Generate sine", 
-                                    command=self.start_sin_thread)
-        
-        # place the button at the bottom of the window
-        self.button_sin.pack()
+       
     
-    def _update_user_context(self, key, value):
-        with self.user_context_lock:
-            self.user_context[key] = value
-
     def connect_device(self):
-        IP_address = self.IP_entry.get()
-        port = self.port_entry.get()
-        print(IP_address)
-        new_device = DeviceStreamer(IP_address, int(port), RETRY_SEC, self.user_context)  
-        self.devices.append(new_device)
-        new_device.stream_thread()
-
-    def make_sin(self, user_context):
-        t=0
-        while True:
-            user_context[RAW_DATA].append(15*np.sin(0.01*np.pi*t))
-            t+=1
-            sleep(0.004)
-    
-    def start_sin_thread(self):
-        if not self.data_thread:
-            self.data_thread = Thread(target=self.make_sin, 
-                                        kwargs={'user_context': self.user_context})
-            self.data_thread.start()
+        # potentially need to type check the port field to make sure we actually have an int
+        # probably should do an error handler in general if the device failed to connect
+        self.view_model.connect_device(self.IP_entry.get(), int(self.port_entry.get()))
 
