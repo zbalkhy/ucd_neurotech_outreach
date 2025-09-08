@@ -19,7 +19,6 @@ class DataStream(Thread):
         self._queue_length: int = queue_length
         self.data: deque = deque(maxlen=queue_length)
         self._shutdown: bool = False 
-        self.stream_thread: Thread = None
         self.shutdown_event: Event = Event()
 
         super().__init__()
