@@ -30,9 +30,16 @@ if __name__ == "__main__":
     data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
     user_model.add_stream(data_stream)
 
-    filtered_stream = FilteredStream("filtered_stream_test", StreamType.FILTER, user_model)
+    filters = ['lowpass', 'highpass', 'bandpass', 'bandstop']
+    frequencies = [30, 10, [10, 30], [15, 25]]
+    order = [4, 4, 4, 4]
+    inf_dict = {'filter': filters, 'frequency': frequencies, 'order': order}
+    print(inf_dict)
+    
+    filtered_stream = FilteredStream("software_stream_test", "filtered_stream_test", StreamType.FILTER, user_model, inf_dict)
     user_model.add_stream(filtered_stream)
-
+    print('added_stream')
+    
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')
