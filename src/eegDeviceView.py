@@ -4,7 +4,7 @@ from threading import Thread, Lock
 from eegDeviceViewModel import EEGDeviceViewModel
 from eventClass import *
 
-class EEGDeviceFrame(EventClass):
+class EEGDeviceView(EventClass):
     def __init__(self, frame: tk.Frame, view_model: EEGDeviceViewModel):
         super().__init__()
 
@@ -83,7 +83,7 @@ class EEGDeviceFrame(EventClass):
         self.device_list_canvas.pack(side="left", fill="both", expand=True)
         self.device_list_scrollbar.pack(side="right", fill="y")
 
-        # create a two column grid to hold 
+        # create a two column grid to hold everything
         for i, device in enumerate(self.view_model.get_device_names()):
             label = tk.Label(self.scrollable_frame, text=device, anchor="w")
             label.grid(row=i, column=0, padx=5, pady=5, sticky="w")
