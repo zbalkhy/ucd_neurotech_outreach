@@ -23,13 +23,14 @@ class EEGDeviceViewModel(object):
     def get_devices(self) -> list[DataStream]:
         devices = []
         for stream in self.user_model.get_streams():
-            if stream.stream_type in [StreamType.DEVICE, StreamType.SOFTWARE]:
+            if stream.stream_type in [StreamType.DEVICE, StreamType.SOFTWARE, StreamType.FILTER]:
                 devices.append(stream)
+        print(devices)
         return devices
 
     def get_device_names(self) -> list[str]:
         device_names = []
         for stream in self.user_model.get_streams():
-            if stream.stream_type in [StreamType.DEVICE, StreamType.SOFTWARE]:
+            if stream.stream_type in [StreamType.DEVICE, StreamType.SOFTWARE, StreamType.FILTER]:
                 device_names.append(stream.stream_name)
         return device_names

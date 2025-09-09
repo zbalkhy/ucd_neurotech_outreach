@@ -56,7 +56,7 @@ class Plotter():
         # hard code software stream for now
         data = []
         for stream in self.user_model.get_streams():
-            if stream.stream_type == StreamType.SOFTWARE:
+            if stream.stream_type == StreamType.FILTER:
                 data = list(stream.get_stream())
                 break
         # instead of ax.hold(False)

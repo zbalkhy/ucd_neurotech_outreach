@@ -22,6 +22,8 @@ class UserModel(EventClass):
         return list(self.data_streams.values())
     
     def add_stream(self, stream: DataStream) -> None:
+        ##UTILIZE THIS TO ADD STREAM LATER
+        
         ##TODO: right now there is a bug where
         ## if a user overrides a stream with the same name, the program loses track of the old stream thread and cannot quit
 

@@ -7,6 +7,7 @@ from eegDeviceFrame import EEGDeviceFrame
 from eegDeviceViewModel import EEGDeviceViewModel
 from dataStream import DataStream, StreamType
 from softwareStream import SoftwareStream
+from filteredSoftwareStream import FilteredStream
 
 frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Experiment"]]
 
@@ -28,6 +29,9 @@ if __name__ == "__main__":
     user_model = UserModel()
     data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
     user_model.add_stream(data_stream)
+
+    filtered_stream = FilteredStream("filtered_stream_test", StreamType.FILTER, user_model)
+    user_model.add_stream(filtered_stream)
 
     # create root and frame for the main window
     root = tk.Tk()
