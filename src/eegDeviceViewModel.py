@@ -14,7 +14,11 @@ class EEGDeviceViewModel(object):
 
     def start_device_stream(self, device_name) -> None:
         if device_name in self.get_device_names():
-            self.user_model.get_stream(device_name).start()
+            stream = self.user_model.get_stream(device_name)
+            if stream.is_alive():
+                stream.stop()
+            else:
+                stream.start()
     
     def get_devices(self) -> list[DataStream]:
         devices = []

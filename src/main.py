@@ -17,7 +17,7 @@ def on_closing():
     
     # wait for each thread to exit before shutdown
     for data_stream in user_model.get_streams():
-        if data_stream.ident is not None or data_stream.is_alive():
+        if data_stream.is_alive():
             data_stream.join()
     
     root.destroy()
@@ -27,7 +27,6 @@ if __name__ == "__main__":
     # initialize user model
     user_model = UserModel()
     data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
-    data_stream.start()
     user_model.add_stream(data_stream)
 
     # create root and frame for the main window

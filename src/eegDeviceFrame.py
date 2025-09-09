@@ -45,7 +45,7 @@ class EEGDeviceFrame(EventClass):
         # Create frame to hold the device list
         self.device_list_frame = tk.Frame(self.frame, borderwidth=1, relief="solid")
         self.device_list_frame.pack(side="top", fill="both", expand=True)
-        self.pack_device_list
+        self.pack_device_list()
         
     def on_notify(self, eventData: any, event: EventType ) -> None:
         if event == EventType.DEVICELISTUPDATE:

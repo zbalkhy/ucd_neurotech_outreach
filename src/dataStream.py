@@ -9,7 +9,7 @@ class StreamType(Enum):
     CONTROL = 3
     SOFTWARE = 4
 
-class DataStream(Thread):
+class DataStream():
     def __init__(self, stream_name: str, 
                  stream_type: StreamType, 
                  queue_length: int = QUEUE_LENGTH):
@@ -20,8 +20,7 @@ class DataStream(Thread):
         self.data: deque = deque(maxlen=queue_length)
         self._shutdown: bool = False 
         self.shutdown_event: Event = Event()
-
-        super().__init__()
+        self._stream_thread: Thread = None
     
     # return all data in the queue for the stream
     def get_stream(self) -> deque:
@@ -34,7 +33,31 @@ class DataStream(Thread):
         except:
             pass
     
-    # define what to do when the thread is started
-    def run(self):
-        while not self.shutdown_event.is_set():
-            self._stream()
+    # start the streaming thread 
+    def start(self) -> None:
+        if self._stream_thread == None and not self.shutdown_event.is_set():
+            self._stream_thread = Thread(target=self._stream)
+            self._stream_thread.start()
+
+    # stop the streaming thread and reset it to none
+    def stop(self) -> None:
+        if self._stream_thread is not None:
+            self.shutdown_event.set()
+            self.join()
+            self.shutdown_event.clear()
+            self._stream_thread = None
+
+    # wait for streaming thread to finish
+    def join(self) -> None:
+        self._stream_thread.join()
+    
+    # check if thread is alive
+    def is_alive(self) -> bool:
+        if self._stream_thread == None:
+            return False
+        elif not (self._stream_thread.is_alive() or self._stream_thread.ident is not None):
+            return False
+        else:
+            return True
+        
+        
