@@ -5,6 +5,7 @@ from eventClass import EventClass, EventType
 class UserModel(EventClass):
     def __init__(self):
         self.data_streams: dict = {}
+        self.filters: dict = {'filter': [], 'order': [], 'frequency': []}
         self.lock: Lock = Lock()
         super().__init__()
 
@@ -31,6 +32,17 @@ class UserModel(EventClass):
 
         if stream.stream_type in [StreamType.SOFTWARE, StreamType.DEVICE]:
             self.notify(None, EventType.DEVICELISTUPDATE)
+    #add filter
+    def add_filter(self, filter_type, order, frequency) -> None:
+        self.filters['filter'].append(filter_type)
+        self.filters['order'].append(order)
+        self.filters['frequency'].append(frequency)
+
+    def remove_filter(self, position) -> None:
+        del self.filters['filter'][position]
+        del self.filters['order'][position]
+        del self.filters['frequency'][position]
+
 
     
 

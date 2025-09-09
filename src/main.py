@@ -8,6 +8,7 @@ from eegDeviceViewModel import EEGDeviceViewModel
 from dataStream import DataStream, StreamType
 from softwareStream import SoftwareStream
 from filteredSoftwareStream import FilteredStream
+from filterViewModel import filterViewModel
 
 frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Experiment"]]
 
@@ -29,15 +30,14 @@ if __name__ == "__main__":
     user_model = UserModel()
     data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
     user_model.add_stream(data_stream)
-
-    filters = ['lowpass', 'highpass', 'bandpass', 'bandstop']
-    frequencies = [30, 10, [10, 30], [15, 25]]
-    order = [4, 4, 4, 4]
-    inf_dict = {'filter': filters, 'frequency': frequencies, 'order': order}
-    print(inf_dict)
     
-    filtered_stream = FilteredStream("software_stream_test", "filtered_stream_test", StreamType.FILTER, user_model, inf_dict)
-    user_model.add_stream(filtered_stream)
+    filtering = filterViewModel(user_model)
+    filtering.add_filter('lowpass', 4, 30)
+    filtering.add_filter('highpass', 4, 10)
+    filtering.add_filter('bandstop', 4, [20, 25])
+    filtering.remove_filter(1)
+
+    filtering.create_filter_stream("software_stream_test")
     print('added_stream')
     
     # create root and frame for the main window
