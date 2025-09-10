@@ -27,10 +27,9 @@ class UserModel(EventClass):
         
         ##TODO: right now there is a bug where
         ## if a user overrides a stream with the same name, the program loses track of the old stream thread and cannot quit
-
         self.data_streams[stream.stream_name] = stream
-
-        if stream.stream_type in [StreamType.SOFTWARE, StreamType.DEVICE]:
+        self.notify(None, EventType.STREAMUPDATE)
+        if stream.stream_type in [StreamType.SOFTWARE, StreamType.DEVICE, StreamType.FILTER]:
             self.notify(None, EventType.DEVICELISTUPDATE)
     #add filter
     def add_filter(self, filter_type, order, frequency) -> None:

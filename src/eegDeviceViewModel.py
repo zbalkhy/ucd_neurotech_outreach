@@ -19,7 +19,8 @@ class EEGDeviceViewModel(object):
                 stream.stop()
             else:
                 stream.start()
-    
+
+    #temporary fix to have the streams put in the devices category
     def get_devices(self) -> list[DataStream]:
         devices = []
         for stream in self.user_model.get_streams():
