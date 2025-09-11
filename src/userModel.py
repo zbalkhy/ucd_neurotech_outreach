@@ -1,11 +1,12 @@
 from dataStream import *
 from threading import Lock
 from eventClass import EventClass, EventType
+from filterClass import filterClass
 
 class UserModel(EventClass):
     def __init__(self):
         self.data_streams: dict = {}
-        self.filters: dict = {'filter': [], 'order': [], 'frequency': []}
+        self.filters: list = []
         self.lock: Lock = Lock()
         super().__init__()
 
@@ -31,11 +32,22 @@ class UserModel(EventClass):
         self.notify(None, EventType.STREAMUPDATE)
         if stream.stream_type in [StreamType.SOFTWARE, StreamType.DEVICE, StreamType.FILTER]:
             self.notify(None, EventType.DEVICELISTUPDATE)
-    #add filter
-    def add_filter(self, filter_type, order, frequency) -> None:
-        self.filters['filter'].append(filter_type)
-        self.filters['order'].append(order)
-        self.filters['frequency'].append(frequency)
+            
+    #add filter   
+    def add_filter(self, name, filter_type, order, frequency) -> None:
+        #WILL CAUSE ISSUE IF FILTERS SHARE THE SAME NAME
+        if filterClass(name) not in self.filters:
+            
+            #if it does not exist in the filter list, add it to the list
+            print('created a filter')
+            self.filters.append(filterClass(name))
+        for filter_name in self.filters:
+            if filter_name.filter_name == name:
+                print('added onto a filter')
+                #sweep through the list and add filters
+                filter_name.add_filters('filter', filter_type)
+                filter_name.add_filters('order', order)
+                filter_name.add_filters('frequency', frequency)
 
     def remove_filter(self, position) -> None:
         del self.filters['filter'][position]

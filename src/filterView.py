@@ -25,8 +25,6 @@ class filterView(EventClass):
         self.create_dropdown()
 
         #create a filter add frame
-        #NOTE
-        #will need to create a clear button and a create filter stream button
         self.filter_mod_frame = tk.Frame(frame, borderwidth=1, relief="solid")
         self.filter_mod_frame.pack(side="top", fill="both", expand=True)
 
@@ -38,6 +36,14 @@ class filterView(EventClass):
 
         #create filter stream button
         self.create_filter_stream_button = tk.Button(self.filter_mod_frame, text="Create Filter Stream", command=self.create_filter_stream, width=15, bg='yellow').pack(pady=10, padx=10, anchor="e", side = LEFT)
+
+        #create a filter naming label
+        self.filter_name_label = tk.Label(self.filter_mod_frame, text="Filter Stream Name:", anchor='e').pack(pady=10, padx=(10, 0), anchor="e", side=LEFT)
+        
+        #create filter naming entry
+        self.filter_name_entry = tk.Entry(self.filter_mod_frame, width = 20)
+        self.filter_name_entry.pack(pady=10, padx=2, anchor = "e", side = LEFT)
+        
         #add a frame with all of the filters
         self.filter_list_frame = tk.Frame(frame, borderwidth=1, relief="solid")
         self.filter_list_frame.pack(side="top", fill="both", expand=True)
@@ -53,7 +59,6 @@ class filterView(EventClass):
         self.update_filter_frame()
         
     def update_filter_frame(self):
-        print('updating filter frame')
         for child in self.filter_list_frame.winfo_children():
             child.destroy()
         self.filter_list_canvas = tk.Canvas(self.filter_list_frame)
@@ -108,12 +113,6 @@ class filterView(EventClass):
             entry3 = tk.Entry(self.scrollable_frame, width=7, textvariable = self.filter_boxes['frequency'][i])
             entry3.grid(row=i, column=5, padx=5, pady=5, sticky="w")
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
-
-    def set_StringVar(self, StringVar, Entry):
-        print(StringVar.get())
-        StringVar.set(Entry.get())
-        print('I am here')
-        print(StringVar.get())
         
     def create_dropdown(self):
         #reference stream using dropdown
@@ -152,10 +151,11 @@ class filterView(EventClass):
             frequency_hold = self.filter_boxes['frequency'][i].get()
             frequency_hold = frequency_hold.split(',')
             frequency_hold_float = [float(item) for item in frequency_hold]
-            self.view_model.add_filter(filter_hold.lower(), order_hold, frequency_hold_float)
-        self.view_model.create_filter_stream(self.reference_stream.get())
+            self.view_model.add_filter(self.filter_name_entry.get(), filter_hold.lower(), order_hold, frequency_hold_float)
+        self.view_model.create_filter_stream(self.filter_name_entry.get(), self.reference_stream.get())
         streams = self.view_model.get_streams()
-        print(streams)
+        self.filter_name_entry.delete(0, tk.END)
+        self.clear_filter_box()
 
             
             

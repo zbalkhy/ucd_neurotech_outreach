@@ -9,8 +9,8 @@ class filterViewModel(object):
         self.user_model: UserModel = user_model
 
     #add new filter to the user model
-    def add_filter(self, filter_type, order, frequency) -> None:
-        self.user_model.add_filter(filter_type, order, frequency)
+    def add_filter(self, name, filter_type, order, frequency) -> None:
+        self.user_model.add_filter(name, filter_type, order, frequency)
 
     #remove filter based on the position
     def remove_filter(self, position) -> None:
@@ -22,7 +22,7 @@ class filterViewModel(object):
     def get_streams(self):
         return self.user_model.get_streams()
     #create filter stream
-    def create_filter_stream(self, reference_stream) -> None:
-        filtered_stream = FilteredStream(str(reference_stream), "filtered_stream_test", StreamType.FILTER, self.user_model, self.user_model.filters)
+    def create_filter_stream(self, name, reference_stream) -> None:
+        filtered_stream = FilteredStream(str(reference_stream), name, StreamType.FILTER, self.user_model, self.user_model.filters)
         self.user_model.add_stream(filtered_stream)
         
