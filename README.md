@@ -1,3 +1,3 @@
 # ucd_neurotech_outreach
 Detailed installation and usage instructions to come
-<img width="562" height="449" alt="Screenshot 2025-07-21 at 8 51 13 PM" src="https://github.com/user-attachments/assets/675c0a3b-74bb-4d7b-b2d7-98b43748bbd9" />
+<img width="885" height="619" alt="Screenshot 2025-09-09 at 12 51 56 PM" src="https://github.com/user-attachments/assets/aa7a69b7-d699-402e-80b4-89cca5b6101e" />

@@ -4,7 +4,7 @@ from threading import Thread, Lock
 from eegDeviceViewModel import EEGDeviceViewModel
 from eventClass import *
 
-class EEGDeviceFrame(EventClass):
+class EEGDeviceView(EventClass):
     def __init__(self, frame: tk.Frame, view_model: EEGDeviceViewModel):
         super().__init__()
 
@@ -53,6 +53,8 @@ class EEGDeviceFrame(EventClass):
         return
     
     def pack_device_list(self):
+
+        # clear old device list first
         for child in self.device_list_frame.winfo_children():
             child.destroy()
 
@@ -71,6 +73,7 @@ class EEGDeviceFrame(EventClass):
             )
         )
 
+        # 
         self.device_list_canvas.create_window((0, 0), 
                                               window=self.scrollable_frame, 
                                               anchor="nw")
@@ -80,20 +83,17 @@ class EEGDeviceFrame(EventClass):
         self.device_list_canvas.pack(side="left", fill="both", expand=True)
         self.device_list_scrollbar.pack(side="right", fill="y")
 
-        # create a two column grid to hold 
+        # create a two column grid to hold everything
         for i, device in enumerate(self.view_model.get_device_names()):
             print(self.view_model.get_device_names())
             label = tk.Label(self.scrollable_frame, text=device, anchor="w")
             label.grid(row=i, column=0, padx=5, pady=5, sticky="w")
             
             button = tk.Button(self.scrollable_frame, text="Start Stream", 
-                               command=lambda x=device: self.start_device_stream(x))
+                               command=lambda x=device: self.view_model.start_device_stream(x))
             button.grid(row=i, column=1, padx=5, pady=5, sticky="e")
         
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
-
-    def start_device_stream(self, device_name: str) -> None:
-        self.view_model.start_device_stream(device_name)
 
     def add_device(self) -> None:
         # potentially need to type check the port field to make sure we actually have an int

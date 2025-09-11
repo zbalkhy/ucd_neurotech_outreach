@@ -3,7 +3,7 @@ from plotter import Plotter
 from floatTheOrbGame import FloatTheOrb
 from common import create_grid
 from userModel import UserModel
-from eegDeviceFrame import EEGDeviceFrame
+from eegDeviceView import EEGDeviceView
 from eegDeviceViewModel import EEGDeviceViewModel
 from dataStream import DataStream, StreamType
 from softwareStream import SoftwareStream
@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     # create device connector
     device_frame_viewmodel = EEGDeviceViewModel(user_model)
-    device_connector = EEGDeviceFrame(frames[0][0], device_frame_viewmodel)
+    device_connector = EEGDeviceView(frames[0][0], device_frame_viewmodel)
 
     # create plotter
     plotter = Plotter(frames[0][1], user_model)

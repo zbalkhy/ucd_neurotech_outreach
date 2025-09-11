@@ -19,11 +19,6 @@ class Plotter():
         # create a tk.DrawingArea.
         self.canvas = FigureCanvasTkAgg(self.fig, master=frame)  
         self.canvas.draw()
-
-        # disable toolbar for now since we likeley wont 
-        # pack_toolbar=False will make it easier to use a layout manager later on.
-        #self.toolbar = NavigationToolbar2Tk(self.canvas, root, pack_toolbar=False)
-        #self.toolbar.update()  
         
         self.canvas.mpl_connect(
             "key_press_event", lambda event: print(f"you pressed {event.key}"))
@@ -31,12 +26,7 @@ class Plotter():
 
         self.button_pause = tk.Button(master=frame, text="Play/Pause", command=self.play_pause)
         
-        # Packing order is important. Widgets are processed sequentially and if there
-        # is no space left, because the window is too small, they are not displayed.
-        # The canvas is rather flexible in its size, so we pack it last which makes
-        # sure the UI controls are displayed as long as possible.
         self.button_pause.pack(side=tk.BOTTOM)
-        #self.toolbar.pack(side=tk.BOTTOM, fill=tk.X)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         
         self.plot()
