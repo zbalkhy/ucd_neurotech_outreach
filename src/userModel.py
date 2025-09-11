@@ -6,7 +6,7 @@ from filterClass import filterClass
 class UserModel(EventClass):
     def __init__(self):
         self.data_streams: dict = {}
-        self.filters: list = []
+        self.filters: dict = {}
         self.lock: Lock = Lock()
         super().__init__()
 
@@ -34,26 +34,25 @@ class UserModel(EventClass):
             self.notify(None, EventType.DEVICELISTUPDATE)
             
     #add filter   
-    def add_filter(self, name, filter_type, order, frequency) -> None:
+    def add_filter(self, name: str, filter_type: str, order: float, frequency: float) -> None:
         #WILL CAUSE ISSUE IF FILTERS SHARE THE SAME NAME
         if filterClass(name) not in self.filters:
-            
-            #if it does not exist in the filter list, add it to the list
+            #if it does not exist in the filter list, add it to the dictionary
             print('created a filter')
-            self.filters.append(filterClass(name))
-        for filter_name in self.filters:
-            if filter_name.filter_name == name:
-                print('added onto a filter')
-                #sweep through the list and add filters
-                filter_name.add_filters('filter', filter_type)
-                filter_name.add_filters('order', order)
-                filter_name.add_filters('frequency', frequency)
+            self.filters[name] = filterClass(name)
+        self.filters[name].add_filters('filter', filter_type)
+        self.filters[name].add_filters('order', order)
+        self.filters[name].add_filters('frequency', frequency)
 
-    def remove_filter(self, position) -> None:
-        del self.filters['filter'][position]
-        del self.filters['order'][position]
-        del self.filters['frequency'][position]
 
+    def remove_filter(self, name: str) -> None:
+        del self.filters[name]
+
+    def get_filter(self, name: str) -> None:
+        if name in self.filters.keys():
+            return self.filters[name]
+        else:
+            return None
 
     
 

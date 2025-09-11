@@ -17,8 +17,10 @@ class EEGDeviceViewModel(object):
             stream = self.user_model.get_stream(device_name)
             if stream.is_alive():
                 stream.stop()
+                print('stopping stream')
             else:
                 stream.start()
+                print('starting stream')
 
     #temporary fix to have the streams put in the devices category
     def get_devices(self) -> list[DataStream]:
@@ -26,7 +28,6 @@ class EEGDeviceViewModel(object):
         for stream in self.user_model.get_streams():
             if stream.stream_type in [StreamType.DEVICE, StreamType.SOFTWARE, StreamType.FILTER]:
                 devices.append(stream)
-        print(devices)
         return devices
 
     def get_device_names(self) -> list[str]:

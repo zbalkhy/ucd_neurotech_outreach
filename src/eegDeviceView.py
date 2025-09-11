@@ -85,7 +85,6 @@ class EEGDeviceView(EventClass):
 
         # create a two column grid to hold everything
         for i, device in enumerate(self.view_model.get_device_names()):
-            print(self.view_model.get_device_names())
             label = tk.Label(self.scrollable_frame, text=device, anchor="w")
             label.grid(row=i, column=0, padx=5, pady=5, sticky="w")
             

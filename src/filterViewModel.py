@@ -22,7 +22,10 @@ class filterViewModel(object):
     def get_streams(self):
         return self.user_model.get_streams()
     #create filter stream
-    def create_filter_stream(self, name, reference_stream) -> None:
-        filtered_stream = FilteredStream(str(reference_stream), name, StreamType.FILTER, self.user_model, self.user_model.filters)
+    def create_filter_stream(self, name: str, reference_stream: str) -> None:
+        #currently the filter and the filtered stream will be named the same thing
+        filter_obj = self.user_model.get_filter(name)
+        reference_stream = self.user_model.get_stream(reference_stream)
+        filtered_stream = FilteredStream(reference_stream, filter_obj, name, StreamType.FILTER)
         self.user_model.add_stream(filtered_stream)
         
