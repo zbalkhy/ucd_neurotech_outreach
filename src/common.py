@@ -5,6 +5,7 @@ RETRY_SEC = 1.5
 
 # user context
 QUEUE_LENGTH = 100
+SAMPLING_FREQ = 250
 
 # float the orb game
 BLACK = (0,0,0)

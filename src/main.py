@@ -7,8 +7,11 @@ from eegDeviceView import EEGDeviceView
 from eegDeviceViewModel import EEGDeviceViewModel
 from dataStream import DataStream, StreamType
 from softwareStream import SoftwareStream
+from filteredSoftwareStream import FilteredStream
+from filterViewModel import filterViewModel
+from filterView import filterView
 
-frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Experiment"]]
+frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Filters"]]
 
 def on_closing():
     # send shutdown event to each stream thread
@@ -28,7 +31,16 @@ if __name__ == "__main__":
     user_model = UserModel()
     data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
     user_model.add_stream(data_stream)
+    
+    #filtering = filterViewModel(user_model)
+    #filtering.add_filter('lowpass', 4, [30])
+    #filtering.add_filter('highpass', 4, [10])
+    #filtering.add_filter('bandstop', 4, [20, 25])
+    #filtering.remove_filter(1)
 
+    #filtering.create_filter_stream("software_stream_test")
+
+    print("after creating filter stream")
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')
@@ -42,6 +54,10 @@ if __name__ == "__main__":
 
     # create plotter
     plotter = Plotter(frames[0][1], user_model)
+
+    #create filter frame
+    filter_frame_viewmodel = filterViewModel(user_model)
+    filter_module = filterView(frames[1][1], filter_frame_viewmodel)
 
     # create game
     #float_the_orb = FloatTheOrb(frames[1][0], user_context, user_context_lock)    

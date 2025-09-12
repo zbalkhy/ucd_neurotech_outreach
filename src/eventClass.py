@@ -4,6 +4,7 @@ from enum import Enum
 
 class EventType(Enum):
     DEVICELISTUPDATE = 1
+    STREAMUPDATE = 2
 
 
 """ This class implements an event sending / receiving mechanism. 
