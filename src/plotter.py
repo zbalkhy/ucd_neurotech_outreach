@@ -49,6 +49,7 @@ class Plotter():
             if stream.stream_type == StreamType.FILTER:
                 data = list(stream.get_stream())
                 break
+        
         # instead of ax.hold(False)
         self.fig.clear()
 

@@ -4,13 +4,13 @@ import numpy as np
 from threading import Thread, Lock
 from filterViewModel import filterViewModel
 from eventClass import *
+
 class filterView(EventClass):
     def __init__(self, frame: tk.Frame, view_model: filterViewModel):
         super().__init__()
 
          # set class variables
         self.frame: tk.Frame = frame
-        self.data_thread: Thread = None
         self.view_model = view_model
         self.filter_count = 0
         self.filter_boxes = {'filter': [], 'order': [], 'frequency': []}

@@ -44,7 +44,6 @@ class UserModel(EventClass):
         self.filters[name].add_filters('order', order)
         self.filters[name].add_filters('frequency', frequency)
 
-
     def remove_filter(self, name: str) -> None:
         del self.filters[name]
 

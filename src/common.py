@@ -15,6 +15,13 @@ SCREEN_HEIGHT = 700
 GRAVITY = 0.05
 PYGAME_WINDOW_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
 
+# eeg bands
+DELTA = [0.5,4]
+THETA = [4,8]
+ALPHA = [8,12]
+BETA = [13-30]
+GAMMA = [30, 45]
+
 def create_grid(root, rows: int, cols: int, grid_names: list[list[str]]) -> list[list[Frame]]:
     # Make the grid expandable
     for i in range(rows):
