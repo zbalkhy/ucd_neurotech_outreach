@@ -2,11 +2,13 @@ from dataStream import *
 from threading import Lock
 from eventClass import EventClass, EventType
 from filterClass import filterClass
+from numpy import ndarray
 
 class UserModel(EventClass):
     def __init__(self):
         self.data_streams: dict = {}
         self.filters: dict = {}
+        self.data_sets: dict[str, ndarray] = {}
         self.lock: Lock = Lock()
         super().__init__()
 
@@ -51,6 +53,19 @@ class UserModel(EventClass):
     def get_filter(self, name: str) -> None:
         if name in self.filters.keys():
             return self.filters[name]
+        else:
+            return None
+    
+    def remove_dataset(self, name: str) -> None:
+        del self.data_sets[name]
+
+    def add_dataset(self, name: str, data_set: ndarray) -> None:
+        self.data_sets[name] = data_set
+        self.notify(None, EventType.DATASETUPDATE)
+        
+    def get_dataset(self, name: str) -> ndarray:
+        if name in self.data_sets.keys():
+            return self.data_sets[name]
         else:
             return None
 
