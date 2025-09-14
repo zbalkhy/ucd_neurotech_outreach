@@ -22,6 +22,7 @@ class FeatureClass():
         psd = abs(rfft(data)) ** 2
         return psd, freqs
     
+    @staticmethod
     def apply(self, data: any, fs: int) -> ndarray:
         if self.type != FeatureType.CUSTOM:
             psd, freqs = self.get_fft(data, fs)

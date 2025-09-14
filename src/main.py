@@ -10,8 +10,11 @@ from softwareStream import SoftwareStream
 from filteredSoftwareStream import FilteredStream
 from filterViewModel import filterViewModel
 from filterView import filterView
+from featureView import FeatureView
+from featureViewModel import FeatureViewModel
 
-frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Filters"]]
+frame_names = [[f"Device Connector", f"Classifier", f"Visualizer"],
+               [f"Float The Orb", f"Filters", f"Feature Viewer"]]
 
 def on_closing():
     # send shutdown event to each stream thread
@@ -44,7 +47,7 @@ if __name__ == "__main__":
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')
-    frames = create_grid(root,2,2, frame_names)
+    frames = create_grid(root,2,3, frame_names)
 
     root.protocol("WM_DELETE_WINDOW", on_closing)
 
@@ -53,7 +56,11 @@ if __name__ == "__main__":
     device_connector = EEGDeviceView(frames[0][0], device_frame_viewmodel)
 
     # create plotter
-    plotter = Plotter(frames[0][1], user_model)
+    plotter = Plotter(frames[0][2], user_model)
+
+    # create feature viewer
+    feature_view_model = FeatureViewModel(user_model)
+    feature_view = FeatureView(frames[1][2], feature_view_model)
 
     #create filter frame
     filter_frame_viewmodel = filterViewModel(user_model)

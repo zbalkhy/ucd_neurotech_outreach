@@ -2,6 +2,7 @@ from eventClass import *
 from featureViewModel import FeatureViewModel
 
 import tkinter as tk
+from tkinter import ttk
 import numpy as np
 
 # Implement the default Matplotlib key bindings.
@@ -19,10 +20,17 @@ class FeatureView(EventClass):
         self.view_model: FeatureViewModel = view_model
         self.subscribe_to_subject(self.view_model.user_model)
 
-        # set up and pack toggle frame
-        self.toggle_frame: tk.Frame = tk.Frame(self.frame)
+        # set up and pack selection frame
+        self.selection_frame: tk.Frame = tk.Frame(self.frame)
+        self.selection_frame.pack(side="left", fill="both", expand=True)
         
-        # feature 
+        # Dropdown menus for the datasets  
+        self.dataset_dropdowns: list[ttk.Combobox] = []
+        self.add_dataset_dropdown()
+        self.add_dataset_dropdown()
+
+        # Dropdown for features
+        
 
         # set up and pack plotter frame
         self.plotter_frame: tk.Frame = tk.Frame(self.frame)
@@ -36,4 +44,24 @@ class FeatureView(EventClass):
             "key_press_event", lambda event: print(f"you pressed {event.key}"))
         self.plot_canvas.mpl_connect("key_press_event", key_press_handler)
         self.plot_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        self.plotter_frame.pack(side="top", fill="both", expand=True)
+        self.plotter_frame.pack(side="right", fill="both", expand=True)
+    
+    def add_dataset_dropdown(self) -> None:
+        datasets = ["data1","data2", "data3"]#self.view_model.get_dataset_names()
+        dropdown = ttk.Combobox(self.selection_frame, values=datasets, state="readonly")
+        dropdown.current(0)
+        dropdown.bind("<<ComboboxSelected>>", self.update_plot)
+        dropdown.pack(pady=10)
+        
+        self.dataset_dropdowns.append(dropdown)
+
+    def update_plot(self, event: tk.Event) -> None:
+        event.widget.selection_clear()
+        
+
+    def on_notify(self, eventData: any, event: EventType):
+        if event == EventType.DATASETUPDATE:
+            # update all the dataset dropdowns when a new dataset comes in
+            for opt, dropdown in self.dataset_dropdowns:
+                dropdown.set_menu(opt, *self.view_model.get_dataset_names())
+        
