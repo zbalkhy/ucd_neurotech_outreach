@@ -27,7 +27,6 @@ class FilteredStream(DataStream):
         try:
             while not self.shutdown_event.is_set():
                 held_data = np.array(list(self.reference_stream.get_stream()))
-                print(held_data)
                 processed_data = self.filter_obj.filter_data(held_data)
                 self.data = list(processed_data)
                 sleep(1/SAMPLING_FREQ)
