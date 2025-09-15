@@ -3,12 +3,17 @@ from threading import Lock
 from eventClass import EventClass, EventType
 from filterClass import filterClass
 from numpy import ndarray
+import pandas as pd
 
 class UserModel(EventClass):
     def __init__(self):
         self.data_streams: dict = {}
         self.filters: dict = {}
         self.data_sets: dict[str, ndarray] = {}
+        self.feature_keys: dict = {}
+
+        #need to make this update whenever a new data_set is made
+        self.features = pd.DataFrame()
         self.lock: Lock = Lock()
         super().__init__()
 
@@ -66,6 +71,19 @@ class UserModel(EventClass):
     def get_dataset(self, name: str) -> ndarray:
         if name in self.data_sets.keys():
             return self.data_sets[name]
+        else:
+            return None
+
+    def add_feature(self, name: str, feature_data: pd.DataFrame(), feature_info: dict) -> None:
+        self.feature_keys[name] = feature_info
+        if 'dataset_label' not in self.features.columns:
+            self.features['dataset_label'] = feature_data['dataset_label']
+        self.features[name] = feature_data['feature']
+        self.notify(None, EventType.FEATUREUPDATE)
+
+    def get_feature(self, name: str) -> ndarray:
+        if name in self.features.columns:
+            return self.features[name]
         else:
             return None
 
