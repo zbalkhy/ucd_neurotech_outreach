@@ -55,7 +55,7 @@ class FeatureClass():
                     idx = logical_and(freqs >= GAMMA[0], freqs <= GAMMA[1])
                 case _:
                     idx = list(range(freqs.size))
-            return np.squeeze(psd[np.where(idx),:]).mean(axis=0)
+            return psd[np.where(idx)].mean(axis=0)
         else:
             try:
                 return self.custom_function(data,fs)

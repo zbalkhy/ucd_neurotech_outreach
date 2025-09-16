@@ -74,34 +74,29 @@ class FeatureView(EventClass):
         self.dataset_dropdowns.append(dropdown)
 
     def update_plot(self, event: tk.Event) -> None:
+        # clear event and figure
         if event:
             event.widget.selection_clear()
         self.fig.clear()
-        feature = self.view_model.get_feature(self.cur_feature.get())
-        datasets = [self.view_model.get_dataset(dataset.get()) for dataset in self.cur_datasets]
-
-        feature_datasets = []
-        for dataset in datasets:
-            feature_dataset = []
-            for i in range(dataset.shape[2]):
-                trial = dataset[:,:,i]
-                trial_feature = feature.apply(trial, 128)
-                feature_dataset.append(trial_feature)
-            feature_datasets.append(np.array(feature_dataset))
         
+        # calculate feature on dataset
+        feature_datasets = self.view_model.calc_feature_datasets(
+            self.cur_feature.get(), [dataset.get() for dataset in self.cur_datasets])
+    
         # create an axis
         ax = self.fig.add_subplot(111)
         ax.set_title(f"Feature:{self.cur_feature.get()}")
         ax.set_ylabel("frequency")
         ax.set_xlabel("power")
+        
         # plot data
-        ax.hist(feature_datasets, bins=30, stacked=True, label=[ds.get() for ds in self.cur_datasets])
+        ax.hist(feature_datasets, bins=30, stacked=True, 
+                label=[ds.get() for ds in self.cur_datasets])
         ax.legend()
+        ax.set_xlim([0,1e4])
         # refresh canvas
         self.plot_canvas.draw()
         self.plot_canvas.flush_events()
-
-
 
     def on_notify(self, eventData: any, event: EventType):
         if event == EventType.DATASETUPDATE:

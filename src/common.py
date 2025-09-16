@@ -21,7 +21,7 @@ PYGAME_WINDOW_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
 DELTA = [0.5,4]
 THETA = [4,8]
 ALPHA = [8,12]
-BETA = [13-30]
+BETA = [13,30]
 GAMMA = [30, 45]
 
 def split_dataset(dataset: pd.DataFrame, 
