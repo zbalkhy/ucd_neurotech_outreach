@@ -16,6 +16,18 @@ class Plotter():
         self.frame = frame
         self.fig = Figure(figsize=(6, 8), dpi=100)  # taller for multiple plots
         self.continue_plotting = True
+        self.simulated = True
+
+        # --- Get available streams ---
+        if self.simulated:
+            # Simulated 4 "streams" with different frequencies
+            self.streams = ["SimStream1", "SimStream2", "SimStream3", "SimStream4"]
+        else:
+            self.streams = [s for s in self.user_model.get_streams() if s.stream_type == StreamType.FILTER]
+
+        self.current_stream_index = 0
+        self.stream_names = [f"Stream {i+1}" for i in range(len(self.streams))]
+
 
         # embed Matplotlib in Tk
         self.canvas = FigureCanvasTkAgg(self.fig, master=frame)
@@ -31,8 +43,13 @@ class Plotter():
         self.button_pause = tk.Button(controls, text="Play/Pause", command=self.play_pause)
         self.button_pause.pack(side=tk.BOTTOM)
 
+        
+        self.selected_stream = tk.StringVar(value=self.stream_names[0])
+        self.stream_menu = tk.OptionMenu(controls, self.selected_stream, *self.stream_names, command=self.change_stream)
+        self.stream_menu.pack(side=tk.LEFT, padx=5, pady=5)
+
         self.toggle_amplitude = tk.Button(controls, text="Hide Amplitude", command=self.toggle_amp)
-        self.toggle_amplitude.pack(side=tk.LEFT)
+        self.toggle_amplitude.pack(side=tk.LEFT, padx=5, pady = 5)
 
         self.amp_settings = tk.Button(controls, text="Amplitude Settings", command=lambda: self.open_settings("amplitude"))
         self.amp_settings.pack(side=tk.LEFT)
@@ -51,6 +68,7 @@ class Plotter():
 
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
+        
         # EEG frequency bands
         self.bands = {
             "delta (0.5–4 Hz)": (0.5, 4),
@@ -67,7 +85,7 @@ class Plotter():
 
         # Label settings (user editable)
         self.labels = {
-            "amplitude": {"title": "Amplitude vs Time", "xlabel": "Samples", "ylabel": "Amplitude (µV)"},
+            "amplitude": {"title": "Amplitude vs Time", "xlabel": "Time (s)", "ylabel": "Amplitude (µV)"},
             "power": {"title": "Power Spectrum", "xlabel": "Frequency (Hz)", "ylabel": "Power"},
             "bands": {"title": "Band Power", "xlabel": "Band", "ylabel": "Power"},
         }
@@ -80,6 +98,11 @@ class Plotter():
             self.plot()
         else:
             self.continue_plotting = not self.continue_plotting
+    
+    def change_stream(self, selection):
+        """Switch which stream is plotted."""
+        self.current_stream_index = self.stream_names.index(selection)
+        self.plot() #force redraw
 
     def toggle_amp(self):
         self.show_amplitude = not self.show_amplitude
@@ -118,6 +141,7 @@ class Plotter():
             self.labels[graph_type]["xlabel"] = xlabel_entry.get()
             self.labels[graph_type]["ylabel"] = ylabel_entry.get()
             popup.destroy()
+            self.plot
 
         tk.Button(popup, text="Apply", command=apply_settings).grid(row=3, column=0, columnspan=2)
 
@@ -125,11 +149,22 @@ class Plotter():
         """Plot amplitude vs time, power spectrum, and band powers."""
 
         # pull data from user_model streams
-        data = []
-        for stream in self.user_model.get_streams():
-            if stream.stream_type == StreamType.FILTER:
-                data = list(stream.get_stream())
-                break
+        if self.simulated:
+        # generate fake data
+            fs = 250
+            t = np.linspace(0, 2, 2*fs, endpoint=False)
+            if self.current_stream_index == 0:
+                data = 50*np.sin(2*np.pi*10*t) + 10*np.random.randn(len(t))
+            elif self.current_stream_index == 1:
+                data = 40*np.sin(2*np.pi*6*t) + 15*np.random.randn(len(t))
+            elif self.current_stream_index == 2:
+                data = 30*np.sin(2*np.pi*20*t) + 10*np.random.randn(len(t))
+            else:
+                data = 20*np.sin(2*np.pi*30*t) + 10*np.random.randn(len(t))
+        else:
+            data = []
+            if self.streams:
+                data = list(self.streams[self.current_stream_index].get_stream())
 
         self.fig.clear()  # clear figure before redrawing
 
@@ -143,7 +178,9 @@ class Plotter():
             if self.show_amplitude:
                 ax1 = self.fig.add_subplot(n_subplots, 1, subplot_index)
                 subplot_index += 1
-                ax1.plot(data, color="blue")
+                time_axis = np.arange(len(data)) / fs
+                ax1.plot(time_axis, data, color="blue")
+                
                 ax1.set_title(self.labels["amplitude"]["title"])
                 ax1.set_ylabel(self.labels["amplitude"]["ylabel"])
                 ax1.set_xlabel(self.labels["amplitude"]["xlabel"])
@@ -183,11 +220,12 @@ class Plotter():
             ax.set_axis_off()
 
         # refresh canvas
+        self.fig.tight_layout()
         self.canvas.draw()
         self.canvas.flush_events()
 
         # schedule next update
         if self.continue_plotting:
-            self.frame.after(1, self.plot)  
+            self.frame.after(10, self.plot)  
 
 
