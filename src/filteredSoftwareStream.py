@@ -27,18 +27,8 @@ class FilteredStream(DataStream):
         try:
             while not self.shutdown_event.is_set():
                 held_data = np.array(list(self.reference_stream.get_stream()))
-                for i, x in enumerate(filter_dict['filter']):
-                    #loop through each filter
-                    filter_type = filter_dict['filter'][i]
-                    cutoff_freq = np.array(filter_dict['frequency'][i])
-                    filter_order = filter_dict['order'][i]
-                    #normalize the cutoff frequency to the sampling rate
-                    normalized_cutoff = cutoff_freq / (.5 * SAMPLING_FREQ)
-                    #filter the signal
-                    b, a = signal.butter(filter_order, normalized_cutoff, btype=filter_type, analog=False)
-                    held_data = signal.lfilter(b, a, held_data)
-                #update the data
-                self.data = list(held_data)
+                processed_data = self.filter_obj.filter_data(held_data)
+                self.data = list(processed_data)
                 sleep(1/SAMPLING_FREQ)
         except:
             pass
