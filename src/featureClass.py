@@ -3,6 +3,7 @@ from numpy import abs, logical_and, ndarray, dtype
 from numpy.fft import rfft, rfftfreq
 from common import *
 from typing import Tuple
+from types import FunctionType
 
 class FeatureType(Enum):
     DELTA = 1
@@ -13,16 +14,31 @@ class FeatureType(Enum):
     CUSTOM = 6
 
 class FeatureClass():
-    def __init__(self, feature_type:FeatureType):
+    def __init__(self, feature_type:FeatureType, custom_name: str=None, custom_function: FunctionType=None):
         self.type = feature_type
-        return
+        self.custom_name = custom_name
+        self.custom_function = custom_function
 
+    def __str__(self):
+        match self.type:
+            case FeatureType.DELTA:
+                return "Delta Power"
+            case FeatureType.THETA:
+                return "Theta Power"
+            case FeatureType.ALPHA:
+                return "Alpha Power"
+            case FeatureType.BETA:
+                return "Beta Power"
+            case FeatureType.GAMMA:
+                return "Gamma Power"
+            case _:
+                return self.custom_name
+    
     def get_fft(self, data: any, fs: int) -> Tuple[ndarray, ndarray]:
         freqs = rfftfreq(len(data), 1 / fs)
         psd = abs(rfft(data)) ** 2
         return psd, freqs
     
-    @staticmethod
     def apply(self, data: any, fs: int) -> ndarray:
         if self.type != FeatureType.CUSTOM:
             psd, freqs = self.get_fft(data, fs)
@@ -40,7 +56,13 @@ class FeatureClass():
                 case _:
                     idx = list(range(freqs.size))
             return psd[idx].mean(axis=0)
-        
+        else:
+            try:
+                return self.custom_function(data,fs)
+            except:
+                # need to have some way to bubble up that the function is not valid
+                pass
+                
 
             
 

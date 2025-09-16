@@ -2,6 +2,7 @@ from dataStream import *
 from threading import Lock
 from eventClass import EventClass, EventType
 from filterClass import filterClass
+from featureClass import FeatureClass
 from numpy import ndarray
 
 class UserModel(EventClass):
@@ -9,6 +10,7 @@ class UserModel(EventClass):
         self.data_streams: dict = {}
         self.filters: dict = {}
         self.data_sets: dict[str, ndarray] = {}
+        self.features: dict[str, FeatureClass] = {}
         self.lock: Lock = Lock()
         super().__init__()
 
@@ -70,6 +72,12 @@ class UserModel(EventClass):
     
     def get_datasets(self) -> dict[str, ndarray]:
         return self.data_sets
+    
+    def get_features(self) -> dict[str, FeatureClass]:
+        return self.features
+    
+    def add_feature(self, feature: FeatureClass) -> None:
+        self.features[str(feature)] = feature
 
     
 

@@ -30,7 +30,7 @@ class FeatureView(EventClass):
         self.add_dataset_dropdown()
 
         # Dropdown for features
-        
+        self.add_feature_dropdown()
 
         # set up and pack plotter frame
         self.plotter_frame: tk.Frame = tk.Frame(self.frame)
@@ -47,7 +47,7 @@ class FeatureView(EventClass):
         self.plotter_frame.pack(side="right", fill="both", expand=True)
     
     def add_dataset_dropdown(self) -> None:
-        datasets = ["data1","data2", "data3"]#self.view_model.get_dataset_names()
+        datasets = self.view_model.get_dataset_names()
         dropdown = ttk.Combobox(self.selection_frame, values=datasets, state="readonly")
         dropdown.current(0)
         dropdown.bind("<<ComboboxSelected>>", self.update_plot)
@@ -55,8 +55,18 @@ class FeatureView(EventClass):
         
         self.dataset_dropdowns.append(dropdown)
 
+    def add_feature_dropdown(self) -> None:
+        features = self.view_model.get_feature_names()
+        dropdown = ttk.Combobox(self.selection_frame, values=features, state="readonly")
+        dropdown.current(0)
+        dropdown.bind("<<ComboboxSelected>>", self.update_plot)
+        dropdown.pack(pady=10)
+    
+        self.dataset_dropdowns.append(dropdown)
+
     def update_plot(self, event: tk.Event) -> None:
         event.widget.selection_clear()
+
         
 
     def on_notify(self, eventData: any, event: EventType):
