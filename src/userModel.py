@@ -68,6 +68,8 @@ class UserModel(EventClass):
             return self.data_sets[name]
         else:
             return None
+    def get_datasets(self) -> dict[str, ndarray]:
+        return self.data_sets
 
     
 

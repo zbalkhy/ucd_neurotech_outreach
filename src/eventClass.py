@@ -6,6 +6,8 @@ class EventType(Enum):
     DEVICELISTUPDATE = 1
     STREAMUPDATE = 2
     DATASETUPDATE = 3
+    FILTERUPDATE = 4
+    FEATUREUPDATE = 5
 
 
 """ This class implements an event sending / receiving mechanism. 

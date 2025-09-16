@@ -10,6 +10,8 @@ from softwareStream import SoftwareStream
 from filteredSoftwareStream import FilteredStream
 from filterViewModel import filterViewModel
 from filterView import filterView
+from dataCollectionViewModel import dataCollectionViewModel
+from dataCollectionView import dataCollectionView
 
 frame_names = [[f"Device Connector", f"Visualizer"],[f"Float The Orb", f"Filters"]]
 
@@ -40,7 +42,6 @@ if __name__ == "__main__":
 
     #filtering.create_filter_stream("software_stream_test")
 
-    print("after creating filter stream")
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')
@@ -58,6 +59,10 @@ if __name__ == "__main__":
     #create filter frame
     filter_frame_viewmodel = filterViewModel(user_model)
     filter_module = filterView(frames[1][1], filter_frame_viewmodel)
+
+    #create data collection frame
+    dataCollection_frame_viewmodel = dataCollectionViewModel(user_model)
+    dataCollection_module = dataCollectionView(frames[1][0], dataCollection_frame_viewmodel)
 
     # create game
     #float_the_orb = FloatTheOrb(frames[1][0], user_context, user_context_lock)    

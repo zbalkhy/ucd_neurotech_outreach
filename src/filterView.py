@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import *
 import numpy as np
-from threading import Thread, Lock
 from filterViewModel import filterViewModel
 from eventClass import *
 class filterView(EventClass):
@@ -10,7 +9,6 @@ class filterView(EventClass):
 
          # set class variables
         self.frame: tk.Frame = frame
-        self.data_thread: Thread = None
         self.view_model = view_model
         self.filter_count = 0
         self.filter_boxes = {'filter': [], 'order': [], 'frequency': []}
