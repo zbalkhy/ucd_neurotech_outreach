@@ -14,7 +14,9 @@ class FeatureType(Enum):
     CUSTOM = 6
 
 class FeatureClass():
-    def __init__(self, feature_type:FeatureType, custom_name: str=None, custom_function: FunctionType=None):
+    def __init__(self, feature_type:FeatureType, 
+                 custom_name: str=None, 
+                 custom_function: FunctionType=None):
         self.type = feature_type
         self.custom_name = custom_name
         self.custom_function = custom_function

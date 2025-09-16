@@ -24,11 +24,13 @@ class FeatureViewModel(object):
     def get_feature(self, name: str) -> FeatureClass:
         return self.user_model.get_features()[name]
     
-    def calc_feature_datasets(self, feature_name: str, dataset_names: list[str]) -> list[np.ndarray]:
-        # calculate feature on dataset
+    def calc_feature_datasets(self, feature_name: str, 
+                              dataset_names: list[str]) -> list[np.ndarray]:
+        # get feature and dataset
         feature = self.get_feature(feature_name)
         datasets = [self.get_dataset(dataset) for dataset in dataset_names]
         
+        # calculate feature on dataset
         feature_datasets = []
         for dataset in datasets:
             feature_dataset = []

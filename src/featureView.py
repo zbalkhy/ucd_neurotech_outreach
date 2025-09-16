@@ -93,7 +93,7 @@ class FeatureView(EventClass):
         ax.hist(feature_datasets, bins=30, stacked=True, 
                 label=[ds.get() for ds in self.cur_datasets])
         ax.legend()
-        ax.set_xlim([0,1e4])
+        
         # refresh canvas
         self.plot_canvas.draw()
         self.plot_canvas.flush_events()
