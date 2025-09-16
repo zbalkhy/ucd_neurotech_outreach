@@ -21,7 +21,7 @@ if __name__ == "__main__":
             user_model.add_feature(FeatureClass(type))
     
     # load test dataset
-    df = pd.read_csv('../data/eeg-eye-state.csv')
+    df = pd.read_csv('./data/eeg-eye-state.csv')
 
     # extract fs hardcode for this dataset right now
     fs = df.shape[0]/117
