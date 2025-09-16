@@ -15,8 +15,8 @@ class SoftwareStream(DataStream):
         t=0
         try:
             while not self.shutdown_event.is_set():
-                self.data.append(15*np.sin(0.01*np.pi*t))
-                t+=1
+                self.data.append(15*np.sin(0.01*np.pi*t) + 12*np.sin(0.03*np.pi*t) + 1*np.sin(0.15*np.pi*t) + 11*np.sin(0.07*np.pi*t))
+                t += 1
                 sleep(0.004)
         except:
             pass

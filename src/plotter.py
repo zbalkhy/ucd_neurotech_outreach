@@ -146,6 +146,7 @@ class Plotter():
         tk.Button(popup, text="Apply", command=apply_settings).grid(row=3, column=0, columnspan=2)
 
     def plot(self):
+
         """Plot amplitude vs time, power spectrum, and band powers."""
 
         # pull data from user_model streams
