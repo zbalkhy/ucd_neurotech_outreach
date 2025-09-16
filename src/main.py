@@ -37,17 +37,6 @@ if __name__ == "__main__":
     user_model = UserModel()
     data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
     user_model.add_stream(data_stream)
-    for type in FeatureType:
-        if type != FeatureType.CUSTOM:
-            user_model.add_feature(FeatureClass(type))
-    
-    # temporary dataset loading
-    df = pd.read_csv('../data/eeg-eye-state.csv')
-
-    fs = df.shape[0]/117
-    t = np.arange(0, len(df) * 1 / fs, 1/fs)
-    cols = df.columns.tolist()[:-1]
-    user_model.add_dataset("test1", df.to_numpy())
 
     #filtering = filterViewModel(user_model)
     #filtering.add_filter('lowpass', 4, [30])

@@ -9,6 +9,9 @@ class FeatureViewModel(object):
     def get_datasets(self) -> dict[str, ndarray]:
         return self.user_model.get_datasets()
 
+    def get_dataset(self, name: str) -> ndarray:
+        return self.user_model.get_dataset(name)
+    
     def get_dataset_names(self) ->list[str]:
         return list(self.user_model.get_datasets().keys())
     
@@ -18,3 +21,5 @@ class FeatureViewModel(object):
     def get_feature_names(self) -> list[str]:
         return list(self.user_model.get_features().keys())
     
+    def get_feature(self, name: str) -> FeatureClass:
+        return self.user_model.get_features()[name]

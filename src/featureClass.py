@@ -34,12 +34,12 @@ class FeatureClass():
             case _:
                 return self.custom_name
     
-    def get_fft(self, data: any, fs: int) -> Tuple[ndarray, ndarray]:
-        freqs = rfftfreq(len(data), 1 / fs)
-        psd = abs(rfft(data)) ** 2
+    def get_fft(self, data: ndarray, fs: int) -> Tuple[ndarray, ndarray]:
+        freqs = rfftfreq(data.shape[0], 1 / fs)
+        psd = abs(rfft(data, axis=0)) ** 2
         return psd, freqs
     
-    def apply(self, data: any, fs: int) -> ndarray:
+    def apply(self, data: ndarray, fs: int) -> ndarray:
         if self.type != FeatureType.CUSTOM:
             psd, freqs = self.get_fft(data, fs)
             match self.type:
@@ -55,7 +55,7 @@ class FeatureClass():
                     idx = logical_and(freqs >= GAMMA[0], freqs <= GAMMA[1])
                 case _:
                     idx = list(range(freqs.size))
-            return psd[idx].mean(axis=0)
+            return np.squeeze(psd[np.where(idx),:]).mean(axis=0)
         else:
             try:
                 return self.custom_function(data,fs)
