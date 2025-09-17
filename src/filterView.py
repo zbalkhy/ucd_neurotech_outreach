@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import *
 import numpy as np
-from threading import Thread, Lock
 from filterViewModel import filterViewModel
 from eventClass import *
 
