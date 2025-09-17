@@ -3,6 +3,7 @@ from tkinter import *
 import numpy as np
 from filterViewModel import filterViewModel
 from eventClass import *
+
 class filterView(EventClass):
     def __init__(self, frame: tk.Frame, view_model: filterViewModel):
         super().__init__()

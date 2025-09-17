@@ -20,7 +20,7 @@ class EventClass(object):
 
     def __del__(self):
         for subject in self.subjects:
-            subject.removeObserver(self)
+            subject.remove_observer(self)
     
     def add_observer(self, observer: EventClass) -> None:
         self.observers.append(observer)
