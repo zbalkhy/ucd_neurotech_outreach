@@ -43,7 +43,6 @@ class Plotter():
         self.button_pause = tk.Button(controls, text="Play/Pause", command=self.play_pause)
         self.button_pause.pack(side=tk.BOTTOM)
 
-        
         self.selected_stream = tk.StringVar(value=self.stream_names[0])
         self.stream_menu = tk.OptionMenu(controls, self.selected_stream, *self.stream_names, command=self.change_stream)
         self.stream_menu.pack(side=tk.LEFT, padx=5, pady=5)
@@ -68,7 +67,6 @@ class Plotter():
 
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        
         # EEG frequency bands
         self.bands = {
             "delta (0.5–4 Hz)": (0.5, 4),
@@ -141,12 +139,10 @@ class Plotter():
             self.labels[graph_type]["xlabel"] = xlabel_entry.get()
             self.labels[graph_type]["ylabel"] = ylabel_entry.get()
             popup.destroy()
-            self.plot
 
         tk.Button(popup, text="Apply", command=apply_settings).grid(row=3, column=0, columnspan=2)
 
     def plot(self):
-
         """Plot amplitude vs time, power spectrum, and band powers."""
 
         # pull data from user_model streams
