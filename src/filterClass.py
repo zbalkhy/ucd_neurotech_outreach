@@ -10,6 +10,7 @@ class filterClass():
         return self.filters
     def add_filters(self, name: str, value: str or float):
         self.filters[name].append(value)
+    
     def filter_data(self, data: ndarray):
         held_data = data
         for i, x in enumerate(self.filters['filter']):
