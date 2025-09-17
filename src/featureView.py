@@ -69,6 +69,8 @@ class FeatureView(EventClass):
         
     def add_dataset_dropdown(self) -> None:
         datasets = self.view_model.get_dataset_names()
+        if not len(datasets):
+            return
         cur_dataset = tk.StringVar()
         idx = min(len(self.dataset_dropdowns), len(datasets)-1) 
         cur_dataset.set(datasets[idx])
@@ -99,7 +101,8 @@ class FeatureView(EventClass):
 
     def add_feature_dropdown(self) -> None:
         features = self.view_model.get_feature_names()
-        self.cur_feature.set(features[0])
+        if len(features):
+            self.cur_feature.set(features[0])
         dropdown = ttk.Combobox(self.feature_frame, values=features, state="readonly")
         dropdown.config(textvariable=self.cur_feature)
         dropdown.bind("<<ComboboxSelected>>", self.update_plot)
@@ -113,25 +116,26 @@ class FeatureView(EventClass):
             event.widget.selection_clear()
         self.fig.clear()
         
-        # calculate feature on dataset
-        feature_datasets = self.view_model.calc_feature_datasets(
-            self.cur_feature.get(), [dataset.get() for dataset in self.cur_datasets],
-            [channel.get() for channel in self.cur_channels])
+        if len(self.cur_feature.get()) and len(self.cur_datasets):
+            # calculate feature on dataset
+            feature_datasets = self.view_model.calc_feature_datasets(
+                self.cur_feature.get(), [dataset.get() for dataset in self.cur_datasets],
+                [channel.get() for channel in self.cur_channels])
     
-        # create an axis
-        ax = self.fig.add_subplot(111)
-        ax.set_title(f"Feature:{self.cur_feature.get()}")
-        ax.set_ylabel("frequency")
-        ax.set_xlabel("power")
-        
-        # plot data
-        ax.hist(feature_datasets, bins=30, stacked=True, 
-                label=[ds.get() for ds in self.cur_datasets])
-        ax.legend()
-        
-        # refresh canvas
-        self.plot_canvas.draw()
-        self.plot_canvas.flush_events()
+            # create an axis
+            ax = self.fig.add_subplot(111)
+            ax.set_title(f"Feature:{self.cur_feature.get()}")
+            ax.set_ylabel("frequency")
+            ax.set_xlabel("power")
+            
+            # plot data
+            ax.hist(feature_datasets, bins=30, stacked=True, 
+                    label=[ds.get() for ds in self.cur_datasets])
+            ax.legend()
+            
+            # refresh canvas
+            self.plot_canvas.draw()
+            self.plot_canvas.flush_events()
 
     def on_notify(self, eventData: any, event: EventType):
         if event == EventType.DATASETUPDATE:
