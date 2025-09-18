@@ -16,14 +16,14 @@ class Plotter():
         self.frame = frame
         self.fig = Figure(figsize=(6, 8), dpi=100)  # taller for multiple plots
         self.continue_plotting = True
-        self.simulated = True
+        self.simulated = False
 
         # --- Get available streams ---
         if self.simulated:
             # Simulated 4 "streams" with different frequencies
             self.streams = ["SimStream1", "SimStream2", "SimStream3", "SimStream4"]
         else:
-            self.streams = [s for s in self.user_model.get_streams() if s.stream_type == StreamType.FILTER]
+            self.streams = [s for s in self.user_model.get_streams()]
 
         self.current_stream_index = 0
         self.stream_names = [f"Stream {i+1}" for i in range(len(self.streams))]

@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from plotter import Plotter
 from floatTheOrbGame import FloatTheOrb
 from common import create_grid
@@ -15,8 +16,7 @@ from dataCollectionView import dataCollectionView
 from featureView import FeatureView
 from featureViewModel import FeatureViewModel
 from featureClass import *
-import pandas as pd
-import numpy as np
+
 
 frame_names = [[f"Device Connector", f"Classifier", f"Visualizer"],
                [f"Float The Orb", f"Filters", f"Feature Viewer"]]
@@ -51,29 +51,52 @@ if __name__ == "__main__":
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')
-    frames = create_grid(root,2,3, frame_names)
+    #frames = create_grid(root,2,3, frame_names)
 
     root.protocol("WM_DELETE_WINDOW", on_closing)
+    
+    pw0 = ttk.PanedWindow(orient="vertical")
+    pw0.pack(fill="both")
+    
+    pw1 = ttk.PanedWindow(pw0, orient="horizontal")
+    pw1.pack(fill="both")
 
     # create device connector
+    device_frame = tk.Frame(pw1, relief="solid")
     device_frame_viewmodel = EEGDeviceViewModel(user_model)
-    device_connector = EEGDeviceView(frames[0][0], device_frame_viewmodel)
+    device_connector = EEGDeviceView(device_frame, device_frame_viewmodel)
 
     # create plotter
-    plotter = Plotter(frames[0][2], user_model)
+    plot_frame = tk.Frame(pw1, relief="solid")
+    plotter = Plotter(plot_frame, user_model)
+    
+    pw1.add(device_frame)
+    pw1.add(plot_frame)
+
+    pw2 = ttk.PanedWindow(pw0, orient="horizontal")
+    pw2.pack(fill="both")
 
     # create feature viewer
+    feature_frame = tk.Frame(pw2, relief="solid")
     feature_view_model = FeatureViewModel(user_model)
-    feature_view = FeatureView(frames[1][2], feature_view_model)
+    feature_view = FeatureView(feature_frame, feature_view_model)
 
     #create filter frame
+    filter_frame = tk.Frame(pw2, relief="solid")
     filter_frame_viewmodel = filterViewModel(user_model)
-    filter_module = filterView(frames[1][1], filter_frame_viewmodel)
+    filter_module = filterView(filter_frame, filter_frame_viewmodel)
 
     #create data collection frame
+    dataCollection_frame = tk.Frame(pw2, relief="solid")
     dataCollection_frame_viewmodel = dataCollectionViewModel(user_model)
-    dataCollection_module = dataCollectionView(frames[1][0], dataCollection_frame_viewmodel)
+    dataCollection_module = dataCollectionView(dataCollection_frame, dataCollection_frame_viewmodel)
 
+    pw2.add(feature_frame)
+    pw2.add(filter_frame)
+    pw2.add(dataCollection_frame)
+    
+    pw0.add(pw1)
+    pw0.add(pw2)
     # create game
     #float_the_orb = FloatTheOrb(frames[1][0], user_context, user_context_lock)    
     #float_the_orb.start_pygame()
