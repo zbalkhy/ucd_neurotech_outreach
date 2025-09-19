@@ -23,7 +23,7 @@ class DataStream():
         self._stream_thread: Thread = None
     
     # return all data in the queue for the stream
-    def get_stream(self) -> deque:
+    def get_stream_data(self) -> deque:
         return self.data
     
     # This function is meant to be implemented by the inheriting class.

@@ -1,6 +1,6 @@
 import tkinter as tk
 import numpy as np
-
+from eventClass import *
 # Implement the default Matplotlib key bindings.
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
@@ -10,20 +10,23 @@ from userModel import UserModel
 from dataStream import StreamType
 
 
-class Plotter():
+class Plotter(EventClass):
     def __init__(self, frame: tk.Frame, user_model: UserModel):
+        super().__init__()
         self.user_model = user_model
         self.frame = frame
         self.fig = Figure(figsize=(6, 8), dpi=100)  # taller for multiple plots
         self.continue_plotting = True
-        self.simulated = True
+        self.simulated = False
+
+        self.subscribe_to_subject(self.user_model)
 
         # --- Get available streams ---
         if self.simulated:
             # Simulated 4 "streams" with different frequencies
             self.streams = ["SimStream1", "SimStream2", "SimStream3", "SimStream4"]
         else:
-            self.streams = [s for s in self.user_model.get_streams() if s.stream_type == StreamType.FILTER]
+            self.streams = [s for s in self.user_model.get_streams() if s.stream_type in [StreamType.FILTER, StreamType.DEVICE, StreamType.SOFTWARE]]
 
         self.current_stream_index = 0
         self.stream_names = [f"Stream {i+1}" for i in range(len(self.streams))]
@@ -90,6 +93,23 @@ class Plotter():
 
         self.plot()
 
+    def refresh_stream_list(self):
+        self.streams = [s for s in self.user_model.get_streams() if s.stream_type in [StreamType.FILTER, StreamType.DEVICE, StreamType.SOFTWARE]]
+        self.stream_names = [f"Stream {i+1}" for i in range(len(self.streams))]
+        # Reset var and delete all old options
+        self.selected_stream.set('')
+        self.stream_menu['menu'].delete(0, 'end')
+
+        # Insert list of new options (tk._setit hooks them up to var)
+        for stream in self.stream_names:
+            self.stream_menu['menu'].add_command(label=stream, command=tk._setit(self.selected_stream, stream, self.change_stream))
+        self.selected_stream.set(self.stream_names[0])
+
+
+    def on_notify(self, eventData, event) -> None:
+        if event == EventType.DEVICELISTUPDATE:
+            self.refresh_stream_list()
+            
     def play_pause(self):
         if not self.continue_plotting:
             self.continue_plotting = not self.continue_plotting
@@ -161,7 +181,7 @@ class Plotter():
         else:
             data = []
             if self.streams:
-                data = list(self.streams[self.current_stream_index].get_stream())
+                data = list(self.streams[self.current_stream_index].get_stream_data())
 
         self.fig.clear()  # clear figure before redrawing
 

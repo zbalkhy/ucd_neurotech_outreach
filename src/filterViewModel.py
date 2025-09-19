@@ -1,8 +1,6 @@
 from userModel import UserModel
-from deviceStream import DeviceStream
-from common import RETRY_SEC
-from dataStream import DataStream, StreamType
-from filteredSoftwareStream import FilteredStream
+from dataStream import StreamType
+from composedStream import ComposedStream
 
 class filterViewModel(object):
     def __init__(self, user_model: UserModel):
@@ -21,11 +19,12 @@ class filterViewModel(object):
 
     def get_streams(self):
         return self.user_model.get_streams()
+   
     #create filter stream
     def create_filter_stream(self, name: str, reference_stream: str) -> None:
         #currently the filter and the filtered stream will be named the same thing
         filter_obj = self.user_model.get_filter(name)
         reference_stream = self.user_model.get_stream(reference_stream)
-        filtered_stream = FilteredStream(reference_stream, filter_obj, name, StreamType.FILTER)
+        filtered_stream = ComposedStream(reference_stream, [filter_obj], name, StreamType.FILTER)
         self.user_model.add_stream(filtered_stream)
         

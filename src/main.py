@@ -7,7 +7,7 @@ from eegDeviceView import EEGDeviceView
 from eegDeviceViewModel import EEGDeviceViewModel
 from dataStream import DataStream, StreamType
 from softwareStream import SoftwareStream
-from filteredSoftwareStream import FilteredStream
+from composedStream import ComposedStream
 from filterViewModel import filterViewModel
 from filterView import filterView
 from dataCollectionViewModel import dataCollectionViewModel

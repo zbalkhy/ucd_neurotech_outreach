@@ -2,6 +2,7 @@ from userModel import UserModel
 from deviceStream import DeviceStream
 from common import RETRY_SEC
 from dataStream import DataStream, StreamType
+from eventClass import EventType
 
 class EEGDeviceViewModel(object):
     def __init__(self, user_model: UserModel):
@@ -12,7 +13,7 @@ class EEGDeviceViewModel(object):
         new_device = DeviceStream(IP_address, port, RETRY_SEC, name, StreamType.DEVICE)  
         self.user_model.add_stream(new_device)
 
-    def start_device_stream(self, device_name) -> None:
+    def toggle_device_stream(self, device_name) -> None:
         if device_name in self.get_device_names():
             stream = self.user_model.get_stream(device_name)
             if stream.is_alive():
@@ -21,6 +22,7 @@ class EEGDeviceViewModel(object):
             else:
                 stream.start()
                 print('starting stream')
+            self.user_model.notify(device_name, EventType.STREAMTOGGLED)
 
     #temporary fix to have the streams put in the devices category
     def get_devices(self) -> list[DataStream]:

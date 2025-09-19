@@ -1,5 +1,5 @@
 from enum import Enum
-from numpy import abs, logical_and, ndarray, dtype
+from numpy import abs, logical_and, ndarray
 from numpy.fft import rfft, rfftfreq
 from common import *
 from typing import Tuple

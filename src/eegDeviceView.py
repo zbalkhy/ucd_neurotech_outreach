@@ -1,6 +1,6 @@
 import tkinter as tk
 import numpy as np
-from threading import Thread, Lock
+from threading import Thread
 from eegDeviceViewModel import EEGDeviceViewModel
 from eventClass import *
 
@@ -48,7 +48,7 @@ class EEGDeviceView(EventClass):
         self.pack_device_list()
         
     def on_notify(self, eventData: any, event: EventType ) -> None:
-        if event == EventType.DEVICELISTUPDATE:
+        if event in [EventType.DEVICELISTUPDATE, EventType.STREAMTOGGLED]:
             self.pack_device_list()
         return
     
@@ -84,12 +84,13 @@ class EEGDeviceView(EventClass):
         self.device_list_scrollbar.pack(side="right", fill="y")
 
         # create a two column grid to hold everything
-        for i, device in enumerate(self.view_model.get_device_names()):
-            label = tk.Label(self.scrollable_frame, text=device, anchor="w")
+        for i, device in enumerate(self.view_model.get_devices()):
+            label = tk.Label(self.scrollable_frame, text=device.stream_name, anchor="w")
             label.grid(row=i, column=0, padx=5, pady=5, sticky="w")
             
-            button = tk.Button(self.scrollable_frame, text="Start Stream", 
-                               command=lambda x=device: self.view_model.start_device_stream(x))
+            button_state = "Stop" if device.is_alive() else "Start"
+            button = tk.Button(self.scrollable_frame, text=button_state + " Stream", 
+                               command=lambda x=device.stream_name: self.view_model.toggle_device_stream(x))
             button.grid(row=i, column=1, padx=5, pady=5, sticky="e")
         
         self.scrollable_frame.grid_columnconfigure(0, weight=1)

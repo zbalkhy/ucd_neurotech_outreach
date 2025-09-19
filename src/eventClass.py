@@ -8,6 +8,7 @@ class EventType(Enum):
     DATASETUPDATE = 3
     FILTERUPDATE = 4
     FEATUREUPDATE = 5
+    STREAMTOGGLED = 6
 
 
 """ This class implements an event sending / receiving mechanism. 
