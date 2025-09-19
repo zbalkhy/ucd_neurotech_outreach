@@ -14,7 +14,7 @@ class dataCollectionViewModel(object):
 
     def add_dataset(self, collection_stream: str) -> None:
         stream = self.user_model.get_stream(collection_stream)
-        data = np.array(list(stream.get_stream()))
+        data = np.array(list(stream.get_stream_data()))
         axis = self.dataset.ndim
         if self.dataset.size == 0:
             #if dataset is empty, populate
@@ -27,6 +27,7 @@ class dataCollectionViewModel(object):
             #if data set only has one entry, make new axis
             self.dataset = np.stack([self.dataset, data], axis = 0)
             self.first_trial = False
+    
     def get_trial_number(self) -> int:
         if self.first_trial == True:
             return 1

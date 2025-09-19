@@ -3,7 +3,6 @@ from featureViewModel import FeatureViewModel
 
 import tkinter as tk
 from tkinter import ttk
-import numpy as np
 
 # Implement the default Matplotlib key bindings.
 from matplotlib.backend_bases import key_press_handler

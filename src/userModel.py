@@ -1,7 +1,7 @@
 from dataStream import *
 from threading import Lock
 from eventClass import EventClass, EventType
-from filterClass import filterClass
+from filterClass import FilterClass
 from featureClass import FeatureClass
 from numpy import ndarray
 
@@ -40,10 +40,10 @@ class UserModel(EventClass):
     #add filter   
     def add_filter(self, name: str, filter_type: str, order: float, frequency: float) -> None:
         #WILL CAUSE ISSUE IF FILTERS SHARE THE SAME NAME
-        if filterClass(name) not in self.filters:
+        if FilterClass(name) not in self.filters:
             #if it does not exist in the filter list, add it to the dictionary
             print('created a filter')
-            self.filters[name] = filterClass(name)
+            self.filters[name] = FilterClass(name)
         self.filters[name].add_filters('filter', filter_type)
         self.filters[name].add_filters('order', order)
         self.filters[name].add_filters('frequency', frequency)

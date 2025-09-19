@@ -45,10 +45,6 @@ class dataCollectionView(EventClass):
         self.dataset_name = tk.StringVar(self.save_dataset_frame)
         self.dataset_name_entry = tk.Entry(self.save_dataset_frame, textvariable = self.dataset_name).pack(fill = X, side = "left", expand = True, padx = 10)
 
-
-
-
-
     def create_dropdown(self):
         for child in self.collect_stream_frame.winfo_children():
             child.destroy()

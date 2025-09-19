@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import *
-import numpy as np
 from filterViewModel import filterViewModel
 from eventClass import *
 
@@ -28,16 +27,32 @@ class filterView(EventClass):
         self.filter_mod_frame.pack(side="top", fill="both", expand=True)
 
         #add filter button
-        self.filter_add_button = tk.Button(self.filter_mod_frame, text="Add Filter", command=self.add_filter_box, width=9, bg='green').pack(pady=10, padx=10, anchor="e", side = RIGHT)
+        self.filter_add_button = tk.Button(self.filter_mod_frame, 
+                                           text="Add Filter", 
+                                           command=self.add_filter_box, 
+                                           width=9, 
+                                           bg='green')
+        self.filter_add_button.pack(pady=10, padx=10, anchor="e", side = RIGHT)
         
         #clear filters button
-        self.filter_remove_button = tk.Button(self.filter_mod_frame, text="Clear Filters", command=self.clear_filter_box, width=9, bg='red').pack(pady=10, padx=10, anchor="e", side = RIGHT)
+        self.filter_remove_button = tk.Button(self.filter_mod_frame, 
+                                              text="Clear Filters", 
+                                              command=self.clear_filter_box, 
+                                              width=9, bg='red')
+        self.filter_remove_button.pack(pady=10, padx=10, anchor="e", side = RIGHT)
 
         #create filter stream button
-        self.create_filter_stream_button = tk.Button(self.filter_mod_frame, text="Create Filter Stream", command=self.create_filter_stream, width=15, bg='yellow').pack(pady=10, padx=10, anchor="e", side = LEFT)
+        self.create_filter_stream_button = tk.Button(self.filter_mod_frame, 
+                                                     text="Create Filter Stream", 
+                                                     command=self.create_filter_stream, 
+                                                     width=15, bg='yellow')
+        self.create_filter_stream_button.pack(pady=10, padx=10, anchor="e", side = LEFT)
 
         #create a filter naming label
-        self.filter_name_label = tk.Label(self.filter_mod_frame, text="Filter Stream Name:", anchor='e').pack(pady=10, padx=(10, 0), anchor="e", side=LEFT)
+        self.filter_name_label = tk.Label(self.filter_mod_frame, 
+                                          text="Filter Stream Name:", 
+                                          anchor='e')
+        self.filter_name_label.pack(pady=10, padx=(10, 0), anchor="e", side=LEFT)
         
         #create filter naming entry
         self.filter_name_entry = tk.Entry(self.filter_mod_frame, width = 20)
@@ -132,7 +147,8 @@ class filterView(EventClass):
         self.dropdown.pack(anchor='ne', side = RIGHT, padx=10)
         
         #put label and dropdown next to each other
-        dropdown_label = tk.Label(master, text="Reference Stream").pack(anchor='n', side = LEFT, padx = 10, pady = 5)
+        dropdown_label = tk.Label(master, text="Reference Stream")
+        dropdown_label.pack(anchor='n', side = LEFT, padx = 10, pady = 5)
 
                
     def on_notify(self, eventData: any, event: EventType ) -> None:
@@ -143,7 +159,6 @@ class filterView(EventClass):
     def create_filter_stream(self):
         #creates the filtered stream
         for i in range(self.filter_count):
-
             #processes saved values
             filter_hold = self.filter_boxes['filter'][i].get()
             order_hold = float(self.filter_boxes['order'][i].get())
@@ -151,8 +166,8 @@ class filterView(EventClass):
             frequency_hold = frequency_hold.split(',')
             frequency_hold_float = [float(item) for item in frequency_hold]
             self.view_model.add_filter(self.filter_name_entry.get(), filter_hold.lower(), order_hold, frequency_hold_float)
+        
         self.view_model.create_filter_stream(self.filter_name_entry.get(), self.reference_stream.get())
-        streams = self.view_model.get_streams()
         self.filter_name_entry.delete(0, tk.END)
         self.clear_filter_box()
 
