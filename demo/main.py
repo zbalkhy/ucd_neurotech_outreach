@@ -32,7 +32,7 @@ def readStream(classifier):
             print(df.shape)
             prediction = classifier.predictSample(df, sampleRate)
             print(prediction)
-            ser_output = prediction[0] + "\n";
+            ser_output = prediction[0] + "\n"
             print(ser_output)
             ser.write(ser_output.encode())
     except KeyboardInterrupt:

@@ -17,6 +17,10 @@ from featureViewModel import FeatureViewModel
 from featureClass import *
 import pandas as pd
 import numpy as np
+from lslStream import LslStream
+
+
+from pylsl import StreamInlet, resolve_streams
 
 frame_names = [[f"Device Connector", f"Classifier", f"Visualizer"],
                [f"Float The Orb", f"Filters", f"Feature Viewer"]]
@@ -35,10 +39,17 @@ def on_closing():
 
 if __name__ == "__main__":
     
+    streams = resolve_streams()
+    print(streams)
+
+    openBCIStream = LslStream(streams[1], 250, "openbci", StreamType.DEVICE)
+        
+
     # initialize user model
     user_model = UserModel()
     data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
     user_model.add_stream(data_stream)
+    user_model.add_stream(openBCIStream)
 
     #filtering = filterViewModel(user_model)
     #filtering.add_filter('lowpass', 4, [30])

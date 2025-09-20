@@ -181,7 +181,9 @@ class Plotter(EventClass):
         else:
             data = []
             if self.streams:
-                data = list(self.streams[self.current_stream_index].get_stream_data())
+                data = np.array(list(self.streams[self.current_stream_index].get_stream_data()))
+                if len(data.shape) > 1:
+                    data = data[:,0]
 
         self.fig.clear()  # clear figure before redrawing
 

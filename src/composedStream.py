@@ -3,8 +3,8 @@ from time import sleep
 from typing import Union
 from filterClass import FilterClass
 from featureClass import FeatureClass
-from dataStream import DataStream, StreamType
-from common import QUEUE_LENGTH, SAMPLING_FREQ
+from dataStream import *
+from common import SAMPLING_FREQ
 
 class ComposedStream(DataStream):
     def __init__(self, 
