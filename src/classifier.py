@@ -2,6 +2,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 from featureClass import FeatureClass
 from filterClass import FilterClass
+from sklearn.linear_model import LogisticRegression
 from common import SAMPLING_FREQ
 
 class Classifier:
@@ -96,7 +97,6 @@ class Classifier:
         return np.array(X), np.array(y)
 
     def train_model(self) -> None:
-        from sklearn.linear_model import LogisticRegression
         X, y = self.prepare_training_data()
         self.model = LogisticRegression(
             solver="liblinear",
@@ -108,9 +108,9 @@ class Classifier:
     # -----------------------
     # Prediction
     # -----------------------
-    def predict_sample(self, sample: np.ndarray, fs: int) -> int:
+    def predict_sample(self, sample: np.ndarray) -> int:
         if self.model is None:
             raise RuntimeError("Model not trained yet.")
-        features = self.extract_features(sample, fs).reshape(1, -1)
+        features = self.prepare_training_data(sample).reshape(1, -1)
         prediction = self.model.predict(features)
         return int(prediction)
