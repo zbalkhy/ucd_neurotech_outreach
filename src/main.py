@@ -12,6 +12,8 @@ from filterViewModel import filterViewModel
 from filterView import filterView
 from dataCollectionViewModel import dataCollectionViewModel
 from dataCollectionView import dataCollectionView
+from classifierView import ClassifierView
+from classifierViewModel import ClassifierViewModel
 from featureView import FeatureView
 from featureViewModel import FeatureViewModel
 from featureClass import FeatureClass, FeatureType
@@ -70,6 +72,10 @@ if __name__ == "__main__":
     # create device connector
     device_frame_viewmodel = EEGDeviceViewModel(user_model)
     device_connector = EEGDeviceView(frames[0][0], device_frame_viewmodel)
+
+    # create classifier
+    classifier_view_model = ClassifierViewModel(user_model)
+    classifier_view = ClassifierView(frames[0][1], classifier_view_model)
 
     # create plotter
     plotter = Plotter(frames[0][2], user_model)
