@@ -12,9 +12,11 @@ from filterViewModel import filterViewModel
 from filterView import filterView
 from dataCollectionViewModel import dataCollectionViewModel
 from dataCollectionView import dataCollectionView
+from classifierView import ClassifierView
+from classifierViewModel import ClassifierViewModel
 from featureView import FeatureView
 from featureViewModel import FeatureViewModel
-from featureClass import *
+from featureClass import FeatureClass, FeatureType
 import pandas as pd
 import numpy as np
 
@@ -39,6 +41,18 @@ if __name__ == "__main__":
     user_model = UserModel()
     data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
     user_model.add_stream(data_stream)
+    
+    default_features = [
+        FeatureType.DELTA,
+        FeatureType.THETA,
+        FeatureType.ALPHA,
+        FeatureType.BETA,
+        FeatureType.GAMMA
+    ]
+
+    for ftype in default_features:
+        feature = FeatureClass(ftype)
+        user_model.add_feature(feature)
 
     #filtering = filterViewModel(user_model)
     #filtering.add_filter('lowpass', 4, [30])
@@ -58,6 +72,10 @@ if __name__ == "__main__":
     # create device connector
     device_frame_viewmodel = EEGDeviceViewModel(user_model)
     device_connector = EEGDeviceView(frames[0][0], device_frame_viewmodel)
+
+    # create classifier
+    classifier_view_model = ClassifierViewModel(user_model)
+    classifier_view = ClassifierView(frames[0][1], classifier_view_model)
 
     # create plotter
     plotter = Plotter(frames[0][2], user_model)
