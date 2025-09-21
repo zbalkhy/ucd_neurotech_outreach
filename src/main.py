@@ -14,7 +14,7 @@ from dataCollectionViewModel import dataCollectionViewModel
 from dataCollectionView import dataCollectionView
 from featureView import FeatureView
 from featureViewModel import FeatureViewModel
-from featureClass import *
+from featureClass import FeatureClass, FeatureType
 import pandas as pd
 import numpy as np
 
@@ -39,6 +39,18 @@ if __name__ == "__main__":
     user_model = UserModel()
     data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
     user_model.add_stream(data_stream)
+    
+    default_features = [
+        FeatureType.DELTA,
+        FeatureType.THETA,
+        FeatureType.ALPHA,
+        FeatureType.BETA,
+        FeatureType.GAMMA
+    ]
+
+    for ftype in default_features:
+        feature = FeatureClass(ftype)
+        user_model.add_feature(feature)
 
     #filtering = filterViewModel(user_model)
     #filtering.add_filter('lowpass', 4, [30])
