@@ -48,32 +48,16 @@ if __name__ == "__main__":
     streams = resolve_streams()
 
     if len(streams):
-        openBCIStream = LslStream(streams[1], 250, "openbci", StreamType.DEVICE)
+        openBCIStream = LslStream(streams[1], 250, "openbci", StreamType.DEVICE, 200)
         user_model.add_stream(openBCIStream)
 
-    data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE)
+    data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
     user_model.add_stream(data_stream)
     
-    
-    default_features = [
-        FeatureType.DELTA,
-        FeatureType.THETA,
-        FeatureType.ALPHA,
-        FeatureType.BETA,
-        FeatureType.GAMMA
-    ]
-
-    for ftype in default_features:
-        feature = FeatureClass(ftype)
-        user_model.add_feature(feature)
-
-    #filtering = filterViewModel(user_model)
-    #filtering.add_filter('lowpass', 4, [30])
-    #filtering.add_filter('highpass', 4, [10])
-    #filtering.add_filter('bandstop', 4, [20, 25])
-    #filtering.remove_filter(1)
-
-    #filtering.create_filter_stream("software_stream_test")
+    # add default features to the user model
+    for type in FeatureType:
+        if type != FeatureType.CUSTOM:
+            user_model.add_feature(FeatureClass(type))
 
     # create root and frame for the main window
     root = tk.Tk()
