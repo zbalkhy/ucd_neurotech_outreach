@@ -26,7 +26,7 @@ from xrpControlStream import XRPControlStream
 from pylsl import StreamInlet, resolve_streams
 
 frame_names = [[f"Device Connector", f"Classifier", f"Visualizer"],
-               [f"Float The Orb", f"Filters", f"Feature Viewer"]]
+               [f"Data Collector", f"Filters Maker", f"Feature Viewer"]]
 
 def on_closing():
     # send shutdown event to each stream thread
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         openBCIStream = LslStream(streams[1], 250, "openbci", StreamType.DEVICE)
         user_model.add_stream(openBCIStream)
 
-    data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
+    data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE)
     user_model.add_stream(data_stream)
     
     

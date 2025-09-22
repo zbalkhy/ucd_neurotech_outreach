@@ -115,7 +115,7 @@ class ClassifierView(EventClass):
         if event in [EventType.DATASETUPDATE, EventType.DEVICELISTUPDATE]:
             self.refresh_lists()
     
-    def on_select_classifier(self, event: tk.Event) -> None:        # Note here that Tkinter passes an event object to onselect()
+    def on_select_classifier(self, event: tk.Event) -> None:
         w = event.widget
         index = int(w.curselection()[0])
         value = w.get(index)

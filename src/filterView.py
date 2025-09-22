@@ -30,7 +30,7 @@ class filterView(EventClass):
         self.filter_add_button = tk.Button(self.filter_mod_frame, 
                                            text="Add Filter", 
                                            command=self.add_filter_box, 
-                                           width=9, 
+                                           width=6, height=1, 
                                            bg='green')
         self.filter_add_button.pack(pady=10, padx=10, anchor="e", side = RIGHT)
         
@@ -38,19 +38,19 @@ class filterView(EventClass):
         self.filter_remove_button = tk.Button(self.filter_mod_frame, 
                                               text="Clear Filters", 
                                               command=self.clear_filter_box, 
-                                              width=9, bg='red')
+                                              width=6, height=1, bg='red')
         self.filter_remove_button.pack(pady=10, padx=10, anchor="e", side = RIGHT)
 
         #create filter stream button
         self.create_filter_stream_button = tk.Button(self.filter_mod_frame, 
-                                                     text="Create Filter Stream", 
+                                                     text="Make Filter", 
                                                      command=self.create_filter_stream, 
-                                                     width=15, bg='yellow')
+                                                     width=6, height=1, bg='yellow')
         self.create_filter_stream_button.pack(pady=10, padx=10, anchor="e", side = LEFT)
 
         #create a filter naming label
         self.filter_name_label = tk.Label(self.filter_mod_frame, 
-                                          text="Filter Stream Name:", 
+                                          text="Name:", 
                                           anchor='e')
         self.filter_name_label.pack(pady=10, padx=(10, 0), anchor="e", side=LEFT)
         

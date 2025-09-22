@@ -4,7 +4,6 @@ from featureClass import FeatureClass
 from filterClass import FilterClass
 from sklearn.linear_model import LogisticRegression
 from common import SAMPLING_FREQ
-from numpy import ndarray
 
 class Classifier:
     def __init__(
@@ -118,7 +117,7 @@ class Classifier:
         prediction = self.model.predict(features)
         return int(prediction)
     
-    def apply(self, data: ndarray, fs: int) -> ndarray:
+    def apply(self, data: np.ndarray, fs: int) -> np.ndarray:
         prediction = self.predict_sample(data)
         if prediction:
             return np.array(['eyesOpen'])

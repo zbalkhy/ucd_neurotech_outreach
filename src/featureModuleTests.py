@@ -21,7 +21,7 @@ if __name__ == "__main__":
             user_model.add_feature(FeatureClass(type))
     
     # load test dataset
-    df = pd.read_csv('./data/eeg-eye-state.csv')
+    df = pd.read_csv('../data/eeg-eye-state.csv')
 
     # extract fs hardcode for this dataset right now
     fs = df.shape[0]/117
@@ -35,8 +35,8 @@ if __name__ == "__main__":
     data0 = split_dataset(data0, nsamples, ntrials)
     data1 = split_dataset(data1, nsamples, ntrials)
 
-    user_model.add_dataset("data0", data0)
-    user_model.add_dataset("data1", data1)
+    #user_model.add_dataset("data0", data0)
+    #user_model.add_dataset("data1", data1)
 
     # create view and view model
     feature_view_model = FeatureViewModel(user_model)

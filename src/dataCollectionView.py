@@ -27,10 +27,10 @@ class dataCollectionView(EventClass):
         self.trial_num_str.set("Number of Trials: 0")
 
         #button to collect trial, locks the dropdown
-        tk.Button(self.trial_mod_frame, text = "Collect Trial", command = self.collect_trial, width = 15).pack(pady=10, padx=10, anchor = "e", side = LEFT)
+        tk.Button(self.trial_mod_frame, text = "Collect Trial", width=6, height=1, command = self.collect_trial).pack(pady=10, padx=10, anchor = "e", side = LEFT)
         
         #button to clear trials, unlocks the dropdown
-        tk.Button(self.trial_mod_frame, text = "Clear Trials", command = self.clear_trials, width=15).pack(pady=10, padx = 10, anchor = "e", side = LEFT)
+        tk.Button(self.trial_mod_frame, text = "Clear Trials", width=6, height=1, command = self.clear_trials).pack(pady=10, padx = 10, anchor = "e", side = LEFT)
 
         #label with the amount of trials
         self.trial_label = tk.Label(self.trial_mod_frame, textvariable=self.trial_num_str).pack(pady=10, padx=10, anchor="e", side = LEFT)
@@ -39,7 +39,7 @@ class dataCollectionView(EventClass):
         self.save_dataset_frame.pack(side = "top", fill = "both", expand = True)
 
         #button to save dataset, unlocks the dropdown
-        self.save_dataset_button = tk.Button(self.save_dataset_frame, text = "Save Dataset", command = self.save_dataset, width = 15).pack(pady = 10, padx = 10, anchor = "e", side = RIGHT)
+        self.save_dataset_button = tk.Button(self.save_dataset_frame, text = "Save Dataset", width=6, height=1, command = self.save_dataset).pack(pady = 10, padx = 10, anchor = "e", side = RIGHT)
         
         #entry to save dataset name
         self.dataset_name = tk.StringVar(self.save_dataset_frame)
@@ -57,7 +57,7 @@ class dataCollectionView(EventClass):
         self.collection_stream.set(self.stream_names[0])
         self.dropdown = OptionMenu(self.collect_stream_frame, self.collection_stream, *self.stream_names)
         self.dropdown.pack(anchor = 'nw', side = RIGHT, padx = 10)
-        dropdown_label = tk.Label(self.collect_stream_frame, text="Collecting from Stream:").pack(anchor='nw', side = LEFT, padx = 10, pady=5)
+        dropdown_label = tk.Label(self.collect_stream_frame, text="Stream:").pack(anchor='nw', side = LEFT, padx = 10, pady=5)
         
     def on_notify(self, eventData: any, event: EventType) -> None:
         if event == EventType.DEVICELISTUPDATE:
