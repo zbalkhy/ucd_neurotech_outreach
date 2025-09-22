@@ -20,6 +20,7 @@ from featureClass import FeatureClass, FeatureType
 import pandas as pd
 import numpy as np
 from lslStream import LslStream
+from xrpControlStream import XRPControlStream
 
 
 from pylsl import StreamInlet, resolve_streams
@@ -41,19 +42,18 @@ def on_closing():
 
 if __name__ == "__main__":
     
-    streams = resolve_streams()
-    print(streams)
-
-    openBCIStream = LslStream(streams[1], 250, "openbci", StreamType.DEVICE)
-        
-
     # initialize user model
     user_model = UserModel()
+
+    streams = resolve_streams()
+
+    if len(streams):
+        openBCIStream = LslStream(streams[1], 250, "openbci", StreamType.DEVICE)
+        user_model.add_stream(openBCIStream)
+
     data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
     user_model.add_stream(data_stream)
-<<<<<<< HEAD
-    user_model.add_stream(openBCIStream)
-=======
+    
     
     default_features = [
         FeatureType.DELTA,
@@ -66,7 +66,6 @@ if __name__ == "__main__":
     for ftype in default_features:
         feature = FeatureClass(ftype)
         user_model.add_feature(feature)
->>>>>>> main
 
     #filtering = filterViewModel(user_model)
     #filtering.add_filter('lowpass', 4, [30])

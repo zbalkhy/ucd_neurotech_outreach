@@ -4,6 +4,7 @@ from featureClass import FeatureClass
 from filterClass import FilterClass
 from sklearn.linear_model import LogisticRegression
 from common import SAMPLING_FREQ
+from numpy import ndarray
 
 class Classifier:
     def __init__(
@@ -81,18 +82,20 @@ class Classifier:
             feature_vectors.append(feature_vals)
 
         # flatten into single vector
-        return np.concatenate(feature_vectors, axis=0)
+        return feature_vectors #np.concatenate(feature_vectors, axis=0)
 
     def prepare_training_data(self) -> Tuple[np.ndarray, np.ndarray]:
         X, y = [], []
 
         for _, data in self.label0_datasets.items():
-            X.append(self.generate_features(data))
-            y.append(0)
+            for i in range(data.shape[0]):
+                X.append(self.generate_features(data[i,:]))
+                y.append(0)
 
         for _, data in self.label1_datasets.items():
-            X.append(self.generate_features(data))
-            y.append(1)
+            for i in range(data.shape[0]):
+                X.append(self.generate_features(data[i,:]))
+                y.append(1)
 
         return np.array(X), np.array(y)
 
@@ -111,6 +114,13 @@ class Classifier:
     def predict_sample(self, sample: np.ndarray) -> int:
         if self.model is None:
             raise RuntimeError("Model not trained yet.")
-        features = self.prepare_training_data(sample).reshape(1, -1)
+        features = np.array(self.generate_features(sample)).reshape(1, -1)
         prediction = self.model.predict(features)
         return int(prediction)
+    
+    def apply(self, data: ndarray, fs: int) -> ndarray:
+        prediction = self.predict_sample(data)
+        if prediction:
+            return np.array(['eyesOpen'])
+        else:
+            return np.array(['eyesClosed'])

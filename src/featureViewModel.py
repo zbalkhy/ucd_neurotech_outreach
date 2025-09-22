@@ -35,10 +35,10 @@ class FeatureViewModel(object):
         feature_datasets = []
         for i, dataset in enumerate(datasets):
             feature_dataset = []
-            for j in range(dataset.shape[2]):
-                trial = dataset[:,:,j]
+            for j in range(dataset.shape[0]):
+                trial = dataset[j,:]
                 trial_feature = feature.apply(trial, 128)
                 ##TODO: introduce channel selection in the ui and pass down to here
-                feature_dataset.append(trial_feature[channels[i]]) # for now take first channel
+                feature_dataset.append(trial_feature) # for now take first channel
             feature_datasets.append(np.array(feature_dataset))
         return feature_datasets

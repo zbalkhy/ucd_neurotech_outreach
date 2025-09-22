@@ -2,7 +2,7 @@ from dataStream import *
 import serial
 
 class XRPControlStream(DataStream):
-    def __init(self, reference_stream: DataStream, 
+    def __init__(self, reference_stream: DataStream, 
                port: str, baudrate: int, timeout:int,
                stream_name: str,
                stream_type: StreamType,
@@ -22,6 +22,7 @@ class XRPControlStream(DataStream):
                     # take the last element in the stream data as the command
                     command = reference_stream_data[-1]
                     ser_output = str(command) + "\n"
+                    print(ser_output)
                     self.ser.write(ser_output.encode())
 
         except Exception as e:

@@ -32,7 +32,6 @@ class dataCollectionViewModel(object):
         if self.first_trial == True:
             return 1
         else:
-            axis = self.dataset.ndim
             size = self.dataset.shape
             return size[0]
 

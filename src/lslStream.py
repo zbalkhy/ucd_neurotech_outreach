@@ -25,7 +25,7 @@ class LslStream(DataStream):
                 if sample:
                     sample.append(timestamp)
                     try:
-                        self.data.append(sample)
+                        self.data.append(sample[0])
                     except:
                         pass
                     
