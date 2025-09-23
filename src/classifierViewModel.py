@@ -21,11 +21,9 @@ class ClassifierViewModel(object):
         classifier_stream = ComposedStream(openbci, [classifier], name+"_stream", StreamType.CONTROL, 1)
         self.user_model.add_stream(classifier_stream)
 
-        xrp_stream = XRPControlStream(classifier_stream, "/dev/tty.usbmodem21301", 9600, 1, "xrp", StreamType.DEVICE, 100)
+        xrp_stream = XRPControlStream(classifier_stream, "/dev/tty.usbmodem1301", 9600, 1, "xrp", StreamType.DEVICE, 100)
         self.user_model.add_stream(xrp_stream)
 
-
-    
     def create_classifier(
         self,
         name: str,

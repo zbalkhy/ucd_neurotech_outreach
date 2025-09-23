@@ -24,7 +24,7 @@ class dataCollectionView(EventClass):
 
         #saving the amount of trials into a stringvar
         self.trial_num_str = StringVar(self.trial_mod_frame)
-        self.trial_num_str.set("Number of Trials: 0")
+        self.trial_num_str.set("trial#: 0")
 
         #button to collect trial, locks the dropdown
         tk.Button(self.trial_mod_frame, text = "Collect Trial", width=6, height=1, command = self.collect_trial).pack(pady=10, padx=10, anchor = "e", side = LEFT)
@@ -82,7 +82,7 @@ class dataCollectionView(EventClass):
             self.dropdown.config(state="disabled")
         else:
             None
-        self.trial_num_str.set("Number of Trials: " + str(trial_number))
+        self.trial_num_str.set("trial# " + str(trial_number))
 
     def save_dataset(self) -> None:
         name = self.dataset_name.get()

@@ -23,7 +23,7 @@ class ComposedStream(DataStream):
         #access the filter information with the corresponding filter
         try:
             while not self.shutdown_event.is_set():
-                new_data = np.array(list(self.reference_stream.get_stream_data()))
+                new_data = np.array(list(self.reference_stream.data))
                 for transformation in self.transformations:
                     new_data = transformation.apply(new_data, SAMPLING_FREQ)
                 self.data.extend(list(new_data))

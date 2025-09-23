@@ -20,8 +20,8 @@ class FilterClass():
             cutoff_freq = np.array(self.filters['frequency'][i])
             filter_order = self.filters['order'][i]
             normalized_cutoff = cutoff_freq / (.5 * fs)
-            b, a = signal.butter(filter_order, normalized_cutoff, btype=filter_type, analog=False)
-            data = signal.lfilter(b, a, data)
+            b, a = signal.butter(filter_order, normalized_cutoff, btype=filter_type, analog=True)
+            data = signal.filtfilt(b, a, data)
         return data
     
     def apply(self, data: ndarray, fs: int) -> ndarray:

@@ -24,7 +24,6 @@ class filterViewModel(object):
     def create_filter_stream(self, name: str, reference_stream_name: str) -> None:
         #currently the filter and the filtered stream will be named the same thing
         filter_obj = self.user_model.get_filter(name)
-        reference_stream = self.user_model.get_stream(reference_stream_name)
-        filtered_stream = ComposedStream(reference_stream, [filter_obj], name, StreamType.FILTER, reference_stream._queue_length)
+        filtered_stream = ComposedStream(self.user_model.get_stream(reference_stream_name), [filter_obj], name, StreamType.FILTER, 250)
         self.user_model.add_stream(filtered_stream)
         

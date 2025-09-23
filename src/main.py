@@ -22,6 +22,8 @@ import numpy as np
 from lslStream import LslStream
 from xrpControlStream import XRPControlStream
 
+from scipy.io import loadmat
+
 
 from pylsl import StreamInlet, resolve_streams
 
@@ -44,11 +46,15 @@ if __name__ == "__main__":
     
     # initialize user model
     user_model = UserModel()
+    data = loadmat('/Users/zacariabalkhy/ucd_neurotech_outreach/src/data.mat')
+    for key in data.keys():
+        if key in ['eyesOpen', 'eyesClosed']:
+            user_model.add_dataset(key, data[key])
 
     streams = resolve_streams()
 
     if len(streams):
-        openBCIStream = LslStream(streams[1], 250, "openbci", StreamType.DEVICE, 200)
+        openBCIStream = LslStream(streams[0], 250, "openbci", StreamType.DEVICE, 250)
         user_model.add_stream(openBCIStream)
 
     data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)

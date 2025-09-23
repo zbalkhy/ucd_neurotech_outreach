@@ -70,7 +70,7 @@ class Classifier:
     def generate_features(self, data: np.ndarray) -> np.ndarray:
         # apply filters
         for flt in self.filters:
-            data = flt.apply(data)
+            data = flt.apply(data, SAMPLING_FREQ)
 
         # extract features per channel
         feature_vectors = []
@@ -101,11 +101,9 @@ class Classifier:
     def train_model(self) -> None:
         X, y = self.prepare_training_data()
         self.model = LogisticRegression(
-            solver="liblinear",
-            max_iter=1000,
-            random_state=42
+            random_state=0
         )
-        self.model.fit(X, y)
+        self.model.fit(np.array(X).reshape(-1, 1), y)
 
     # -----------------------
     # Prediction
@@ -114,11 +112,13 @@ class Classifier:
         if self.model is None:
             raise RuntimeError("Model not trained yet.")
         features = np.array(self.generate_features(sample)).reshape(1, -1)
-        prediction = self.model.predict(features)
+        prediction = (features[0] < 7e-7)
+        #prediction = self.model.predict(features)
         return int(prediction)
     
     def apply(self, data: np.ndarray, fs: int) -> np.ndarray:
         prediction = self.predict_sample(data)
+        print(prediction)
         if prediction:
             return np.array(['eyesOpen'])
         else:

@@ -204,7 +204,7 @@ class Plotter(EventClass):
                 ax1.set_title(self.labels["amplitude"]["title"])
                 ax1.set_ylabel(self.labels["amplitude"]["ylabel"])
                 ax1.set_xlabel(self.labels["amplitude"]["xlabel"])
-                ax1.set_ylim([-100, 100])
+                #ax1.set_ylim([-100, 100])
 
             if self.show_power:
                 freqs = np.fft.rfftfreq(len(data), 1 / fs)
