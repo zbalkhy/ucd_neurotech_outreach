@@ -1,9 +1,28 @@
 from userModel import UserModel
 from classifier import Classifier
+from composedStream import ComposedStream 
+from dataStream import StreamType
+from xrpControlStream import XRPControlStream
 
 class ClassifierViewModel(object):
     def __init__(self, user_model: UserModel):
         self.user_model: UserModel = user_model
+
+    def train_classifier(self, name: str) -> None:
+        classifier = self.user_model.get_classifier(name)
+        classifier.train_model()
+        self.user_model.add_classifier(name, classifier)
+        self.start_classifier_stream(name)
+
+    def start_classifier_stream(self, name: str) -> None:
+        # this will need a major refactor, this is hacky, dont use this
+        openbci = self.user_model.get_stream('openbci')
+        classifier = self.user_model.get_classifier(name)
+        classifier_stream = ComposedStream(openbci, [classifier], name+"_stream", StreamType.CONTROL, 1)
+        self.user_model.add_stream(classifier_stream)
+
+        xrp_stream = XRPControlStream(classifier_stream, "/dev/tty.usbmodem1301", 9600, 1, "xrp", StreamType.DEVICE, 100)
+        self.user_model.add_stream(xrp_stream)
 
     def create_classifier(
         self,
@@ -27,6 +46,4 @@ class ClassifierViewModel(object):
             filters=filter_objs,
         )
 
-        if not hasattr(self.user_model, "classifiers"):
-            self.user_model.classifiers = {}
-        self.user_model.classifiers[name] = classifier
+        self.user_model.add_classifier(name, classifier)

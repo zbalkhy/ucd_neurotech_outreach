@@ -18,6 +18,7 @@ class Plotter(EventClass):
         self.fig = Figure(figsize=(6, 8), dpi=100)  # taller for multiple plots
         self.continue_plotting = True
         self.simulated = False
+        self.power_plot_ylim = 0
 
         self.subscribe_to_subject(self.user_model)
 
@@ -181,7 +182,9 @@ class Plotter(EventClass):
         else:
             data = []
             if self.streams:
-                data = list(self.streams[self.current_stream_index].get_stream_data())
+                data = np.array(list(self.streams[self.current_stream_index].get_stream_data()))
+                if len(data.shape) > 1:
+                    data = data[:,0]
 
         self.fig.clear()  # clear figure before redrawing
 
@@ -201,18 +204,21 @@ class Plotter(EventClass):
                 ax1.set_title(self.labels["amplitude"]["title"])
                 ax1.set_ylabel(self.labels["amplitude"]["ylabel"])
                 ax1.set_xlabel(self.labels["amplitude"]["xlabel"])
-                ax1.set_ylim([-100, 100])
+                #ax1.set_ylim([-100, 100])
 
             if self.show_power:
                 freqs = np.fft.rfftfreq(len(data), 1 / fs)
                 psd = np.abs(np.fft.rfft(data)) ** 2
+                if max(psd) > self.power_plot_ylim:
+                    self.power_plot_ylim = max(psd)
                 ax2 = self.fig.add_subplot(n_subplots, 1, subplot_index)
                 subplot_index += 1
                 ax2.plot(freqs, psd, color="green")
                 ax2.set_xlim([0, 50])  # up to 50 Hz
+                ax2.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
                 ax2.set_title(self.labels["power"]["title"])
                 ax2.set_xlabel(self.labels["power"]["xlabel"])
-                ax2.set_ylabel(self.labels["power"]["ylabel"])
+                ax2.set_ylabel(self.labels["power"]["ylabel"], labelpad=15)
 
             if self.show_bands:
                 freqs = np.fft.rfftfreq(len(data), 1 / fs)
@@ -226,9 +232,10 @@ class Plotter(EventClass):
 
                 ax3 = self.fig.add_subplot(n_subplots, 1, subplot_index)
                 ax3.bar(labels, band_powers, color="orange")
+                ax3.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
                 ax3.set_title(self.labels["bands"]["title"])
                 ax3.set_xlabel(self.labels["bands"]["xlabel"])
-                ax3.set_ylabel(self.labels["bands"]["ylabel"])
+                ax3.set_ylabel(self.labels["bands"]["ylabel"], labelpad=15)
                 ax3.tick_params(axis='x', rotation=30)    
 
         else:

@@ -24,21 +24,24 @@ class FeatureViewModel(object):
     def get_feature(self, name: str) -> FeatureClass:
         return self.user_model.get_features()[name]
     
-    def calc_feature_datasets(self, feature_name: str, 
+    def calc_feature_datasets(self, feature_names: list[str], 
                               dataset_names: list[str],
-                              channels: list[int]) -> list[np.ndarray]:
+                              channels: list[int]) -> tuple[list[str], list[np.ndarray]]:
         # get feature and dataset
-        feature = self.get_feature(feature_name)
+        features = [self.get_feature(feature) for feature in feature_names]
         datasets = [self.get_dataset(dataset) for dataset in dataset_names]
         
         # calculate feature on dataset
         feature_datasets = []
-        for i, dataset in enumerate(datasets):
-            feature_dataset = []
-            for j in range(dataset.shape[2]):
-                trial = dataset[:,:,j]
-                trial_feature = feature.apply(trial, 128)
-                ##TODO: introduce channel selection in the ui and pass down to here
-                feature_dataset.append(trial_feature[channels[i]]) # for now take first channel
-            feature_datasets.append(np.array(feature_dataset))
-        return feature_datasets
+        labels = []
+        for i, feature in enumerate(features):
+            for j, dataset in enumerate(datasets):
+                feature_dataset = []
+                for k in range(dataset.shape[0]):
+                    trial = dataset[k,:]
+                    trial_feature = feature.apply(trial, 128)
+                    ##TODO: introduce channel selection in the ui and pass down to here
+                    feature_dataset.append(trial_feature) # for now take first channel
+                feature_datasets.append(np.array(feature_dataset))
+                labels.append(feature_names[i]+"_"+dataset_names[j])
+        return labels, feature_datasets

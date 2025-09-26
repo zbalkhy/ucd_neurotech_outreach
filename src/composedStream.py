@@ -3,13 +3,14 @@ from time import sleep
 from typing import Union
 from filterClass import FilterClass
 from featureClass import FeatureClass
-from dataStream import DataStream, StreamType
-from common import QUEUE_LENGTH, SAMPLING_FREQ
+from classifier import Classifier
+from dataStream import *
+from common import SAMPLING_FREQ
 
 class ComposedStream(DataStream):
     def __init__(self, 
                  reference_stream: DataStream,
-                 transformations: list[Union[FeatureClass, FilterClass]],
+                 transformations: list[Union[FeatureClass, FilterClass, Classifier]],
                  stream_name: str,
                  stream_type: StreamType,
                  queue_length: int = QUEUE_LENGTH):
@@ -22,7 +23,7 @@ class ComposedStream(DataStream):
         #access the filter information with the corresponding filter
         try:
             while not self.shutdown_event.is_set():
-                new_data = np.array(list(self.reference_stream.get_stream_data()))
+                new_data = np.array(list(self.reference_stream.data))
                 for transformation in self.transformations:
                     new_data = transformation.apply(new_data, SAMPLING_FREQ)
                 self.data.extend(list(new_data))

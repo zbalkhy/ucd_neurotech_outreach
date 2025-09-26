@@ -3,6 +3,7 @@ from threading import Lock
 from eventClass import EventClass, EventType
 from filterClass import FilterClass
 from featureClass import FeatureClass
+from classifier import Classifier
 from numpy import ndarray
 
 class UserModel(EventClass):
@@ -11,6 +12,7 @@ class UserModel(EventClass):
         self.filters: dict = {}
         self.data_sets: dict[str, ndarray] = {}
         self.features: dict[str, FeatureClass] = {}
+        self.classifiers: dict[str, Classifier] = {}
         self.lock: Lock = Lock()
         super().__init__()
 
@@ -78,6 +80,19 @@ class UserModel(EventClass):
     
     def add_feature(self, feature: FeatureClass) -> None:
         self.features[str(feature)] = feature
+
+    def remove_classifier(self, name: str) -> None:
+        del self.classifiers[name]
+
+    def add_classifier(self, name: str, classifier: Classifier) -> None:
+        self.classifiers[name] = classifier
+        #self.notify(None, EventType.DATASETUPDATE)
+        
+    def get_classifier(self, name: str) -> Classifier:
+        if name in self.classifiers.keys():
+            return self.classifiers[name]
+        else:
+            return None
 
     
 

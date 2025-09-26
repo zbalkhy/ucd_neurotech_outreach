@@ -19,9 +19,16 @@ from featureViewModel import FeatureViewModel
 from featureClass import FeatureClass, FeatureType
 import pandas as pd
 import numpy as np
+from lslStream import LslStream
+from xrpControlStream import XRPControlStream
+
+from scipy.io import loadmat
+
+
+from pylsl import StreamInlet, resolve_streams
 
 frame_names = [[f"Device Connector", f"Classifier", f"Visualizer"],
-               [f"Float The Orb", f"Filters", f"Feature Viewer"]]
+               [f"Data Collector", f"Filters Maker", f"Feature Viewer"]]
 
 def on_closing():
     # send shutdown event to each stream thread
@@ -39,28 +46,24 @@ if __name__ == "__main__":
     
     # initialize user model
     user_model = UserModel()
-    data_stream = SoftwareStream("software_stream_test", StreamType.SOFTWARE)
+    data = loadmat('/Users/zacariabalkhy/ucd_neurotech_outreach/src/data.mat')
+    for key in data.keys():
+        if key in ['eyesOpen', 'eyesClosed']:
+            user_model.add_dataset(key, data[key])
+
+    streams = resolve_streams()
+
+    if len(streams):
+        openBCIStream = LslStream(streams[0], 250, "openbci", StreamType.DEVICE, 250)
+        user_model.add_stream(openBCIStream)
+
+    data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
     user_model.add_stream(data_stream)
     
-    default_features = [
-        FeatureType.DELTA,
-        FeatureType.THETA,
-        FeatureType.ALPHA,
-        FeatureType.BETA,
-        FeatureType.GAMMA
-    ]
-
-    for ftype in default_features:
-        feature = FeatureClass(ftype)
-        user_model.add_feature(feature)
-
-    #filtering = filterViewModel(user_model)
-    #filtering.add_filter('lowpass', 4, [30])
-    #filtering.add_filter('highpass', 4, [10])
-    #filtering.add_filter('bandstop', 4, [20, 25])
-    #filtering.remove_filter(1)
-
-    #filtering.create_filter_stream("software_stream_test")
+    # add default features to the user model
+    for type in FeatureType:
+        if type != FeatureType.CUSTOM:
+            user_model.add_feature(FeatureClass(type))
 
     # create root and frame for the main window
     root = tk.Tk()

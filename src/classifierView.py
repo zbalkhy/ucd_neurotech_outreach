@@ -58,6 +58,8 @@ class ClassifierView(EventClass):
         tk.Label(self.list_frame, text="Created Classifiers:").pack(anchor="w", padx=5, pady=5)
 
         self.classifier_listbox = tk.Listbox(self.list_frame, height=12)
+        self.classifier_listbox.bind('<<ListboxSelect>>', self.on_select_classifier)
+
         self.classifier_listbox.pack(fill="both", expand=True, padx=5, pady=5)
 
         self.refresh_lists()
@@ -112,3 +114,10 @@ class ClassifierView(EventClass):
     def on_notify(self, eventData: any, event: EventType):
         if event in [EventType.DATASETUPDATE, EventType.DEVICELISTUPDATE]:
             self.refresh_lists()
+    
+    def on_select_classifier(self, event: tk.Event) -> None:
+        w = event.widget
+        index = int(w.curselection()[0])
+        value = w.get(index)
+        self.view_model.train_classifier(value)
+        

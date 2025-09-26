@@ -70,7 +70,7 @@ class Classifier:
     def generate_features(self, data: np.ndarray) -> np.ndarray:
         # apply filters
         for flt in self.filters:
-            data = flt.apply(data)
+            data = flt.apply(data, SAMPLING_FREQ)
 
         # extract features per channel
         feature_vectors = []
@@ -81,29 +81,29 @@ class Classifier:
             feature_vectors.append(feature_vals)
 
         # flatten into single vector
-        return np.concatenate(feature_vectors, axis=0)
+        return feature_vectors #np.concatenate(feature_vectors, axis=0)
 
     def prepare_training_data(self) -> Tuple[np.ndarray, np.ndarray]:
         X, y = [], []
 
         for _, data in self.label0_datasets.items():
-            X.append(self.generate_features(data))
-            y.append(0)
+            for i in range(data.shape[0]):
+                X.append(self.generate_features(data[i,:]))
+                y.append(0)
 
         for _, data in self.label1_datasets.items():
-            X.append(self.generate_features(data))
-            y.append(1)
+            for i in range(data.shape[0]):
+                X.append(self.generate_features(data[i,:]))
+                y.append(1)
 
         return np.array(X), np.array(y)
 
     def train_model(self) -> None:
         X, y = self.prepare_training_data()
         self.model = LogisticRegression(
-            solver="liblinear",
-            max_iter=1000,
-            random_state=42
+            random_state=0
         )
-        self.model.fit(X, y)
+        self.model.fit(np.array(X).reshape(-1, 1), y)
 
     # -----------------------
     # Prediction
@@ -111,6 +111,15 @@ class Classifier:
     def predict_sample(self, sample: np.ndarray) -> int:
         if self.model is None:
             raise RuntimeError("Model not trained yet.")
-        features = self.prepare_training_data(sample).reshape(1, -1)
-        prediction = self.model.predict(features)
+        features = np.array(self.generate_features(sample)).reshape(1, -1)
+        prediction = (features[0] < 7e-7)
+        #prediction = self.model.predict(features)
         return int(prediction)
+    
+    def apply(self, data: np.ndarray, fs: int) -> np.ndarray:
+        prediction = self.predict_sample(data)
+        print(prediction)
+        if prediction:
+            return np.array(['eyesOpen'])
+        else:
+            return np.array(['eyesClosed'])
