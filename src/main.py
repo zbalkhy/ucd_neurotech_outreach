@@ -1,5 +1,6 @@
 import tkinter as tk
-from plotter import Plotter
+from plotterView import PlotterView, create_plotter
+from plotterViewModel import PlotterViewModel
 from floatTheOrbGame import FloatTheOrb
 from common import create_grid
 from userModel import UserModel
@@ -81,7 +82,8 @@ if __name__ == "__main__":
     classifier_view = ClassifierView(frames[0][1], classifier_view_model)
 
     # create plotter
-    plotter = Plotter(frames[0][2], user_model)
+    plotter_view_model, plotter_view = create_plotter(frames[0][2], user_model) 
+    
 
     # create feature viewer
     feature_view_model = FeatureViewModel(user_model)
