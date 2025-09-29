@@ -14,21 +14,21 @@ class PlotterView(EventClass):
         self.frame = frame
         self.view_model = view_model
         
-        # Changed: Subscribe to ViewModel events instead of user_model directly
+
         self.subscribe_to_subject(self.view_model)
         
-        # Changed: All matplotlib/tkinter setup moved to View as it's purely UI
+        
         self.fig = Figure(figsize=(6, 8), dpi=100)  # taller for multiple plots
         
         self._setup_canvas()
         self._setup_controls()
         
-        # Start the plotting loop
+        
         self.plot()
 
     def _setup_canvas(self):
         
-        # embed Matplotlib in Tk
+        
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.frame)
         self.canvas.draw()
         self.canvas.mpl_connect("key_press_event",
@@ -37,7 +37,7 @@ class PlotterView(EventClass):
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def _setup_controls(self):
-        # Buttons
+        
         controls = tk.Frame(self.frame, bd=1, relief=tk.FLAT)
         controls.pack(side=tk.BOTTOM, fill=tk.X, before=self.canvas.get_tk_widget())
 
@@ -47,11 +47,11 @@ class PlotterView(EventClass):
         self.button_pause = tk.Button(controls, text="Play/Pause", command=self._on_play_pause)
         self.button_pause.grid(row=0, column=0, columnspan=6, padx=6, pady=6, sticky="n")
 
-        # Safely get current stream name and list from view_model (fallback if API differs)
+        
         try:
             current_stream = self.view_model.get_current_stream_name()
         except Exception:
-            # fallback: try to use first of stream_names or empty
+            
             current_stream = (self.view_model.get_stream_names()[0] if hasattr(self.view_model, "get_stream_names") and self.view_model.get_stream_names() else
                               (self.view_model.stream_names[0] if hasattr(self.view_model, "stream_names") and self.view_model.stream_names else ""))
 
@@ -98,11 +98,9 @@ class PlotterView(EventClass):
             self._refresh_stream_menu(eventData)
 
     def _refresh_stream_menu(self, stream_names):
-        # Reset var and delete all old options
         self.selected_stream.set('')
         self.stream_menu['menu'].delete(0, 'end')
 
-        # Insert list of new options (tk._setit hooks them up to var)
         for stream in stream_names:
             self.stream_menu['menu'].add_command(
                 label=stream, 
@@ -138,7 +136,7 @@ class PlotterView(EventClass):
         popup = tk.Toplevel(self.frame)
         popup.title(f"{graph_type.capitalize()} Settings")
 
-        # Get current labels from ViewModel
+        
         plot_data = self.view_model.get_plot_data()
         current_labels = plot_data['labels'][graph_type]
 
@@ -158,7 +156,7 @@ class PlotterView(EventClass):
         ylabel_entry.grid(row=2, column=1)
 
         def apply_settings():
-            # Changed: Delegate to ViewModel for business logic
+            
             success = self.view_model.update_labels(
                 graph_type, 
                 title_entry.get(), 
@@ -186,7 +184,6 @@ class PlotterView(EventClass):
         self.canvas.draw()
         self.canvas.flush_events()
 
-        # schedule next update - Changed: Check ViewModel state
         if self.view_model.should_continue_plotting():
             self.frame.after(10, self.plot)
 
@@ -225,7 +222,6 @@ class PlotterView(EventClass):
             ax3.set_xlabel(labels["bands"]["xlabel"])
             ax3.set_ylabel(labels["bands"]["ylabel"])
             ax3.tick_params(axis='x', rotation=30)
-
 
 # Changed: Factory function to create both ViewModel and View together
 def create_plotter(frame: tk.Frame, user_model):

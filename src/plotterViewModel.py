@@ -9,7 +9,7 @@ class PlotterViewModel(EventClass):
         super().__init__()
         self.user_model = user_model
         self.continue_plotting = True
-        self.simulated = True  # Changed: Moved simulation flag to ViewModel as it's business logic
+        self.simulated = True  
 
         self.subscribe_to_subject(self.user_model)
 
@@ -23,7 +23,7 @@ class PlotterViewModel(EventClass):
         self.current_stream_index = 0
         self.stream_names = [f"Stream {i+1}" for i in range(len(self.streams))]
 
-        # EEG frequency bands - Changed: Moved to ViewModel as it's domain logic
+        # EEG frequency bands 
         self.bands = {
             "delta (0.5–4 Hz)": (0.5, 4),
             "theta (4–8 Hz)": (4, 8),
@@ -32,12 +32,12 @@ class PlotterViewModel(EventClass):
             "gamma (30–45 Hz)": (30, 45),
         }
 
-        # Visibility flags - Changed: Moved to ViewModel to manage state
+        
         self.show_amplitude = True
         self.show_power = True
         self.show_bands = True
 
-        # Label settings (user editable) - Changed: Moved to ViewModel as it's configuration data
+        
         self.labels = {
             "amplitude": {"title": "Amplitude vs Time", "xlabel": "Time (s)", "ylabel": "Amplitude (µV)"},
             "power": {"title": "Power Spectrum", "xlabel": "Frequency (Hz)", "ylabel": "Power"},
@@ -52,7 +52,6 @@ class PlotterViewModel(EventClass):
     def on_notify(self, eventData, event) -> None:
         if event == EventType.DEVICELISTUPDATE:
             self.refresh_stream_list()
-            # Changed: Notify View about stream list update
             self.notify_subscribers(EventType.STREAMLISTUPDATE, self.stream_names)
             
     def toggle_plotting(self):
