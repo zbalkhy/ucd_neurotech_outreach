@@ -45,20 +45,17 @@ class PlotterViewModel(EventClass):
         }
 
     def refresh_stream_list(self):
-        """Refresh the list of available streams - Changed: Pure business logic, stays in ViewModel"""
         self.streams = [s for s in self.user_model.get_streams() if s.stream_type in [StreamType.FILTER, StreamType.DEVICE, StreamType.SOFTWARE]]
         self.stream_names = [f"Stream {i+1}" for i in range(len(self.streams))]
         return self.stream_names
 
     def on_notify(self, eventData, event) -> None:
-        """Handle events from the user model - Changed: Business logic, stays in ViewModel"""
         if event == EventType.DEVICELISTUPDATE:
             self.refresh_stream_list()
             # Changed: Notify View about stream list update
             self.notify_subscribers(EventType.STREAMLISTUPDATE, self.stream_names)
             
     def toggle_plotting(self):
-        """Toggle the plotting state - Changed: Business logic method"""
         if not self.continue_plotting:
             self.continue_plotting = not self.continue_plotting
             return True  # Should start plotting
@@ -67,29 +64,24 @@ class PlotterViewModel(EventClass):
             return False  # Should stop plotting
     
     def change_stream(self, selection):
-        """Change the current stream - Changed: Business logic, returns success status"""
         if selection in self.stream_names:
             self.current_stream_index = self.stream_names.index(selection)
             return True
         return False
 
     def toggle_amplitude(self):
-        """Toggle amplitude visibility - Changed: Returns new state for View to update UI"""
         self.show_amplitude = not self.show_amplitude
         return self.show_amplitude
 
     def toggle_power_spectrum(self):
-        """Toggle power spectrum visibility - Changed: Returns new state for View to update UI"""
         self.show_power = not self.show_power
         return self.show_power
 
     def toggle_band_power(self):
-        """Toggle band power visibility - Changed: Returns new state for View to update UI"""
         self.show_bands = not self.show_bands
         return self.show_bands
 
     def update_labels(self, graph_type, title, xlabel, ylabel):
-        """Update labels for a specific graph type - Changed: Business logic for managing labels"""
         if graph_type in self.labels:
             self.labels[graph_type]["title"] = title
             self.labels[graph_type]["xlabel"] = xlabel
@@ -98,7 +90,6 @@ class PlotterViewModel(EventClass):
         return False
 
     def get_plot_data(self):
-        """Get all data needed for plotting - Changed: Central method to provide all plotting data to View"""
         # Generate or get data
         if self.simulated:
             data = self._generate_simulated_data()
@@ -153,7 +144,6 @@ class PlotterViewModel(EventClass):
         }
 
     def _generate_simulated_data(self):
-        """Generate simulated data - Changed: Private method for data generation logic"""
         fs = 250
         t = np.linspace(0, 2, 2*fs, endpoint=False)
         if self.current_stream_index == 0:
@@ -166,22 +156,18 @@ class PlotterViewModel(EventClass):
             return 20*np.sin(2*np.pi*30*t) + 10*np.random.randn(len(t))
 
     def _get_real_data(self):
-        """Get real data from streams - Changed: Private method for real data access"""
         data = []
         if self.streams and self.current_stream_index < len(self.streams):
             data = list(self.streams[self.current_stream_index].get_stream_data())
         return data
 
     def should_continue_plotting(self):
-        """Check if plotting should continue - Changed: Simple state accessor for View"""
         return self.continue_plotting
 
     def get_stream_names(self):
-        """Get current stream names - Changed: Accessor method for View"""
         return self.stream_names
 
     def get_current_stream_name(self):
-        """Get currently selected stream name - Changed: Accessor method for View"""
         if self.current_stream_index < len(self.stream_names):
             return self.stream_names[self.current_stream_index]
         return ""

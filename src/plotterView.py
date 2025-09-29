@@ -27,7 +27,7 @@ class PlotterView(EventClass):
         self.plot()
 
     def _setup_canvas(self):
-        """Setup the matplotlib canvas - Changed: Private method for UI setup"""
+        
         # embed Matplotlib in Tk
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.frame)
         self.canvas.draw()
@@ -37,8 +37,6 @@ class PlotterView(EventClass):
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def _setup_controls(self):
-        """Setup all control widgets - Changed: Private method for UI setup"""
-        
         # Buttons
         controls = tk.Frame(self.frame, bd=1, relief=tk.FLAT)
         controls.pack(side=tk.BOTTOM, fill=tk.X, before=self.canvas.get_tk_widget())
@@ -96,12 +94,10 @@ class PlotterView(EventClass):
         
 
     def on_notify(self, eventData, event) -> None:
-        """Handle events from ViewModel - Changed: Handle ViewModel events"""
         if event == EventType.STREAMLISTUPDATE:
             self._refresh_stream_menu(eventData)
 
     def _refresh_stream_menu(self, stream_names):
-        """Refresh the stream selection menu - Changed: UI update method"""
         # Reset var and delete all old options
         self.selected_stream.set('')
         self.stream_menu['menu'].delete(0, 'end')
@@ -117,34 +113,28 @@ class PlotterView(EventClass):
             self.selected_stream.set(stream_names[0])
 
     def _on_play_pause(self):
-        """Handle play/pause button click - Changed: UI event handler"""
         should_start = self.view_model.toggle_plotting()
         if should_start:
             self.plot()
 
     def _on_change_stream(self, selection):
-        """Handle stream selection change - Changed: UI event handler"""
         success = self.view_model.change_stream(selection)
         if success:
             self.plot()  # force redraw
 
     def _on_toggle_amp(self):
-        """Handle amplitude toggle - Changed: UI event handler with button text update"""
         show_amplitude = self.view_model.toggle_amplitude()
         self.toggle_amplitude.config(text="Hide Amp" if show_amplitude else "Show Amp")
 
     def _on_toggle_power_spectrum(self):
-        """Handle power spectrum toggle - Changed: UI event handler with button text update"""
         show_power = self.view_model.toggle_power_spectrum()
         self.toggle_power.config(text="Hide Power" if show_power else "Show Power")
 
     def _on_toggle_band_power(self):
-        """Handle band power toggle - Changed: UI event handler with button text update"""
         show_bands = self.view_model.toggle_band_power()
         self.toggle_bands.config(text="Hide Band" if show_bands else "Show Band")
 
     def _open_settings(self, graph_type):
-        """Open settings popup for a graph type - Changed: UI method, delegates logic to ViewModel"""
         popup = tk.Toplevel(self.frame)
         popup.title(f"{graph_type.capitalize()} Settings")
 
@@ -181,7 +171,6 @@ class PlotterView(EventClass):
         tk.Button(popup, text="Apply", command=apply_settings).grid(row=3, column=0, columnspan=2)
 
     def plot(self):
-        """Plot all graphs based on ViewModel data - Changed: Pure UI rendering method"""
         # Get all plotting data from ViewModel
         plot_data = self.view_model.get_plot_data()
         
@@ -202,13 +191,11 @@ class PlotterView(EventClass):
             self.frame.after(10, self.plot)
 
     def _show_no_data_message(self):
-        """Show 'No data' message - Changed: Private UI method"""
         ax = self.fig.add_subplot(111)
         ax.text(0.5, 0.5, "No data", ha="center", va="center")
         ax.set_axis_off()
 
     def _render_plots(self, plot_data):
-        """Render all the plots based on provided data - Changed: Private UI method"""
         subplot_index = 1
         labels = plot_data['labels']
         
