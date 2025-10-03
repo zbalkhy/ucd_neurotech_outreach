@@ -25,6 +25,9 @@ frame_names = [[f"Device Connector", f"Classifier", f"Visualizer"],
                [f"Float The Orb", f"Filters", f"Feature Viewer"]]
 
 def on_closing():
+    # Stop the plotter thread
+    plotter_view.stop()
+    
     # send shutdown event to each stream thread
     for data_stream in user_model.get_streams():
         data_stream.shutdown_event.set()
