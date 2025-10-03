@@ -22,7 +22,7 @@ class PlotterView(EventClass):
         
         self.fig = Figure(figsize=(6, 8), dpi=100)  # taller for multiple plots
         
-        # Added: Thread-safe communication
+        
         self.plot_queue = queue.Queue(maxsize=2)  # Small queue to avoid memory buildup
         self.plot_thread = None
         self.stop_thread = threading.Event()
@@ -96,7 +96,6 @@ class PlotterView(EventClass):
         self.bands_settings.grid(row=1, column=5, padx=6, pady=6, sticky="ew")
 
     def _start_plot_thread(self):
-        """Start the background plotting thread - Added: Threading support"""
         self.stop_thread.clear()
         self.plot_thread = threading.Thread(target=self._plot_loop, daemon=True)
         self.plot_thread.start()
@@ -104,7 +103,6 @@ class PlotterView(EventClass):
         self._process_plot_queue()
 
     def _plot_loop(self):
-        """Background thread that continuously gets plot data - Added: Threading support"""
         while not self.stop_thread.is_set():
             if self.view_model.should_continue_plotting():
                 try:
@@ -124,7 +122,6 @@ class PlotterView(EventClass):
                 except Exception as e:
                     print(f"Error in plot loop: {e}")
             
-            # Sleep for 50ms (20 Hz update rate) to reduce CPU usage
             time.sleep(0.05)
 
     def _process_plot_queue(self):
@@ -139,7 +136,6 @@ class PlotterView(EventClass):
         except Exception as e:
             print(f"Error processing plot queue: {e}")
         
-        # Schedule next UI update at 50ms (20 Hz) to match data rate
         if not self.stop_thread.is_set():
             self.frame.after(50, self._process_plot_queue)
 
@@ -199,7 +195,6 @@ class PlotterView(EventClass):
         popup = tk.Toplevel(self.frame)
         popup.title(f"{graph_type.capitalize()} Settings")
 
-        # Fixed: Get labels directly from ViewModel instead of expensive get_plot_data() call
         current_labels = self.view_model.labels[graph_type]
 
         tk.Label(popup, text="Graph Title:").grid(row=0, column=0, sticky="w")
@@ -230,7 +225,6 @@ class PlotterView(EventClass):
         tk.Button(popup, text="Apply", command=apply_settings).grid(row=3, column=0, columnspan=2)
 
     def plot(self):
-        """Legacy method - now handled by thread - Kept for compatibility"""
         # This method is no longer used - thread handles all plotting
         pass
 
