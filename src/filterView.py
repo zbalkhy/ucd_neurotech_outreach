@@ -10,7 +10,6 @@ class filterView(EventClass):
          # set class variables
         self.frame: tk.Frame = frame
         self.view_model = view_model
-        self.filter_count = 0
         self.filter_boxes = {'filter': [], 'order': [], 'frequency': []}
 
         self.subscribe_to_subject(self.view_model.user_model)
@@ -61,14 +60,13 @@ class filterView(EventClass):
         #add a frame with all of the filters
         self.filter_list_frame = tk.Frame(frame, borderwidth=1, relief="solid")
         self.filter_list_frame.pack(side="top", fill="both", expand=True)
+        self.update_filter_frame()
         
     def add_filter_box(self):
         #add onto filter count
-        self.filter_count += 1
         self.update_filter_frame()
         
     def clear_filter_box(self):
-        self.filter_count = 0
         self.filter_boxes = {'filter': [], 'order': [], 'frequency': []}
         self.update_filter_frame()
         
@@ -103,29 +101,28 @@ class filterView(EventClass):
         #note, I know I can do this more efficiently but it's like 2am and tkinter is kicking my butt -Andy
 
         #creates objects to interact with but holds actual value in a stringvar object to keep saved
-        for i in range(self.filter_count):
-            label1 = tk.Label(self.scrollable_frame, text='Filter Type:', anchor="w")
-            label1.grid(row=i, column=0, padx=3, pady=5, sticky="w")
-            filter_types = ['lowpass', 'highpass', 'bandpass', 'bandstop']
-            filter_type = StringVar(self.scrollable_frame)
-            filter_type.set(filter_types[0])
-            self.filter_boxes['filter'].append(filter_type)
-            entry1 = OptionMenu(self.scrollable_frame, self.filter_boxes['filter'][i], *filter_types)
-            entry1.grid(row=i, column=1, padx=5, pady=5, sticky="w")
-            
-            label2 = tk.Label(self.scrollable_frame, text='Order:', anchor="w")
-            label2.grid(row=i, column=2, padx=3, pady=5, sticky="w")
-            order = StringVar(self.scrollable_frame)
-            self.filter_boxes['order'].append(order)
-            entry2 = tk.Entry(self.scrollable_frame, width=2, textvariable = self.filter_boxes['order'][i])
-            entry2.grid(row=i, column=3, padx=5, pady=5, sticky="w")
-            
-            label3 = tk.Label(self.scrollable_frame, text='Frequency:', anchor="w")
-            label3.grid(row=i, column=4, padx=3, pady=5, sticky="w")
-            frequency = StringVar(self.scrollable_frame)
-            self.filter_boxes['frequency'].append(frequency)
-            entry3 = tk.Entry(self.scrollable_frame, width=7, textvariable = self.filter_boxes['frequency'][i])
-            entry3.grid(row=i, column=5, padx=5, pady=5, sticky="w")
+        label1 = tk.Label(self.scrollable_frame, text='Filter Type:', anchor="w")
+        label1.grid(row=0, column=0, padx=3, pady=5, sticky="w")
+        filter_types = ['lowpass', 'highpass', 'bandpass', 'bandstop']
+        filter_type = StringVar(self.scrollable_frame)
+        filter_type.set(filter_types[0])
+        self.filter_boxes['filter'].append(filter_type)
+        entry1 = OptionMenu(self.scrollable_frame, self.filter_boxes['filter'][0], *filter_types)
+        entry1.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+        
+        label2 = tk.Label(self.scrollable_frame, text='Order:', anchor="w")
+        label2.grid(row=0, column=2, padx=3, pady=5, sticky="w")
+        order = StringVar(self.scrollable_frame)
+        self.filter_boxes['order'].append(order)
+        entry2 = tk.Entry(self.scrollable_frame, width=2, textvariable = self.filter_boxes['order'][0])
+        entry2.grid(row=0, column=3, padx=5, pady=5, sticky="w")
+        
+        label3 = tk.Label(self.scrollable_frame, text='Frequency:', anchor="w")
+        label3.grid(row=0, column=4, padx=3, pady=5, sticky="w")
+        frequency = StringVar(self.scrollable_frame)
+        self.filter_boxes['frequency'].append(frequency)
+        entry3 = tk.Entry(self.scrollable_frame, width=7, textvariable = self.filter_boxes['frequency'][0])
+        entry3.grid(row=0, column=5, padx=5, pady=5, sticky="w")
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
         
     def create_dropdown(self):
@@ -158,14 +155,12 @@ class filterView(EventClass):
 
     def create_filter_stream(self):
         #creates the filtered stream
-        for i in range(self.filter_count):
-            #processes saved values
-            filter_hold = self.filter_boxes['filter'][i].get()
-            order_hold = float(self.filter_boxes['order'][i].get())
-            frequency_hold = self.filter_boxes['frequency'][i].get()
-            frequency_hold = frequency_hold.split(',')
-            frequency_hold_float = [float(item) for item in frequency_hold]
-            self.view_model.add_filter(self.filter_name_entry.get(), filter_hold.lower(), order_hold, frequency_hold_float)
+        filter_hold = self.filter_boxes['filter'][0].get()
+        order_hold = float(self.filter_boxes['order'][0].get())
+        frequency_hold = self.filter_boxes['frequency'][0].get()
+        frequency_hold = frequency_hold.split(',')
+        frequency_hold_float = [float(item) for item in frequency_hold]
+        self.view_model.add_filter(self.filter_name_entry.get(), filter_hold.lower(), order_hold, frequency_hold_float)
         
         self.view_model.create_filter_stream(self.filter_name_entry.get(), self.reference_stream.get())
         self.filter_name_entry.delete(0, tk.END)
