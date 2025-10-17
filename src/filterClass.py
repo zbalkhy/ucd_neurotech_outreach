@@ -20,7 +20,9 @@ class FilterClass():
             cutoff_freq = np.array(self.filters['frequency'][i])
             filter_order = self.filters['order'][i]
             normalized_cutoff = cutoff_freq / (.5 * fs)
-            b, a = signal.butter(filter_order, normalized_cutoff, btype=filter_type, analog=False)
+            # try out sos filter for high order filters
+            # with this we will need sosfiltfilt to do the filtering
+            b, a = signal.butter(filter_order, cutoff_freq, btype=filter_type, fs=fs)
             data = signal.filtfilt(b, a, data)
         return data
     
