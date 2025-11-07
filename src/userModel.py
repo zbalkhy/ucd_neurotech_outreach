@@ -36,6 +36,28 @@ class UserModel(EventClass):
         self.notify(None, EventType.STREAMUPDATE)
         if stream.stream_type in [StreamType.SOFTWARE, StreamType.DEVICE, StreamType.FILTER]:
             self.notify(None, EventType.DEVICELISTUPDATE)
+
+    def remove_stream_by_name(self, name: str) -> bool:
+        """Safely remove a stream by its name, stopping any active threads."""
+        if name not in self.data_streams:
+            print(f"[UserModel] No stream found named {name}")
+            return False
+
+        stream = self.data_streams.pop(name)
+
+        # Gracefully stop the stream thread if it's running
+        try:
+            stream.shutdown_event.set()
+            if stream.is_alive():
+                stream.join(timeout=0.5)
+        except Exception as e:
+            print(f"[UserModel] Warning stopping stream {name}: {e}")
+
+        print(f"[UserModel] Removed stream {name}")
+        self.notify(None, EventType.STREAMUPDATE)
+        return True
+
+
             
     #add filter   
     def add_filter(self, name: str, filter_type: str, order: float, frequency: float) -> None:

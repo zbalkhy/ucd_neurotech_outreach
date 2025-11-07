@@ -71,10 +71,20 @@ class PlotterView(EventClass):
             textvariable=self.selected_stream,
             values=stream_names,
             state="readonly",
-            width=10
+            width=20
         )
         self.stream_menu.bind("<<ComboboxSelected>>",
                             lambda e: self._on_change_stream(self.selected_stream.get()))
+        
+        # Control-click on combobox opens context menu to rename/delete selected item
+        # This is for Mac only. Right-click for Windows please
+        self.stream_menu.bind("<Button-3>", self._on_stream_context_menu)  # right-click
+        self.stream_menu.bind("<Control-Button-1>", self._on_stream_context_menu)  # mac Ctrl-click
+
+        # Hover enter/leave for tooltip showing inherent stream name
+        self.stream_menu.bind("<Enter>", self._on_stream_hover_enter)
+        self.stream_menu.bind("<Leave>", self._on_stream_hover_leave)
+        
         self.stream_menu.grid(row=0, column=0, padx=6, pady=6, sticky="ew")
 
         self.toggle_amplitude = tk.Button(controls, text="Hide Amp", command=self._on_toggle_amp)
@@ -94,6 +104,167 @@ class PlotterView(EventClass):
 
         self.bands_settings = tk.Button(controls, text="Band Settings", command=lambda: self._open_settings("bands"))
         self.bands_settings.grid(row=1, column=5, padx=6, pady=6, sticky="ew")
+    
+    # ------------------------------
+    # Right-click context + rename
+    # ------------------------------
+    def _on_stream_context_menu(self, event):
+        """Show a non-blocking per-stream context menu implemented as a Toplevel."""
+        current = self.selected_stream.get()
+        if not current or current == "No Streams":
+            return
+
+        # Close any existing menu
+        self._close_context_menu()
+
+        menu = tk.Toplevel(self.frame)
+        menu.wm_overrideredirect(True)       
+        menu.transient(self.frame)
+        # Position menu at cursor
+        menu.geometry(f"+{event.x_root}+{event.y_root}")
+
+        # Build simple buttons for menu actions
+        btn_rename = tk.Button(menu, text="Rename", command=lambda: self._open_rename_and_close(menu, current))
+        btn_rename.pack(fill="x", padx=4, pady=2)
+
+        # Delete
+        btn_delete = tk.Button(menu, text="Delete", fg="red", command=lambda: self._on_delete_stream_and_close(menu, current))
+        btn_delete.pack(fill="x", padx=4, pady=2)
+
+        # Close menu when clicking anywhere else or when focus lost
+        menu.bind("<FocusOut>", lambda e: self._close_context_menu())
+        menu.bind("<Escape>", lambda e: self._close_context_menu())
+
+        # Keep reference so we can destroy it later
+        self._context_menu = menu
+        menu.focus_force()
+
+    def _open_rename_and_close(self, menu, current_display):
+        self._close_context_menu()
+        self._open_rename_popup(current_display)
+
+    def _on_delete_stream_and_close(self, menu, stream_name):
+        """Delete the selected stream safely and clear the plot if needed."""
+        self._close_context_menu()
+
+        confirm = tk.Toplevel(self.frame)
+        confirm.title("Confirm Delete")
+        confirm.transient(self.frame)
+        confirm.geometry("+400+250")
+
+        tk.Label(confirm, text=f"Delete stream '{stream_name}'?", padx=10, pady=10).pack()
+
+        btn_frame = tk.Frame(confirm)
+        btn_frame.pack(pady=5)
+
+        def do_delete():
+            success = self.view_model.delete_stream_by_name(stream_name)
+            confirm.destroy()
+            if success:
+                # Refresh dropdown list
+                updated = self.view_model.get_stream_names()
+                self._refresh_stream_menu(updated)
+
+                
+                if self.selected_stream.get() == stream_name:
+                    if updated:
+                        # Select first remaining stream
+                        self.selected_stream.set(updated[0])
+                        self._on_change_stream(updated[0])
+                    else:
+                        # No streams left — clear graphs and show "No data"
+                        self.selected_stream.set("No Streams")
+                        self._clear_graphs()
+                else:
+                    self._on_change_stream(self.selected_stream.get())
+            else:
+                print(f"[PlotterView] delete failed for '{stream_name}'")
+
+        tk.Button(btn_frame, text="Delete", fg="red", command=do_delete).pack(side="left", padx=5)
+        tk.Button(btn_frame, text="Cancel", command=confirm.destroy).pack(side="left", padx=5)
+
+    def _close_context_menu(self):
+        if getattr(self, "_context_menu", None):
+            try:
+                self._context_menu.destroy()
+            except Exception:
+                pass
+            self._context_menu = None
+
+    def _open_rename_popup(self, old_name):
+        """Open rename popup for old_name (display name)."""
+        popup = tk.Toplevel(self.frame)
+        popup.title(f"Rename Stream: {old_name}")
+        popup.transient(self.frame)
+
+        tk.Label(popup, text="Old Name:").grid(row=0, column=0, padx=6, pady=6, sticky="w")
+        tk.Label(popup, text=old_name).grid(row=0, column=1, padx=6, pady=6, sticky="w")
+
+        tk.Label(popup, text="New Name:").grid(row=1, column=0, padx=6, pady=6, sticky="w")
+        new_name_entry = tk.Entry(popup)
+        new_name_entry.grid(row=1, column=1, padx=6, pady=6, sticky="ew")
+        new_name_entry.insert(0, old_name)
+        new_name_entry.focus_set()
+
+        def apply_new_name():
+            new_name = new_name_entry.get().strip()
+            if not new_name:
+                return
+            success = self.view_model.rename_stream(old_name, new_name)
+            if success:
+                # update combobox values while preserving selection if possible
+                updated = self.view_model.get_stream_names()
+                self._refresh_stream_menu(updated, new_selection=new_name)
+                popup.grab_release()
+                popup.destroy()
+            else:
+                popup.grab_release()
+                popup.destroy()
+
+        tk.Button(popup, text="Apply", command=apply_new_name).grid(row=2, column=0, columnspan=2, pady=8)
+        popup.columnconfigure(1, weight=1)
+
+    
+    def _clear_graphs(self):
+        """Clear all graph axes and display 'No data'."""
+        try:
+            self.fig.clear()
+            ax = self.fig.add_subplot(111)
+            ax.text(0.5, 0.5, "No data", ha="center", va="center")
+            ax.set_axis_off()
+            self.canvas.draw()
+            
+        except Exception as e:
+            print("[PlotterView] Error clearing graphs:", e)
+    
+    # Hover tooltip for inherent name
+    def _on_stream_hover_enter(self, event):
+        """Show a small tooltip with the inherent stream name for the current selection."""
+        display = self.selected_stream.get()
+        if not display:
+            return
+        inherent = self.view_model.get_inherent_name(display)
+        if not inherent:
+            return
+
+        # Create tooltip window if it doesn't exist
+        if getattr(self, "_stream_tooltip", None) is None:
+            self._stream_tooltip = tk.Toplevel(self.frame)
+            self._stream_tooltip.wm_overrideredirect(True)  # no window decorations
+            lbl = tk.Label(self._stream_tooltip, text=f"Inherent: {inherent}", bd=1, relief='solid', padx=4, pady=2)
+            lbl.pack()
+        # position tooltip near mouse
+        x = event.x_root + 10
+        y = event.y_root + 10
+        self._stream_tooltip.wm_geometry(f"+{x}+{y}")
+
+    def _on_stream_hover_leave(self, event):
+        if getattr(self, "_stream_tooltip", None):
+            try:
+                self._stream_tooltip.destroy()
+            except Exception:
+                pass
+            self._stream_tooltip = None
 
     def _start_plot_thread(self):
         self.stop_thread.clear()
@@ -161,11 +332,32 @@ class PlotterView(EventClass):
 
     def on_notify(self, eventData, event) -> None:
         if event == EventType.STREAMLISTUPDATE:
-            self._refresh_stream_menu(eventData)
+            if eventData and len(eventData) > 0:
+                self.stream_menu["values"] = eventData
+                current = self.selected_stream.get()
+                if current in eventData:
+                    self.selected_stream.set(current)
+                else:
+                    self.selected_stream.set(eventData[0])
+            else:
+                # No streams left — set dropdown to "No Streams"
+                self.stream_menu["values"] = ["No Streams"]
+                self.selected_stream.set("No Streams")
 
-    def _refresh_stream_menu(self, stream_names):
+        elif event == EventType.CLEARALLPLOTS:
+            self.stream_menu["values"] = ["No Streams"]
+            self.selected_stream.set("No Streams")
+            self._clear_graphs()
+
+    def _refresh_stream_menu(self, stream_names, new_selection=None):
+        # preserve current selection if possible
+        current = self.selected_stream.get()
         self.stream_menu["values"] = stream_names
-        if stream_names:
+        if new_selection and new_selection in stream_names:
+            self.selected_stream.set(new_selection)
+        elif current in stream_names:
+            self.selected_stream.set(current)
+        elif stream_names:
             self.selected_stream.set(stream_names[0])
 
     def _on_play_pause(self):

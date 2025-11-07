@@ -1,7 +1,7 @@
 import numpy as np
 from eventClass import *
 from userModel import UserModel
-from dataStream import StreamType
+from dataStream import DataStream, StreamType
 
 
 class PlotterViewModel(EventClass):
@@ -10,18 +10,26 @@ class PlotterViewModel(EventClass):
         self.user_model = user_model
         self.continue_plotting = True
         self.simulated = True  
+        
 
         self.subscribe_to_subject(self.user_model)
 
         # --- Get available streams ---
         if self.simulated:
             # Simulated 4 "streams" with different frequencies
-            self.streams = ["SimStream1", "SimStream2", "SimStream3", "SimStream4"]
+            types = [StreamType.FILTER, StreamType.DEVICE, StreamType.SOFTWARE]
+            self.streams = [
+                DataStream(stream_name=f"SimStream{i+1}", stream_type=types[i % len(types)])
+                for i in range(4)
+            ]
         else:
             self.streams = [s for s in self.user_model.get_streams() if s.stream_type in [StreamType.FILTER, StreamType.DEVICE, StreamType.SOFTWARE]]
+        
+        # Track user-defined names separately
+        self.custom_names = {}
 
+        self.stream_names = [self._get_display_name(s) for s in self.streams]
         self.current_stream_index = 0
-        self.stream_names = [f"Stream {i+1}" for i in range(len(self.streams))]
 
         # EEG frequency bands 
         self.bands = {
@@ -43,17 +51,110 @@ class PlotterViewModel(EventClass):
             "power": {"title": "Power Spectrum", "xlabel": "Frequency (Hz)", "ylabel": "Power"},
             "bands": {"title": "Band Power", "xlabel": "Band", "ylabel": "Power"},
         }
+    
+    def _get_display_name(self, stream):
+        """Return user-customized name if available, else inherent name."""
+        inherent = getattr(stream, "stream_name", None) or "UnnamedStream"
+        return self.custom_names.get(inherent, inherent)
+
+    def rename_stream(self, display_name, new_name):
+        """
+        Rename the stream with current display_name to new_name.
+        Keys custom_names by the inherent streamname.
+        Returns True if rename succeeded, False otherwise.
+        """
+        for stream in self.streams:
+            inherent = getattr(stream, "stream_name", None)
+            if inherent is None:
+                continue
+            current_display = self.custom_names.get(inherent, inherent)
+            if current_display == display_name:
+                # set new custom name 
+                self.custom_names[inherent] = new_name
+                # refresh stream_names and notify UI
+                self.stream_names = [self._get_display_name(s) for s in self.streams]
+                self.notify_subscribers(EventType.STREAMLISTUPDATE, self.stream_names)
+                return True
+        return False
+
+    def delete_stream_by_name(self, display_name):
+        """Delete a stream (simulated or real) by its display name."""
+        inherent_name = self.get_inherent_name(display_name) or display_name
+
+        #  Find and remove stream 
+        target = None
+        for s in list(self.streams):
+            if getattr(s, "stream_name", None) == inherent_name:
+                target = s
+                break
+
+        if not target:
+            print(f"No stream found to delete: {inherent_name}")
+            return False
+
+        # Stop the stream safely
+        try:
+            target.shutdown_event.set()
+            if target.is_alive():
+                target.join(timeout=0.5)
+        except Exception as e:
+            print(f"[PlotterViewModel] Warning stopping stream {inherent_name}: {e}")
+
+        # Remove from internal list
+        self.streams.remove(target)
+
+        # Remove from custom name map
+        if inherent_name in self.custom_names:
+            del self.custom_names[inherent_name]
+
+        # --- Update user_model if not simulated ---
+        if not self.simulated:
+            try:
+                if hasattr(self.user_model, "remove_stream_by_name"):
+                    self.user_model.remove_stream_by_name(inherent_name)
+                    print(f"[PlotterViewModel] Removed '{inherent_name}' from user_model.")
+                else:
+                    print("[PlotterViewModel] WARNING: user_model missing remove_stream_by_name()")
+            except Exception as e:
+                print(f"[PlotterViewModel] Error removing from user_model: {e}")
+
+        # --- Refresh internal state and notify UI ---
+        self.stream_names = [self._get_display_name(s) for s in self.streams]
+        self.notify_subscribers(EventType.STREAMLISTUPDATE, self.stream_names)
+
+        # If the deleted stream was the one currently shown, adjust index
+        if self.current_stream_index >= len(self.streams):
+            self.current_stream_index = max(0, len(self.streams) - 1)
+
+        # If no streams left, signal the view to clear all plots
+        if not self.streams:
+            self.notify_subscribers(EventType.CLEARALLPLOTS, None)
+
+        return True
+        
 
     def refresh_stream_list(self):
-        self.streams = [s for s in self.user_model.get_streams() if s.stream_type in [StreamType.FILTER, StreamType.DEVICE, StreamType.SOFTWARE]]
-        self.stream_names = [f"Stream {i+1}" for i in range(len(self.streams))]
+        if not self.simulated:
+            self.streams = [
+                s for s in self.user_model.get_streams()
+                if s.stream_type in [StreamType.FILTER, StreamType.DEVICE, StreamType.SOFTWARE]
+            ]
+        self.stream_names = [self._get_display_name(s) for s in self.streams]
         return self.stream_names
 
     def on_notify(self, eventData, event) -> None:
         if event == EventType.DEVICELISTUPDATE:
             self.refresh_stream_list()
             self.notify_subscribers(EventType.STREAMLISTUPDATE, self.stream_names)
-            
+
+    def notify_subscribers(self, event, data):
+        """Notify all subscribers of a view-model event."""
+        if not hasattr(self, "subscribers"):
+            return
+        for sub in self.subscribers:
+            if hasattr(sub, "on_notify"):
+                sub.on_notify(data, event)
+
     def toggle_plotting(self):
         if not self.continue_plotting:
             self.continue_plotting = not self.continue_plotting
@@ -95,7 +196,7 @@ class PlotterViewModel(EventClass):
         else:
             data = self._get_real_data()
 
-        if len(data) == 0:
+        if not self.streams or self.current_stream_index >= len(self.streams):
             return {
                 'has_data': False,
                 'data': [],
@@ -145,14 +246,26 @@ class PlotterViewModel(EventClass):
     def _generate_simulated_data(self):
         fs = 250
         t = np.linspace(0, 2, 2*fs, endpoint=False)
-        if self.current_stream_index == 0:
-            return 50*np.sin(2*np.pi*10*t) + 10*np.random.randn(len(t))
-        elif self.current_stream_index == 1:
-            return 40*np.sin(2*np.pi*6*t) + 15*np.random.randn(len(t))
-        elif self.current_stream_index == 2:
-            return 30*np.sin(2*np.pi*20*t) + 10*np.random.randn(len(t))
+        if not self.streams or self.current_stream_index >= len(self.streams):
+        # No streams left — return empty data so plots clear
+            return []
+        # Identify stream uniquely by its name
+        stream_name = getattr(self.streams[self.current_stream_index], "stream_name", "")
+
+        # Assign frequency based on stream name (so identity is stable even after reordering)
+        if "SimStream1" in stream_name:
+            freq, amp, noise = 10, 50, 10
+        elif "SimStream2" in stream_name:
+            freq, amp, noise = 6, 40, 15
+        elif "SimStream3" in stream_name:
+            freq, amp, noise = 20, 30, 10
+        elif "SimStream4" in stream_name:
+            freq, amp, noise = 30, 20, 10
         else:
-            return 20*np.sin(2*np.pi*30*t) + 10*np.random.randn(len(t))
+            # fallback for renamed streams
+            freq, amp, noise = 8, 25, 10
+
+        return amp * np.sin(2 * np.pi * freq * t) + noise * np.random.randn(len(t))
 
     def _get_real_data(self):
         data = []
@@ -164,9 +277,24 @@ class PlotterViewModel(EventClass):
         return self.continue_plotting
 
     def get_stream_names(self):
+        """Return the current list of display names (custom or inherent)."""
+        # keep stream_names in sync with streams/custom_names
+        self.stream_names = [self._get_display_name(s) for s in self.streams]
         return self.stream_names
 
     def get_current_stream_name(self):
-        if self.current_stream_index < len(self.stream_names):
-            return self.stream_names[self.current_stream_index]
+        """Return the display name for the currently selected stream index."""
+        if 0 <= self.current_stream_index < len(self.streams):
+            return self._get_display_name(self.streams[self.current_stream_index])
         return ""
+    
+    def get_inherent_name(self, display_name):
+        """Given a display name (possibly user-customized), return the inherent streamname."""
+        for stream in self.streams:
+            inherent = getattr(stream, "stream_name", None)
+            if inherent is None:
+                continue
+            current_display = self.custom_names.get(inherent, inherent)
+            if current_display == display_name:
+                return inherent
+        return None
