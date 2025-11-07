@@ -121,7 +121,7 @@ class PlotterView(EventClass):
         menu.wm_overrideredirect(True)       
         menu.transient(self.frame)
         # Position menu at cursor
-        menu.geometry(f"+{event.x_root}+{event.y_root}")
+        menu.geometry(f"+{event.x_root+25}+{event.y_root}")
 
         # Build simple buttons for menu actions
         btn_rename = tk.Button(menu, text="Rename", command=lambda: self._open_rename_and_close(menu, current))
@@ -131,9 +131,9 @@ class PlotterView(EventClass):
         btn_delete = tk.Button(menu, text="Delete", fg="red", command=lambda: self._on_delete_stream_and_close(menu, current))
         btn_delete.pack(fill="x", padx=4, pady=2)
 
-        # Close menu when clicking anywhere else or when focus lost
-        menu.bind("<FocusOut>", lambda e: self._close_context_menu())
-        menu.bind("<Escape>", lambda e: self._close_context_menu())
+        btn_close = tk.Button(menu, text="Close Menu", bg="#ddd", command=self._close_context_menu)
+        btn_close.pack(fill="x", padx=4, pady=2)
+
 
         # Keep reference so we can destroy it later
         self._context_menu = menu
