@@ -196,7 +196,7 @@ class PlotterViewModel(EventClass):
         else:
             data = self._get_real_data()
 
-        if not self.streams or self.current_stream_index >= len(self.streams):
+        if len(data) == 0:
             return {
                 'has_data': False,
                 'data': [],
