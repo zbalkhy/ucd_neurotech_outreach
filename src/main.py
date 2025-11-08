@@ -65,10 +65,17 @@ def open_feature_viewer(root, view_model):
 if __name__ == "__main__":
     print("main app starting")
     # initialize user model
-    save_model =  SaveModel()
-    user_model =  save_model.load() if save_model.save_exists() else UserModel()
-    user_model.add_observer(save_model)
+    user_model = UserModel()
+    #pidata = loadmat('/Users/zacariabalkhy/ucd_neurotech_outreach/src/data.mat')
+    #for key in data.keys():
+        # if key in ['eyesOpen', 'eyesClosed']:
+        #     user_model.add_dataset(key, data[key])
 
+    streams = resolve_streams()
+
+    if len(streams):
+        openBCIStream = LslStream(streams[0], 250, "openbci", StreamType.DEVICE, 250)
+        user_model.add_stream(openBCIStream)
 
     data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
     user_model.add_stream(data_stream)
