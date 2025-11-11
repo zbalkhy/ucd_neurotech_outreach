@@ -78,7 +78,8 @@ class PlotterView(EventClass):
         
         # Control-click on combobox opens context menu to rename/delete selected item
         # This is for Mac only. Right-click for Windows please
-        self.stream_menu.bind("<Button-3>", self._on_stream_context_menu)  # right-click
+        self.stream_menu.bind("<Button-3>", self._on_stream_context_menu)  # Windows right-click
+        self.stream_menu.bind("<Button-2>", self._on_stream_context_menu)  # Mac right-click
         self.stream_menu.bind("<Control-Button-1>", self._on_stream_context_menu)  # mac Ctrl-click
 
         # Hover enter/leave for tooltip showing inherent stream name
@@ -109,7 +110,7 @@ class PlotterView(EventClass):
     # Right-click context + rename
     # ------------------------------
     def _on_stream_context_menu(self, event):
-        """Show a non-blocking per-stream context menu implemented as a Toplevel."""
+        """Show a context menu that stays open until Close Menu is clicked."""
         current = self.selected_stream.get()
         if not current or current == "No Streams":
             return
@@ -118,26 +119,29 @@ class PlotterView(EventClass):
         self._close_context_menu()
 
         menu = tk.Toplevel(self.frame)
-        menu.wm_overrideredirect(True)       
-        menu.transient(self.frame)
-        # Position menu at cursor
+        menu.wm_overrideredirect(True)
+        menu.lift()
+        menu.attributes("-topmost", True)
         menu.geometry(f"+{event.x_root+25}+{event.y_root}")
 
+        # Keep it open even if focus changes
+        menu.grab_set_global()  # keeps events directed here until closed
+
         # Build simple buttons for menu actions
-        btn_rename = tk.Button(menu, text="Rename", command=lambda: self._open_rename_and_close(menu, current))
+        btn_rename = tk.Button(menu, text="Rename",
+                            command=lambda: self._open_rename_and_close(menu, current))
         btn_rename.pack(fill="x", padx=4, pady=2)
 
-        # Delete
-        btn_delete = tk.Button(menu, text="Delete", fg="red", command=lambda: self._on_delete_stream_and_close(menu, current))
+        btn_delete = tk.Button(menu, text="Delete", fg="red",
+                            command=lambda: self._on_delete_stream_and_close(menu, current))
         btn_delete.pack(fill="x", padx=4, pady=2)
 
-        btn_close = tk.Button(menu, text="Close Menu", bg="#ddd", command=self._close_context_menu)
+        btn_close = tk.Button(menu, text="Close Menu", bg="#ddd",
+                            command=self._close_context_menu)
         btn_close.pack(fill="x", padx=4, pady=2)
 
-
-        # Keep reference so we can destroy it later
+        # Save reference
         self._context_menu = menu
-        menu.focus_force()
 
     def _open_rename_and_close(self, menu, current_display):
         self._close_context_menu()
@@ -186,6 +190,7 @@ class PlotterView(EventClass):
     def _close_context_menu(self):
         if getattr(self, "_context_menu", None):
             try:
+                self._context_menu.grab_release()
                 self._context_menu.destroy()
             except Exception:
                 pass
