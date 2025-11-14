@@ -43,7 +43,7 @@ class DataStream():
     def stop(self) -> None:
         if self._stream_thread is not None:
             self.shutdown_event.set()
-            self.join()
+            self.join(timeout=0.5)
             self.shutdown_event.clear()
             self._stream_thread = None
 

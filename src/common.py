@@ -24,6 +24,9 @@ ALPHA = [8,12]
 BETA = [13,30]
 GAMMA = [30, 45]
 
+
+
+
 def split_dataset(dataset: pd.DataFrame, 
                   nsamples: int, ntrials: int) -> list[np.ndarray]:
     trials = np.zeros((nsamples, len(dataset.columns), ntrials))
@@ -31,12 +34,12 @@ def split_dataset(dataset: pd.DataFrame,
         trials[:,:,i] = dataset[i*nsamples:i*nsamples + nsamples]
     return trials
 
-def create_grid(root, rows: int, cols: int, grid_names: list[list[str]]) -> list[list[Frame]]:
+def create_grid(root, rows: int, cols: int, grid_names: list[list[str]], resize: bool = True) -> list[list[Frame]]:
     # Make the grid expandable
     for i in range(rows):
-        root.rowconfigure(i, weight=1)
+        root.rowconfigure(i, weight=int(resize))
     for j in range(cols):
-        root.columnconfigure(j, weight=1)
+        root.columnconfigure(j, weight=int(resize))
 
     # Create frames dynamically
     frames = []
