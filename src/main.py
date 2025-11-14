@@ -66,10 +66,10 @@ if __name__ == "__main__":
     print("main app starting")
     # initialize user model
     user_model = UserModel()
-    #pidata = loadmat('/Users/zacariabalkhy/ucd_neurotech_outreach/src/data.mat')
-    #for key in data.keys():
-        # if key in ['eyesOpen', 'eyesClosed']:
-        #     user_model.add_dataset(key, data[key])
+    data = loadmat('./data.mat')
+    for key in data.keys():
+        if key in ['eyesOpen', 'eyesClosed']:
+            user_model.add_dataset(key, data[key])
 
     streams = resolve_streams()
 
