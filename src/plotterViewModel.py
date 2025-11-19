@@ -9,7 +9,7 @@ class PlotterViewModel(EventClass):
         super().__init__()
         self.user_model = user_model
         self.continue_plotting = True
-        self.simulated = True  
+        self.simulated = False  
         
 
         self.subscribe_to_subject(self.user_model)
