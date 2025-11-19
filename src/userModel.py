@@ -111,16 +111,16 @@ class UserModel(EventClass):
     def rename_dataset(self, old_name: str, new_name: str) -> bool:
         """Rename a dataset from old_name to new_name."""
         if old_name not in self.data_sets:
-            print(f"[UserModel] No stream found named {old_name}")
+            print(f"[UserModel] No dataset found named {old_name}")
             return False
         if new_name in self.data_sets:
-            print(f"[UserModel] A stream named {new_name} already exists")
+            print(f"[UserModel] A dataset named {new_name} already exists")
             return False
 
         data_set = self.data_sets.pop(old_name)
         self.data_sets[new_name] = data_set
 
-        print(f"[UserModel] Renamed stream {old_name} to {new_name}")
+        print(f"[UserModel] Renamed dataset {old_name} to {new_name}")
         self.notify(None, EventType.DATASETUPDATE)
         return True
     
@@ -133,19 +133,42 @@ class UserModel(EventClass):
     def add_feature(self, feature: FeatureClass) -> None:
         self.features[str(feature)] = feature
 
-    def remove_classifier(self, name: str) -> None:
-        del self.classifiers[name]
+    def remove_classifier(self, name: str) -> bool:
+        if name in self.classifiers.keys():
+            del self.classifiers[name]
+            self.notify(None, EventType.CLASSIFIERUPDATE)
+            return True
+        else:
+            return False
 
     def add_classifier(self, name: str, classifier: Classifier) -> None:
         self.classifiers[name] = classifier
-        #self.notify(None, EventType.DATASETUPDATE)
+        self.notify(None, EventType.CLASSIFIERUPDATE)
         
     def get_classifier(self, name: str) -> Classifier:
         if name in self.classifiers.keys():
             return self.classifiers[name]
         else:
             return None
+    
+    def get_classifiers(self) -> dict[str, Classifier]:
+        return self.classifiers
 
+    def rename_classifier(self, old_name: str, new_name: str) -> bool:
+        """Rename a classifier from old_name to new_name."""
+        if old_name not in self.classifiers:
+            print(f"[UserModel] No classifier found named {old_name}")
+            return False
+        if new_name in self.classifiers:
+            print(f"[UserModel] A classifier named {new_name} already exists")
+            return False
+
+        classifier = self.classifiers.pop(old_name)
+        self.classifiers[new_name] = classifier
+
+        print(f"[UserModel] Renamed classifier {old_name} to {new_name}")
+        self.notify(None, EventType.CLASSIFIERUPDATE)
+        return True
     
 
     

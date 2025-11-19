@@ -28,19 +28,25 @@ class InventoryViewModel(object):
         return stream_names
     
     def get_dataset_names(self) -> list[str]:
-        dataset_names = []
-        for name in self.user_model.get_datasets().keys():
-            dataset_names.append(name)
-        return dataset_names
+        return list(self.user_model.get_datasets().keys())
     
+    def get_classifier_names(self) -> list[str]:
+        return list(self.user_model.get_classifiers().keys())
+
     def delete_dataset_by_name(self, name: str) -> bool:
         return self.user_model.delete_dataset(name)
     
     def delete_stream_by_name(self, name: str) -> bool:
         return self.user_model.remove_stream_by_name(name)
     
+    def delete_classifier_by_name(self, name: str) -> bool:
+        return self.user_model.remove_classifier(name)
+    
     def rename_stream(self, old_name: str, new_name: str) -> bool:
         return self.user_model.rename_stream(old_name, new_name)
     
     def rename_dataset(self, old_name: str, new_name: str) -> bool:
         return self.user_model.rename_dataset(old_name, new_name)
+    
+    def rename_classifier(self, old_name: str, new_name: str) -> bool:
+        return self.user_model.rename_classifier(old_name, new_name)

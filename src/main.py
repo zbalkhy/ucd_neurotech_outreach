@@ -6,6 +6,8 @@ from common import create_grid
 from userModel import UserModel
 from eegDeviceView import EEGDeviceView
 from eegDeviceViewModel import EEGDeviceViewModel
+from inventoryView import InventoryView
+from inventoryViewModel import InventoryViewModel
 from dataStream import DataStream, StreamType
 from softwareStream import SoftwareStream
 from composedStream import ComposedStream
@@ -77,8 +79,12 @@ if __name__ == "__main__":
     root.protocol("WM_DELETE_WINDOW", on_closing)
 
     # create device connector
-    device_frame_viewmodel = EEGDeviceViewModel(user_model)
-    device_connector = EEGDeviceView(frames[0][0], device_frame_viewmodel)
+    #device_frame_viewmodel = EEGDeviceViewModel(user_model)
+    #device_connector = EEGDeviceView(frames[0][0], device_frame_viewmodel)
+
+    # create inventory
+    inventory_viewmodel = InventoryViewModel(user_model)
+    inventory_view = InventoryView(frames[0][0], inventory_viewmodel)
 
     # create classifier
     classifier_view_model = ClassifierViewModel(user_model)

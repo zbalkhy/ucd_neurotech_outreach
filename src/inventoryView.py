@@ -12,6 +12,8 @@ class InventoryView(EventClass):
         self.subscribe_to_subject(self.view_model.user_model)
         # set class variables
         self.frame: tk.Frame = frame
+        self.inner_frame = tk.Frame(self.frame)
+        self.inner_frame.pack()
         style = ttk.Style(self.frame)
 
         # Disable highlight on the treeview
@@ -20,18 +22,10 @@ class InventoryView(EventClass):
             ('selected', 'invalid', 'yellow'),('pressed', 'focus', 'yellow')
         ])
         # grab png image for stream running icon
-        self.stream_running_icon = tk.PhotoImage(file="/Users/zacariabalkhy/Downloads/explorer/folder.png")
+        self.stream_running_icon = tk.PhotoImage(file="../assets/folder.png")
 
-        # Inventory Label
-        #self.inventory_label = tk.Label(self.frame, text="Inventory")
-        #self.inventory_label.pack(pady=10)
-
-        self.views = [['Inventory'], ['Streams'], ['Datasets']]
-        self.frames = create_grid(self.frame,3,1, self.views, resize=False)
-
-        # Inventory Label
-        #self.inventory_label = tk.Label(self.frames[0][0], text="Inventory")
-        #self.inventory_label.pack(pady=10)
+        self.views = [['Inventory'], ['Streams'], ['Datasets'], ['Classifiers']]
+        self.frames = create_grid(self.inner_frame, len(self.views), 1, self.views, resize=False)
         
         # Stream tree
         self.stream_tree = ttk.Treeview(self.frames[1][0], show='tree', columns=("start/stop"))
@@ -46,7 +40,13 @@ class InventoryView(EventClass):
         self.dataset_tree = ttk.Treeview(self.frames[2][0], show='tree')
         self.bind_context_menu(self.dataset_tree)
         self.dataset_tree.pack(anchor=tk.NW)
-        self.populate_datasets()    
+        self.populate_datasets()
+
+        # Classifier tree
+        self.classifier_tree = ttk.Treeview(self.frames[3][0], show='tree')
+        self.bind_context_menu(self.stream_tree)
+        self.classifier_tree.pack(anchor=tk.NW)
+        self.populate_classifiers()
 
     def add_item(self, item: str) -> None:
         self.inventory_listbox.insert(tk.END, item)
@@ -64,10 +64,15 @@ class InventoryView(EventClass):
         return
     
     def populate_datasets(self) -> None:
-        self.data_sets = self.view_model.get_dataset_names()
-        for i in range(len(self.data_sets)):
-            self.dataset_tree.insert("", "end", text=self.data_sets[i])
+        self.data_sets_names = self.view_model.get_dataset_names()
+        for i in range(len(self.data_sets_names)):
+            self.dataset_tree.insert("", "end", text=self.data_sets_names[i])
         return
+
+    def populate_classifiers(self) -> None:
+        self.classifier_names = self.view_model.get_classifier_names()
+        for i in range(len(self.classifier_names)):
+            self.classifier_tree.insert("", "end", text=self.classifier_names[i])
     
     def on_click(self, event) -> None:
         item = self.stream_tree.identify('item',event.x,event.y)
@@ -151,6 +156,8 @@ class InventoryView(EventClass):
                     success = self.view_model.delete_stream_by_name(name)
                 case self.dataset_tree:
                     success = self.view_model.delete_dataset_by_name(name)
+                case self.classifier_tree:
+                    success = self.view_model.delete_classifier_by_name(name)
             confirm.destroy()
             if not success:
                 print(f"[Inventory] delete failed for '{name}'")
@@ -186,6 +193,8 @@ class InventoryView(EventClass):
                     success = self.view_model.rename_stream(old_name, new_name)
                 case self.dataset_tree:
                     success = self.view_model.rename_dataset(old_name, new_name)
+                case self.classifier_tree:
+                    success = self.view_model.rename_classifier(old_name, new_name)
             if not success:
                 print(f"[Inventory] delete failed for '{old_name}'")
             popup.grab_release()
@@ -195,14 +204,17 @@ class InventoryView(EventClass):
         popup.columnconfigure(1, weight=1)
 
     def on_notify(self, eventData, event) -> None:
+        # refresh relevant list
         if event == EventType.STREAMUPDATE:
-            # refresh stream list
             for child in self.stream_tree.get_children():
                 self.stream_tree.delete(child)
             self.populate_streams()
         elif event == EventType.DATASETUPDATE:
-            # refresh dataset list
             for child in self.dataset_tree.get_children():
                 self.dataset_tree.delete(child)
             self.populate_datasets()
+        elif event == EventType.CLASSIFIERUPDATE:
+            for child in self.classifier_tree.get_children():
+                self.classifier_tree.delete(child)
+            self.populate_classifiers()
         return 
