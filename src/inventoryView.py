@@ -34,7 +34,7 @@ class InventoryView(EventClass):
         self.stream_tree.pack(anchor=tk.NW)
         self.populate_streams()
         # bind click event to toggle stream start/stop
-        self.stream_tree.bind("<Button-1>", self.on_click)
+        self.stream_tree.bind("<Button-1>", self.on_stream_click)
 
         # Dataset tree
         self.dataset_tree = ttk.Treeview(self.frames[2][0], show='tree')
@@ -47,6 +47,7 @@ class InventoryView(EventClass):
         self.bind_context_menu(self.stream_tree)
         self.classifier_tree.pack(anchor=tk.NW)
         self.populate_classifiers()
+        self.classifier_tree.bind("<Button-1>", self.on_classifier_click)
 
     def add_item(self, item: str) -> None:
         self.inventory_listbox.insert(tk.END, item)
@@ -74,7 +75,7 @@ class InventoryView(EventClass):
         for i in range(len(self.classifier_names)):
             self.classifier_tree.insert("", "end", text=self.classifier_names[i])
     
-    def on_click(self, event) -> None:
+    def on_stream_click(self, event) -> None:
         item = self.stream_tree.identify('item',event.x,event.y)
         item_name = self.stream_tree.item(item, "text")
         self.view_model.toggle_stream(item_name)
@@ -82,6 +83,15 @@ class InventoryView(EventClass):
             self.stream_tree.item(item, image="", values=("start"))
         else:
             self.stream_tree.item(item, image=self.stream_running_icon, values=("stop"))
+        return
+    
+    def on_classifier_click(self, event) -> None:
+        item = self.classifier_tree.identify('item',event.x,event.y)
+        item_name = self.classifier_tree.item(item, "text")
+        if not self.classifier_tree.item(item, "image"):
+            self.classifier_tree.item(item, image=self.stream_running_icon)
+            self.view_model.train_classifier(item_name)
+            self.view_model.add_classifier_stream(item_name)
         return
     
     def bind_context_menu(self, widget) -> None:

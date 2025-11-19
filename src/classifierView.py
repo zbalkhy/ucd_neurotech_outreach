@@ -19,7 +19,7 @@ class ClassifierView(EventClass):
 
         # --- left panel: creation controls
         self.create_frame = tk.Frame(frame, borderwidth=1, relief="solid")
-        self.create_frame.pack(side="left", fill="both", expand=True)
+        self.create_frame.pack()#side="left", fill="both", expand=True)
 
         # Name entry
         tk.Label(self.create_frame, text="Classifier Name:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
@@ -52,15 +52,14 @@ class ClassifierView(EventClass):
         self.create_button.grid(row=5, column=0, columnspan=2, pady=10)
 
         # --- right panel: created classifiers list
-        self.list_frame = tk.Frame(frame, borderwidth=1, relief="solid")
-        self.list_frame.pack(side="right", fill="both", expand=True)
+        # self.list_frame = tk.Frame(frame, borderwidth=1, relief="solid")
+        # self.list_frame.pack(side="right", fill="both", expand=True)
 
-        tk.Label(self.list_frame, text="Created Classifiers:").pack(anchor="w", padx=5, pady=5)
+        # tk.Label(self.list_frame, text="Created Classifiers:").pack(anchor="w", padx=5, pady=5)
 
-        self.classifier_listbox = tk.Listbox(self.list_frame, height=12)
-        self.classifier_listbox.bind('<<ListboxSelect>>', self.on_select_classifier)
+        # self.classifier_listbox = tk.Listbox(self.list_frame, height=12)
 
-        self.classifier_listbox.pack(fill="both", expand=True, padx=5, pady=5)
+        # self.classifier_listbox.pack(fill="both", expand=True, padx=5, pady=5)
 
         self.refresh_lists()
 
@@ -114,10 +113,4 @@ class ClassifierView(EventClass):
     def on_notify(self, eventData: any, event: EventType):
         if event in [EventType.DATASETUPDATE, EventType.DEVICELISTUPDATE]:
             self.refresh_lists()
-    
-    def on_select_classifier(self, event: tk.Event) -> None:
-        w = event.widget
-        index = int(w.curselection()[0])
-        value = w.get(index)
-        self.view_model.train_classifier(value)
         

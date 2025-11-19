@@ -30,7 +30,7 @@ from scipy.io import loadmat
 
 from pylsl import StreamInlet, resolve_streams
 
-frame_names = [[f"Device Connector", f"Classifier", f"Visualizer"],
+frame_names = [[f"Inventory", f"Classifier", f"Visualizer"],
                [f"Data Collector", f"Filters Maker", f"Feature Viewer"]]
 
 def on_closing():

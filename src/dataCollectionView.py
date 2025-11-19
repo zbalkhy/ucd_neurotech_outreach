@@ -27,24 +27,24 @@ class dataCollectionView(EventClass):
         self.trial_num_str.set("trial#: 0")
 
         #button to collect trial, locks the dropdown
-        tk.Button(self.trial_mod_frame, text = "Collect Trial", width=6, height=1, command = self.collect_trial).pack(pady=10, padx=10, anchor = "e", side = LEFT)
+        tk.Button(self.trial_mod_frame, text = "Collect Trial", width=6, height=1, command = self.collect_trial).pack(pady=10, padx=10)
         
         #button to clear trials, unlocks the dropdown
-        tk.Button(self.trial_mod_frame, text = "Clear Trials", width=6, height=1, command = self.clear_trials).pack(pady=10, padx = 10, anchor = "e", side = LEFT)
+        tk.Button(self.trial_mod_frame, text = "Clear Trials", width=6, height=1, command = self.clear_trials).pack(pady=10, padx = 10)
 
         #label with the amount of trials
-        self.trial_label = tk.Label(self.trial_mod_frame, textvariable=self.trial_num_str).pack(pady=10, padx=10, anchor="e", side = LEFT)
+        self.trial_label = tk.Label(self.trial_mod_frame, textvariable=self.trial_num_str).pack(pady=10, padx=10)
 
         self.save_dataset_frame = tk.Frame(frame, borderwidth=1, relief = "solid")
         self.save_dataset_frame.pack(side = "top", fill = "both", expand = True)
 
-        #button to save dataset, unlocks the dropdown
-        self.save_dataset_button = tk.Button(self.save_dataset_frame, text = "Save Dataset", width=6, height=1, command = self.save_dataset).pack(pady = 10, padx = 10, anchor = "e", side = RIGHT)
-        
         #entry to save dataset name
         self.dataset_name = tk.StringVar(self.save_dataset_frame)
-        self.dataset_name_entry = tk.Entry(self.save_dataset_frame, textvariable = self.dataset_name).pack(fill = X, side = "left", expand = True, padx = 10)
+        self.dataset_name_entry = tk.Entry(self.save_dataset_frame, textvariable = self.dataset_name).pack(expand = True, padx = 10)
 
+        #button to save dataset, unlocks the dropdown
+        self.save_dataset_button = tk.Button(self.save_dataset_frame, text = "Save Dataset", width=6, height=1, command = self.save_dataset).pack(pady = 10, padx = 10)
+        
     def create_dropdown(self):
         for child in self.collect_stream_frame.winfo_children():
             child.destroy()

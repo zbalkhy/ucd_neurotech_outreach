@@ -3,7 +3,8 @@ from deviceStream import DeviceStream
 from common import RETRY_SEC
 from dataStream import DataStream, StreamType
 from eventClass import EventType
-
+from composedStream import ComposedStream
+from xrpControlStream import XRPControlStream
 class InventoryViewModel(object):
     def __init__(self, user_model: UserModel):
         self.user_model: UserModel = user_model
@@ -20,6 +21,22 @@ class InventoryViewModel(object):
             stream.start()
             print('[Inventory] starting stream')
         self.user_model.notify(stream_name, EventType.STREAMTOGGLED)
+
+    def train_classifier(self, name: str) -> None:
+        classifier = self.user_model.get_classifier(name)
+        classifier.train_model()
+        self.user_model.add_classifier(name, classifier)
+        self.add_classifier_stream(name)
+
+    def add_classifier_stream(self, name: str) -> None:
+        # this will need a major refactor, this is hacky, dont use this
+        openbci = self.user_model.get_stream('openbci')
+        classifier = self.user_model.get_classifier(name)
+        classifier_stream = ComposedStream(openbci, [classifier], name+"_stream", StreamType.CONTROL, 1)
+        self.user_model.add_stream(classifier_stream)
+
+        xrp_stream = XRPControlStream(classifier_stream, "/dev/tty.usbmodem1301", 9600, 1, "xrp", StreamType.DEVICE, 100)
+        self.user_model.add_stream(xrp_stream)
 
     def get_stream_names(self) -> list[str]:
         stream_names = []
