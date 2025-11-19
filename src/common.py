@@ -34,7 +34,7 @@ def split_dataset(dataset: pd.DataFrame,
         trials[:,:,i] = dataset[i*nsamples:i*nsamples + nsamples]
     return trials
 
-def create_grid(root, rows: int, cols: int, grid_names: list[list[str]], resize: bool = True) -> list[list[Frame]]:
+def create_grid(root, rows: int, cols: int, grid_names: list[list[str]], resize: bool = True, show_labels: bool = True) -> list[list[Frame]]:
     # Make the grid expandable
     for i in range(rows):
         root.rowconfigure(i, weight=int(resize))
@@ -47,11 +47,12 @@ def create_grid(root, rows: int, cols: int, grid_names: list[list[str]], resize:
         row_frames = []
         for j in range(cols):
             frame = Frame(root, borderwidth=2, relief="solid")
-            frame.grid(row=i, column=j, sticky="nsew", padx=5, pady=5)
+            frame.grid(row=i, column=j, sticky="nsew", padx=1, pady=1)
 
-            # Example content: label with coordinates
-            label = Label(frame, text=grid_names[i][j], bg=frame["bg"])
-            label.pack(expand=False, anchor="w", padx=5)
+            if show_labels:
+                # Example content: label with coordinates
+                label = Label(frame, text=grid_names[i][j], bg=frame["bg"])
+                label.pack(expand=False, anchor="w", padx=2)
 
             row_frames.append(frame)
         frames.append(row_frames)

@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from plotterView import PlotterView, create_plotter
 from plotterViewModel import PlotterViewModel
 from floatTheOrbGame import FloatTheOrb
@@ -24,14 +25,11 @@ import pandas as pd
 import numpy as np
 from lslStream import LslStream
 from xrpControlStream import XRPControlStream
-
 from scipy.io import loadmat
-
-
 from pylsl import StreamInlet, resolve_streams
 
-frame_names = [[f"Inventory", f"Classifier", f"Visualizer"],
-               [f"Data Collector", f"Filters Maker", f"Feature Viewer"]]
+top_grid_names = [[f"Inventory", 'Visualizer']]
+bottom_grid_names = [[f"Data Collector", f"Filter Maker", f"Classifier"]]
 
 def on_closing():
     # Stop the plotter thread
@@ -47,6 +45,13 @@ def on_closing():
             data_stream.join()
     
     root.destroy()
+
+def open_feature_viewer(root, view_model):
+    t = tk.Toplevel(root)
+    t.wm_title('Feature Viewer')
+    feature_view = FeatureView(t, feature_view_model)
+
+
 
 if __name__ == "__main__":
     
@@ -74,37 +79,54 @@ if __name__ == "__main__":
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')
-    frames = create_grid(root,2,3, frame_names)
+    
+    # create paned window for each row, this allows them to be adjustable
+    inner_paned_window = ttk.PanedWindow(root, orient="vertical")
+    inner_paned_window.pack(side = "top", fill = "both", expand=True)
+    
+    # create top and bottom panes
+    top_pane = tk.Frame(inner_paned_window, borderwidth=2, relief="solid")
+    bottom_pane = tk.Frame(inner_paned_window, borderwidth=2, relief="solid")
+    inner_paned_window.add(top_pane)
+    inner_paned_window.add(bottom_pane)
+    
+    # create a gride in each pane to hold our widgets
+    top_grid_frames = create_grid(top_pane,1,2, top_grid_names,resize=True)
+    bottom_grid_frames = create_grid(bottom_pane,1,3, bottom_grid_names)
 
     root.protocol("WM_DELETE_WINDOW", on_closing)
 
-    # create device connector
-    #device_frame_viewmodel = EEGDeviceViewModel(user_model)
-    #device_connector = EEGDeviceView(frames[0][0], device_frame_viewmodel)
-
-    # create inventory
-    inventory_viewmodel = InventoryViewModel(user_model)
-    inventory_view = InventoryView(frames[0][0], inventory_viewmodel)
-
-    # create classifier
-    classifier_view_model = ClassifierViewModel(user_model)
-    classifier_view = ClassifierView(frames[0][1], classifier_view_model)
-
-    # create plotter
-    plotter_view_model, plotter_view = create_plotter(frames[0][2], user_model) 
-    
-
-    # create feature viewer
-    feature_view_model = FeatureViewModel(user_model)
-    feature_view = FeatureView(frames[1][2], feature_view_model)
+    #create data collection frame
+    dataCollection_frame_viewmodel = dataCollectionViewModel(user_model)
+    dataCollection_module = dataCollectionView(bottom_grid_frames[0][0], dataCollection_frame_viewmodel)
 
     #create filter frame
     filter_frame_viewmodel = filterViewModel(user_model)
-    filter_module = filterView(frames[1][1], filter_frame_viewmodel)
+    filter_module = filterView(bottom_grid_frames[0][1], filter_frame_viewmodel)
 
-    #create data collection frame
-    dataCollection_frame_viewmodel = dataCollectionViewModel(user_model)
-    dataCollection_module = dataCollectionView(frames[1][0], dataCollection_frame_viewmodel)
+    # create classifier
+    classifier_view_model = ClassifierViewModel(user_model)
+    classifier_view = ClassifierView(bottom_grid_frames[0][2], classifier_view_model)
+    
+    # create inventory
+    inventory_viewmodel = InventoryViewModel(user_model)
+    inventory_view = InventoryView(top_grid_frames[0][0], inventory_viewmodel)
+
+    # create plotter
+    plotter_view_model, plotter_view = create_plotter(top_grid_frames[0][1], user_model)    
+    
+    
+    # create feature viewer
+    feature_view_model = FeatureViewModel(user_model)
+
+    # create menu bar
+    menubar = tk.Menu(root)
+    actions = tk.Menu(menubar, tearoff=0)
+    menubar.add_cascade(label="Actions", menu=actions)
+    actions.add_command(label='Open Feature Viewer', command=lambda: open_feature_viewer(root, feature_view_model))
+    root.config(menu=menubar)
+    
+
 
     # create game
     #float_the_orb = FloatTheOrb(frames[1][0], user_context, user_context_lock)    

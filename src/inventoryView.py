@@ -24,11 +24,11 @@ class InventoryView(EventClass):
         # grab png image for stream running icon
         self.stream_running_icon = tk.PhotoImage(file="../assets/folder.png")
 
-        self.views = [['Inventory'], ['Streams'], ['Datasets'], ['Classifiers']]
+        self.views = [['Streams'], ['Datasets'], ['Classifiers']]
         self.frames = create_grid(self.inner_frame, len(self.views), 1, self.views, resize=False)
         
         # Stream tree
-        self.stream_tree = ttk.Treeview(self.frames[1][0], show='tree', columns=("start/stop"))
+        self.stream_tree = ttk.Treeview(self.frames[0][0], show='tree', columns=("start/stop"))
         self.stream_tree.column("start/stop", width=50)
         self.bind_context_menu(self.stream_tree)
         self.stream_tree.pack(anchor=tk.NW)
@@ -37,13 +37,13 @@ class InventoryView(EventClass):
         self.stream_tree.bind("<Button-1>", self.on_stream_click)
 
         # Dataset tree
-        self.dataset_tree = ttk.Treeview(self.frames[2][0], show='tree')
+        self.dataset_tree = ttk.Treeview(self.frames[1][0], show='tree')
         self.bind_context_menu(self.dataset_tree)
         self.dataset_tree.pack(anchor=tk.NW)
         self.populate_datasets()
 
         # Classifier tree
-        self.classifier_tree = ttk.Treeview(self.frames[3][0], show='tree')
+        self.classifier_tree = ttk.Treeview(self.frames[2][0], show='tree')
         self.bind_context_menu(self.stream_tree)
         self.classifier_tree.pack(anchor=tk.NW)
         self.populate_classifiers()
