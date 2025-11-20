@@ -45,7 +45,6 @@ class FeatureView(EventClass):
         self.add_feature_listbox()
 
         # Dropdown menus for the datasets  
-
         self.dataset_label = tk.Label(self.selection_frame, text="Datasets")
         self.dataset_label.grid(row=0, column=0)
         self.add_dataset_listbox()
@@ -82,9 +81,6 @@ class FeatureView(EventClass):
             self.feature_list.insert(tk.END, feat)
 
     def update_plot(self, event: tk.Event) -> None:
-        # clear event and figure
-        #if event:
-        #    event.widget.selection_clear()
         self.fig.clear()
         
         cur_features = self.feature_list.curselection()

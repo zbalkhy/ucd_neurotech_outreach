@@ -48,7 +48,7 @@ class EEGDeviceView(EventClass):
         self.pack_device_list()
         
     def on_notify(self, eventData: any, event: EventType ) -> None:
-        if event in [EventType.DEVICELISTUPDATE, EventType.STREAMTOGGLED]:
+        if event in [EventType.STREAMUPDATE, EventType.STREAMTOGGLED]:
             self.pack_device_list()
         return
     

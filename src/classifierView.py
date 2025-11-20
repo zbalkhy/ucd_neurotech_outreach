@@ -4,7 +4,7 @@ from tkinter import ttk
 
 from eventClass import *
 from classifierViewModel import ClassifierViewModel
-
+from common import create_grid
 
 class ClassifierView(EventClass):
     def __init__(self, frame: tk.Frame, view_model: ClassifierViewModel):
@@ -16,51 +16,43 @@ class ClassifierView(EventClass):
 
         # State
         self.classifier_name = StringVar(self.frame)
+        self.inner_frame = tk.Frame(self.frame)
+        self.inner_frame.pack()
+        self.grid_frames = create_grid(self.inner_frame, 1,2, None, True, False)
 
         # --- left panel: creation controls
-        self.create_frame = tk.Frame(frame, borderwidth=1, relief="solid")
-        self.create_frame.pack(side="left", fill="both", expand=True)
+        #self.create_frame = tk.Frame(frame, borderwidth=1, relief="solid")
+        #self.create_frame.pack()
 
         # Name entry
-        tk.Label(self.create_frame, text="Classifier Name:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        self.name_entry = tk.Entry(self.create_frame, textvariable=self.classifier_name, width=20)
+        tk.Label(self.grid_frames[0][0], text="Classifier Name:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.name_entry = tk.Entry(self.grid_frames[0][0], textvariable=self.classifier_name, width=20)
         self.name_entry.grid(row=0, column=1, padx=5, pady=5, sticky="w")
 
         # Label 0 dataset selector
-        tk.Label(self.create_frame, text="Label 0 Datasets:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        self.label0_listbox = tk.Listbox(self.create_frame, selectmode=MULTIPLE, exportselection=False, height=5)
+        tk.Label(self.grid_frames[0][0], text="Label 0 Datasets:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        self.label0_listbox = tk.Listbox(self.grid_frames[0][0], selectmode=MULTIPLE, exportselection=False, height=5)
         self.label0_listbox.grid(row=1, column=1, padx=5, pady=5, sticky="we")
 
         # Label 1 dataset selector
-        tk.Label(self.create_frame, text="Label 1 Datasets:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        self.label1_listbox = tk.Listbox(self.create_frame, selectmode=MULTIPLE, exportselection=False, height=5)
+        tk.Label(self.grid_frames[0][0], text="Label 1 Datasets:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        self.label1_listbox = tk.Listbox(self.grid_frames[0][0], selectmode=MULTIPLE, exportselection=False, height=5)
         self.label1_listbox.grid(row=2, column=1, padx=5, pady=5, sticky="we")
 
         # Feature selector
-        tk.Label(self.create_frame, text="Features:").grid(row=3, column=0, padx=5, pady=5, sticky="w")
-        self.feature_listbox = tk.Listbox(self.create_frame, selectmode=MULTIPLE, exportselection=False, height=5)
+        tk.Label(self.grid_frames[0][1], text="Features:").grid(row=3, column=0, padx=5, pady=5, sticky="w")
+        self.feature_listbox = tk.Listbox(self.grid_frames[0][1], selectmode=MULTIPLE, exportselection=False, height=5)
         self.feature_listbox.grid(row=3, column=1, padx=5, pady=5, sticky="we")
 
         # Filter selector
-        tk.Label(self.create_frame, text="Filters:").grid(row=4, column=0, padx=5, pady=5, sticky="w")
-        self.filter_listbox = tk.Listbox(self.create_frame, selectmode=MULTIPLE, exportselection=False, height=5)
+        tk.Label(self.grid_frames[0][1], text="Filters:").grid(row=4, column=0, padx=5, pady=5, sticky="w")
+        self.filter_listbox = tk.Listbox(self.grid_frames[0][1], selectmode=MULTIPLE, exportselection=False, height=5)
         self.filter_listbox.grid(row=4, column=1, padx=5, pady=5, sticky="we")
 
         # Create classifier button
-        self.create_button = tk.Button(self.create_frame, text="Create Classifier", bg="yellow",
+        self.create_button = tk.Button(self.grid_frames[0][1], text="Create Classifier", bg="yellow",
                                        command=self.create_classifier)
         self.create_button.grid(row=5, column=0, columnspan=2, pady=10)
-
-        # --- right panel: created classifiers list
-        self.list_frame = tk.Frame(frame, borderwidth=1, relief="solid")
-        self.list_frame.pack(side="right", fill="both", expand=True)
-
-        tk.Label(self.list_frame, text="Created Classifiers:").pack(anchor="w", padx=5, pady=5)
-
-        self.classifier_listbox = tk.Listbox(self.list_frame, height=12)
-        self.classifier_listbox.bind('<<ListboxSelect>>', self.on_select_classifier)
-
-        self.classifier_listbox.pack(fill="both", expand=True, padx=5, pady=5)
 
         self.refresh_lists()
 
@@ -112,12 +104,6 @@ class ClassifierView(EventClass):
     # Events
     # -----------------------
     def on_notify(self, eventData: any, event: EventType):
-        if event in [EventType.DATASETUPDATE, EventType.DEVICELISTUPDATE]:
+        if event in [EventType.DATASETUPDATE, EventType.STREAMUPDATE]:
             self.refresh_lists()
-    
-    def on_select_classifier(self, event: tk.Event) -> None:
-        w = event.widget
-        index = int(w.curselection()[0])
-        value = w.get(index)
-        self.view_model.train_classifier(value)
         
