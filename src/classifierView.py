@@ -104,6 +104,6 @@ class ClassifierView(EventClass):
     # Events
     # -----------------------
     def on_notify(self, eventData: any, event: EventType):
-        if event in [EventType.DATASETUPDATE, EventType.DEVICELISTUPDATE]:
+        if event in [EventType.DATASETUPDATE, EventType.STREAMUPDATE]:
             self.refresh_lists()
         

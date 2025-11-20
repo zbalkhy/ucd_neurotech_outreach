@@ -60,7 +60,7 @@ class dataCollectionView(EventClass):
         dropdown_label = tk.Label(self.collect_stream_frame, text="Stream:").pack(anchor='nw', side = LEFT, padx = 10, pady=5)
         
     def on_notify(self, eventData: any, event: EventType) -> None:
-        if event == EventType.DEVICELISTUPDATE:
+        if event == EventType.STREAMUPDATE:
             self.create_dropdown()
         return
         

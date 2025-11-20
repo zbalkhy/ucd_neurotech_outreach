@@ -36,8 +36,6 @@ class UserModel(EventClass):
     
         self.data_streams[stream.stream_name] = stream
         self.notify(None, EventType.STREAMUPDATE)
-        if stream.stream_type in [StreamType.SOFTWARE, StreamType.DEVICE, StreamType.FILTER]:
-            self.notify(None, EventType.DEVICELISTUPDATE)
     
     def rename_stream(self, old_name: str, new_name: str) -> bool:
         """Rename a stream from old_name to new_name."""

@@ -22,7 +22,7 @@ class InventoryView(EventClass):
             ('selected', 'invalid', 'yellow'),('pressed', 'focus', 'yellow')
         ])
         # grab png image for stream running icon
-        self.stream_running_icon = tk.PhotoImage(file="../assets/folder.png")
+        self.stream_running_icon = tk.PhotoImage(file="./assets/folder.png")
 
         self.views = [['Streams'], ['Datasets'], ['Classifiers']]
         self.frames = create_grid(self.inner_frame, len(self.views), 1, self.views, resize=False)

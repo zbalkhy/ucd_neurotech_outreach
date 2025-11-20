@@ -143,17 +143,9 @@ class PlotterViewModel(EventClass):
         return self.stream_names
 
     def on_notify(self, eventData, event) -> None:
-        if event == EventType.DEVICELISTUPDATE:
+        if event == EventType.STREAMUPDATE:
             self.refresh_stream_list()
-            self.notify_subscribers(EventType.STREAMLISTUPDATE, self.stream_names)
-
-    def notify_subscribers(self, event, data):
-        """Notify all subscribers of a view-model event."""
-        if not hasattr(self, "subscribers"):
-            return
-        for sub in self.subscribers:
-            if hasattr(sub, "on_notify"):
-                sub.on_notify(data, event)
+            self.notify(self.stream_names, EventType.STREAMLISTUPDATE)
 
     def toggle_plotting(self):
         if not self.continue_plotting:
