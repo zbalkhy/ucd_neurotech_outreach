@@ -57,7 +57,7 @@ if __name__ == "__main__":
     
     # initialize user model
     user_model = UserModel()
-    data = loadmat('./src/data.mat')
+    data = loadmat('./data.mat')
     for key in data.keys():
         if key in ['eyesOpen', 'eyesClosed']:
             user_model.add_dataset(key, data[key])

@@ -22,7 +22,7 @@ class InventoryView(EventClass):
             ('selected', 'invalid', 'yellow'),('pressed', 'focus', 'yellow')
         ])
         # grab png image for stream running icon
-        self.stream_running_icon = tk.PhotoImage(file="./assets/folder.png")
+        self.stream_running_icon = tk.PhotoImage(file="../assets/folder.png")
 
         self.views = [['Streams'], ['Datasets'], ['Classifiers']]
         self.frames = create_grid(self.inner_frame, len(self.views), 1, self.views, resize=False)
@@ -61,7 +61,12 @@ class InventoryView(EventClass):
     def populate_streams(self) -> None:
         self.stream_names = self.view_model.get_stream_names()
         for i in range(len(self.stream_names)):
-            self.stream_tree.insert("", "end", text=self.stream_names[i], values=("start"))
+            if self.view_model.user_model.get_stream(self.stream_names[i]).is_alive():
+                self.stream_tree.insert("", "end", image=self.stream_running_icon
+                                        , text=self.stream_names[i], values=("stop"))
+            else:
+                self.stream_tree.insert("", "end", text=self.stream_names[i], values=("start"))
+
         return
     
     def populate_datasets(self) -> None:
@@ -88,7 +93,7 @@ class InventoryView(EventClass):
     def on_classifier_click(self, event) -> None:
         item = self.classifier_tree.identify('item',event.x,event.y)
         item_name = self.classifier_tree.item(item, "text")
-        if not self.classifier_tree.item(item, "image"):
+        if not self.view_model.user_model.get_stream(item_name).is_alive():
             self.classifier_tree.item(item, image=self.stream_running_icon)
             self.view_model.train_classifier(item_name)
             self.view_model.add_classifier_stream(item_name)
