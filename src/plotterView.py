@@ -409,17 +409,49 @@ class PlotterView(EventClass):
         ylabel_entry.insert(0, current_labels["ylabel"])
         ylabel_entry.grid(row=2, column=1)
 
+        if graph_type == "bands":
+            tk.Label(popup, text="Visible Bands:", font=("Arial", 10, "bold")).grid(
+                row=3, column=0, columnspan=2, pady=(10, 4), sticky="w"
+            )
+
+            band_vars = {}
+            visibility = self.view_model.get_band_visibility()
+
+            row = 4
+            for band, is_visible in visibility.items():
+                var = tk.BooleanVar(value=is_visible)
+                band_vars[band] = var
+                tk.Checkbutton(popup, text=band, variable=var).grid(
+                    row=row, column=0, columnspan=2, sticky="w"
+                )
+                row += 1
+
         def apply_settings():
-            success = self.view_model.update_labels(
-                graph_type, 
-                title_entry.get(), 
-                xlabel_entry.get(), 
+            self.view_model.update_labels(
+                graph_type,
+                title_entry.get(),
+                xlabel_entry.get(),
                 ylabel_entry.get()
             )
-            if success:
-                popup.destroy()
 
-        tk.Button(popup, text="Apply", command=apply_settings).grid(row=3, column=0, columnspan=2)
+            if graph_type == "bands":
+                for band, var in band_vars.items():
+                    self.view_model.set_band_visibility(band, var.get())
+
+            popup.destroy()
+
+
+        apply_row = row if graph_type == "bands" else 3
+
+        tk.Button(
+            popup,
+            text="Apply",
+            command=apply_settings
+        ).grid(row=apply_row, column=0, columnspan=2, pady=8)
+
+
+        
+
 
     def plot(self):
         # This method is no longer used - thread handles all plotting
@@ -431,6 +463,10 @@ class PlotterView(EventClass):
         ax.set_axis_off()
 
     def _render_plots(self, plot_data):
+        if plot_data['n_subplots'] == 0:
+            self._show_no_data_message()
+            return
+
         subplot_index = 1
         labels = plot_data['labels']
         

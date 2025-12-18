@@ -40,6 +40,14 @@ class PlotterViewModel(EventClass):
             "gamma (30–45 Hz)": (30, 45),
         }
 
+        self.band_visibility = {
+            "delta (0.5–4 Hz)": True,
+            "theta (4–8 Hz)": True,
+            "alpha (8–13 Hz)": True,
+            "beta (13–30 Hz)": True,
+            "gamma (30–45 Hz)": True,
+        }
+
         
         self.show_amplitude = True
         self.show_power = True
@@ -173,6 +181,13 @@ class PlotterViewModel(EventClass):
         self.show_bands = not self.show_bands
         return self.show_bands
 
+    def set_band_visibility(self, band_name: str, visible: bool):
+        if band_name in self.band_visibility:
+            self.band_visibility[band_name] = visible
+
+    def get_band_visibility(self):
+        return dict(self.band_visibility)
+
     def update_labels(self, graph_type, title, xlabel, ylabel):
         if graph_type in self.labels:
             self.labels[graph_type]["title"] = title
@@ -183,6 +198,7 @@ class PlotterViewModel(EventClass):
 
     def get_plot_data(self):
         # Generate or get data
+
         if self.simulated:
             data = self._generate_simulated_data()
         else:
@@ -201,6 +217,9 @@ class PlotterViewModel(EventClass):
             }
 
         data = np.array(data)
+
+        if data.ndim > 1:
+            data = data[:, 0]  # or np.mean(data, axis=1)
         fs = 250  # assume 250 Hz sampling
         
         # Calculate time axis
@@ -213,10 +232,19 @@ class PlotterViewModel(EventClass):
         # Calculate band powers
         band_powers = []
         band_labels = []
+
         for band, (low, high) in self.bands.items():
+            if not self.band_visibility.get(band, True):
+                continue
+
             idx = np.logical_and(freqs >= low, freqs <= high)
-            band_powers.append(psd[idx].mean())
+            if np.any(idx):
+                band_powers.append(psd[idx].mean())
+            else:
+                band_powers.append(0.0)
+
             band_labels.append(band)
+
 
         n_subplots = sum([self.show_amplitude, self.show_power, self.show_bands])
 
