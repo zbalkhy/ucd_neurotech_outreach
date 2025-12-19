@@ -7,9 +7,12 @@ from dataStream import DataStream, StreamType
 class PlotterViewModel(EventClass):
     def __init__(self, user_model: UserModel):
         super().__init__()
+        self.current_channel = 0  # 0-based index (Channel 1)
+        self._stream_version = 0
+
         self.user_model = user_model
         self.continue_plotting = True
-        self.simulated = False  
+        self.simulated = False
         
 
         self.subscribe_to_subject(self.user_model)
@@ -60,6 +63,18 @@ class PlotterViewModel(EventClass):
             "bands": {"title": "Band Power", "xlabel": "Band", "ylabel": "Power"},
         }
     
+        
+    def get_channel_count(self):
+        if self.simulated:
+            data = self._generate_simulated_data()
+        else:
+            data = self._get_real_data()
+
+        if isinstance(data, np.ndarray) and data.ndim == 2:
+            return data.shape[1]
+        return 1
+
+
     def _get_display_name(self, stream):
         """Return user-customized name if available, else inherent name."""
         inherent = getattr(stream, "stream_name", None) or "UnnamedStream"
@@ -166,6 +181,14 @@ class PlotterViewModel(EventClass):
     def change_stream(self, selection):
         if selection in self.stream_names:
             self.current_stream_index = self.stream_names.index(selection)
+
+            # Clamp channel index to new stream's channel count
+            n_ch = self.get_channel_count()
+            if self.current_channel >= n_ch:
+                self.current_channel = 0  # reset to Channel 1
+
+            self._stream_version += 1
+
             return True
         return False
 
@@ -195,41 +218,58 @@ class PlotterViewModel(EventClass):
             self.labels[graph_type]["ylabel"] = ylabel
             return True
         return False
+    
+    def set_channel(self, channel_index: int):
+        n_ch = self.get_channel_count()
+        if 0 <= channel_index < n_ch:
+            self.current_channel = channel_index
+            return True
+        return False
+    
+    def get_channel(self):
+        return self.current_channel
+
+
 
     def get_plot_data(self):
-        # Generate or get data
-
         if self.simulated:
             data = self._generate_simulated_data()
         else:
             data = self._get_real_data()
 
-        if len(data) == 0:
+        if data is None or data.size == 0:
             return {
                 'has_data': False,
-                'data': [],
-                'time_axis': [],
-                'freqs': [],
-                'psd': [],
-                'band_powers': [],
-                'band_labels': [],
-                'n_subplots': 0
+                'data': None,
+                'n_channels': 0
             }
 
-        data = np.array(data)
+        # Normalize once
+        data = np.asarray(data)
 
-        if data.ndim > 1:
-            data = data[:, 0]  # or np.mean(data, axis=1)
-        fs = 250  # assume 250 Hz sampling
-        
-        # Calculate time axis
-        time_axis = np.arange(len(data)) / fs
-        
-        # Calculate power spectrum
-        freqs = np.fft.rfftfreq(len(data), 1 / fs)
-        psd = np.abs(np.fft.rfft(data)) ** 2
-        
-        # Calculate band powers
+        # Determine channel structure
+        if data.ndim == 1:
+            n_channels = 1
+            data_to_plot = data
+            self.current_channel = 0
+        elif data.ndim == 2:
+            n_channels = data.shape[1]
+            ch = min(self.current_channel, n_channels - 1)
+            self.current_channel = ch
+            data_to_plot = data[:, ch]
+        else:
+            return {'has_data': False}
+
+        fs = 250
+
+        # Time axis must match plotted signal
+        time_axis = np.arange(len(data_to_plot)) / fs
+
+        # Power spectrum
+        freqs = np.fft.rfftfreq(len(data_to_plot), 1 / fs)
+        psd = np.abs(np.fft.rfft(data_to_plot)) ** 2
+
+        # Band powers
         band_powers = []
         band_labels = []
 
@@ -237,61 +277,80 @@ class PlotterViewModel(EventClass):
             if not self.band_visibility.get(band, True):
                 continue
 
-            idx = np.logical_and(freqs >= low, freqs <= high)
-            if np.any(idx):
-                band_powers.append(psd[idx].mean())
-            else:
-                band_powers.append(0.0)
-
+            idx = (freqs >= low) & (freqs <= high)
+            band_powers.append(psd[idx].mean() if np.any(idx) else 0.0)
             band_labels.append(band)
-
-
-        n_subplots = sum([self.show_amplitude, self.show_power, self.show_bands])
 
         return {
             'has_data': True,
-            'data': data,
+            'data': data_to_plot,          # always 1D (what we plot)
             'time_axis': time_axis,
             'freqs': freqs,
             'psd': psd,
             'band_powers': band_powers,
             'band_labels': band_labels,
-            'n_subplots': n_subplots,
+            'n_subplots': sum([
+                self.show_amplitude,
+                self.show_power,
+                self.show_bands
+            ]),
             'labels': self.labels,
             'show_amplitude': self.show_amplitude,
             'show_power': self.show_power,
-            'show_bands': self.show_bands
+            'show_bands': self.show_bands,
+            'n_channels': n_channels,       # 🔑 SOURCE OF TRUTH
+            'current_channel': self.current_channel
         }
+
 
     def _generate_simulated_data(self):
         fs = 250
         t = np.linspace(0, 2, 2*fs, endpoint=False)
+
         if not self.streams or self.current_stream_index >= len(self.streams):
-        # No streams left — return empty data so plots clear
-            return []
+            # No streams left — return empty 2D array
+            return np.empty((0, 1))
+
         # Identify stream uniquely by its name
         stream_name = getattr(self.streams[self.current_stream_index], "stream_name", "")
 
-        # Assign frequency based on stream name (so identity is stable even after reordering)
+        # Assign frequency, amplitude, noise, and number of channels based on stream
         if "SimStream1" in stream_name:
-            freq, amp, noise = 10, 50, 10
+            freq, amp, noise, n_ch = 10, 50, 10, 8
         elif "SimStream2" in stream_name:
-            freq, amp, noise = 6, 40, 15
+            freq, amp, noise, n_ch = 6, 40, 15, 5
         elif "SimStream3" in stream_name:
-            freq, amp, noise = 20, 30, 10
+            freq, amp, noise, n_ch = 20, 30, 10, 2
         elif "SimStream4" in stream_name:
-            freq, amp, noise = 30, 20, 10
+            freq, amp, noise, n_ch = 30, 20, 10, 1
         else:
-            # fallback for renamed streams
-            freq, amp, noise = 8, 25, 10
+            freq, amp, noise, n_ch = 8, 25, 10, 1
 
-        return amp * np.sin(2 * np.pi * freq * t) + noise * np.random.randn(len(t))
+        # Generate multi-channel signal
+        channels = np.stack([
+            amp * np.sin(2 * np.pi * (freq + i) * t) + noise * np.random.randn(len(t))
+            for i in range(n_ch)
+        ], axis=1)
 
+        return channels  # Return full multi-channel array
+
+        
     def _get_real_data(self):
-        data = []
-        if self.streams and self.current_stream_index < len(self.streams):
-            data = list(self.streams[self.current_stream_index].get_stream_data())
+        if not self.streams or self.current_stream_index >= len(self.streams):
+            print("No streams or invalid index")
+            return np.array([])
+
+        raw = self.streams[self.current_stream_index].get_stream_data()
+
+        if raw is None:
+            return np.array([])
+
+        if isinstance(raw, deque) and len(raw) == 0:
+            return np.array([])
+        data = np.asarray(raw)
         return data
+
+    
 
     def should_continue_plotting(self):
         return self.continue_plotting

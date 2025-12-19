@@ -10,7 +10,7 @@ from plotterViewModel import PlotterViewModel
 import threading
 import queue
 import time
-
+import numpy as np
 
 class PlotterView(EventClass):
     def __init__(self, frame: tk.Frame, view_model: PlotterViewModel):
@@ -88,6 +88,24 @@ class PlotterView(EventClass):
         
         self.stream_menu.grid(row=0, column=0, padx=6, pady=6, sticky="ew")
 
+        self.channel_frame = tk.LabelFrame(controls, text="Channel")
+        self.channel_frame.grid(row=2, column=0, columnspan=6, sticky="ew", padx=6)
+        self.channel_frame.grid_columnconfigure((0,1,2,3), weight=1)
+
+        self.channel_var = tk.IntVar(value=1)
+
+        for i in range(8):
+            rb = tk.Radiobutton(
+                self.channel_frame,
+                text=f"Ch {i+1}",
+                variable=self.channel_var,
+                value=i + 1,
+                command=self._on_channel_change
+            )
+            rb.grid(row=i // 4, column=i % 4, sticky="w")
+
+
+
         self.toggle_amplitude = tk.Button(controls, text="Hide Amp", command=self._on_toggle_amp)
         self.toggle_amplitude.grid(row=1, column=0, padx=6, pady=6, sticky="ew")
 
@@ -161,6 +179,8 @@ class PlotterView(EventClass):
         btn_frame = tk.Frame(confirm)
         btn_frame.pack(pady=5)
 
+    
+
         def do_delete():
             success = self.view_model.delete_stream_by_name(stream_name)
             confirm.destroy()
@@ -228,6 +248,26 @@ class PlotterView(EventClass):
 
         tk.Button(popup, text="Apply", command=apply_new_name).grid(row=2, column=0, columnspan=2, pady=8)
         popup.columnconfigure(1, weight=1)
+
+    def _on_channel_change(self):
+        n_channels = self.view_model.get_channel_count()
+
+        # Single-channel → force channel 0 and ignore clicks
+        if n_channels == 1:
+            self.channel_var.set(1)
+            return
+
+        channel_index = self.channel_var.get() - 1
+        self.view_model.set_channel(channel_index)
+
+        # Clear queue so next frame is fresh
+        with self.plot_queue.mutex:
+            self.plot_queue.queue.clear()
+
+        # Force one immediate redraw
+        plot_data = self.view_model.get_plot_data()
+        self._render_plot_data(plot_data)
+
 
     
     def _clear_graphs(self):
@@ -316,18 +356,53 @@ class PlotterView(EventClass):
             self.frame.after(50, self._process_plot_queue)
 
     def _render_plot_data(self, plot_data):
-        """Render the plot data in the UI thread - Added: Separated from plot loop"""
+        data = plot_data.get("data")
+        n_channels = plot_data.get("n_channels", 1)
+
+        has_data = plot_data.get("has_data", False)
+        data = plot_data.get("data")
+        n_channels = plot_data.get("n_channels", 0)
+
+        single_channel = has_data and n_channels <= 1
+
+        # Update channel frame label
+        # --- Channel UI state ---
+        if not has_data:
+            # Stream not started yet → don't lock
+            self.channel_frame.config(text="Channel")
+            for rb in self.channel_frame.winfo_children():
+                rb.config(state="disabled")
+        else:
+            self.channel_frame.config(
+                text="Channel (locked)" if single_channel else "Channel"
+            )
+            for idx, rb in enumerate(self.channel_frame.winfo_children()):
+                if single_channel:
+                    rb.config(state="disabled")
+                else:
+                    rb.config(state="normal" if idx < n_channels else "disabled")
+
+
+        # Enforce valid selected channel
+        if has_data:
+            current_channel = self.view_model.get_channel()
+            if single_channel or current_channel >= n_channels:
+                self.view_model.set_channel(0)
+                self.channel_var.set(1)
+
+
+        # ---- plotting logic ----
         self.fig.clear()
 
-        if not plot_data['has_data']:
+        if data is None or data.size == 0:
             self._show_no_data_message()
         else:
             self._render_plots(plot_data)
-        
-        # refresh canvas
+
         self.fig.tight_layout()
         self.canvas.draw()
         self.canvas.flush_events()
+
     
     def stop(self):
         """Stop the plotting thread - Added: Cleanup method"""
@@ -371,9 +446,37 @@ class PlotterView(EventClass):
         # Thread automatically responds to state change - no manual plot() needed
 
     def _on_change_stream(self, selection):
-        """Handle stream selection change - Fixed: Don't call plot() - thread handles it"""
+        """Handle stream selection change with immediate plot update and proper channel handling."""
         success = self.view_model.change_stream(selection)
-        # Thread will automatically get new stream data on next iteration
+        if not success:
+            return
+
+        with self.plot_queue.mutex:
+            self.plot_queue.queue.clear()
+        # Get current plot data for the selected stream
+        plot_data = self.view_model.get_plot_data()
+        data = plot_data.get("data")
+
+        if data is None or data.size == 0:
+            self.view_model.set_channel(0)
+            self.channel_var.set(1)
+        elif data.ndim == 1:
+            self.view_model.set_channel(0)
+            self.channel_var.set(1)
+        else:
+            n_channels = data.shape[1]  # Use 1st dim = samples, 2nd dim = channels
+            current_channel = self.view_model.get_channel()
+            if current_channel >= n_channels:
+                self.view_model.set_channel(0)
+                self.channel_var.set(1)
+            else:
+                self.channel_var.set(current_channel + 1)
+
+
+        # Force immediate redraw of the new stream data
+        plot_data = self.view_model.get_plot_data()
+        self._render_plot_data(plot_data)
+
 
     def _on_toggle_amp(self):
         show_amplitude = self.view_model.toggle_amplitude()
