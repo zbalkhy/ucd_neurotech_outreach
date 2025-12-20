@@ -92,17 +92,19 @@ class PlotterView(EventClass):
         self.channel_frame.grid(row=2, column=0, columnspan=6, sticky="ew", padx=6)
         self.channel_frame.grid_columnconfigure((0,1,2,3), weight=1)
 
-        self.channel_var = tk.IntVar(value=1)
+        self.channel_vars = []
 
         for i in range(8):
-            rb = tk.Radiobutton(
+            var = tk.BooleanVar()
+            cb = tk.Checkbutton(
                 self.channel_frame,
                 text=f"Ch {i+1}",
-                variable=self.channel_var,
-                value=i + 1,
+                variable=var,
                 command=self._on_channel_change
             )
-            rb.grid(row=i // 4, column=i % 4, sticky="w")
+            cb.grid(row=i // 4, column=i % 4, sticky="w")
+            self.channel_vars.append(var)
+
 
 
 
@@ -250,21 +252,19 @@ class PlotterView(EventClass):
         popup.columnconfigure(1, weight=1)
 
     def _on_channel_change(self):
-        n_channels = self.view_model.get_channel_count()
+        selected = [
+            i for i, var in enumerate(self.channel_vars)
+            if var.get()
+        ]
 
-        # Single-channel → force channel 0 and ignore clicks
-        if n_channels == 1:
-            self.channel_var.set(1)
+        if not selected:
             return
 
-        channel_index = self.channel_var.get() - 1
-        self.view_model.set_channel(channel_index)
+        self.view_model.set_selected_channels(selected)
 
-        # Clear queue so next frame is fresh
         with self.plot_queue.mutex:
             self.plot_queue.queue.clear()
 
-        # Force one immediate redraw
         plot_data = self.view_model.get_plot_data()
         self._render_plot_data(plot_data)
 
@@ -275,9 +275,9 @@ class PlotterView(EventClass):
         try:
             self.fig.clear()
             ax = self.fig.add_subplot(111)
-            ax.text(0.5, 0.5, "No data", ha="center", va="center")
+            ax.text(0.5, 0.5, "No data", ha="center", va="center", fontsize=12)
             ax.set_axis_off()
-            self.canvas.draw()
+            self.canvas.draw_idle()
             
         except Exception as e:
             print("[PlotterView] Error clearing graphs:", e)
@@ -356,52 +356,46 @@ class PlotterView(EventClass):
             self.frame.after(50, self._process_plot_queue)
 
     def _render_plot_data(self, plot_data):
-        data = plot_data.get("data")
-        n_channels = plot_data.get("n_channels", 1)
-
         has_data = plot_data.get("has_data", False)
-        data = plot_data.get("data")
+        signals = plot_data.get("signals", [])
         n_channels = plot_data.get("n_channels", 0)
+        selected = self.view_model.get_selected_channels()
 
-        single_channel = has_data and n_channels <= 1
-
-        # Update channel frame label
-        # --- Channel UI state ---
+        # ---------- CHANNEL UI ----------
         if not has_data:
-            # Stream not started yet → don't lock
             self.channel_frame.config(text="Channel")
-            for rb in self.channel_frame.winfo_children():
-                rb.config(state="disabled")
-        else:
-            self.channel_frame.config(
-                text="Channel (locked)" if single_channel else "Channel"
-            )
-            for idx, rb in enumerate(self.channel_frame.winfo_children()):
-                if single_channel:
-                    rb.config(state="disabled")
-                else:
-                    rb.config(state="normal" if idx < n_channels else "disabled")
+            for cb in self.channel_frame.winfo_children():
+                cb.config(state="disabled")
+            
+            # CLEAR OLD VISUALS
+            self._clear_graphs()
+            return
 
+        self.channel_frame.config(text="Channels")
 
-        # Enforce valid selected channel
-        if has_data:
-            current_channel = self.view_model.get_channel()
-            if single_channel or current_channel >= n_channels:
-                self.view_model.set_channel(0)
-                self.channel_var.set(1)
+        for idx, cb in enumerate(self.channel_frame.winfo_children()):
+            if idx < n_channels:
+                cb.config(state="normal")
+                cb_var = self.channel_vars[idx]
 
+                # sync UI with ViewModel
+                cb_var.set(idx in selected)
+            else:
+                cb.config(state="disabled")
+                self.channel_vars[idx].set(False)
 
-        # ---- plotting logic ----
+        # ---------- PLOTTING ----------
         self.fig.clear()
 
-        if data is None or data.size == 0:
+        if not signals:
             self._show_no_data_message()
         else:
             self._render_plots(plot_data)
 
         self.fig.tight_layout()
         self.canvas.draw()
-        self.canvas.flush_events()
+
+
 
     
     def stop(self):
@@ -445,37 +439,32 @@ class PlotterView(EventClass):
         should_start = self.view_model.toggle_plotting()
         # Thread automatically responds to state change - no manual plot() needed
 
+        if should_start:
+            # Stream is running → update channel defaults
+            plot_data = self.view_model.get_plot_data()
+            n_channels = plot_data.get("n_channels", 0)
+
+            if n_channels > 0:
+                default = list(range(min(4, n_channels)))
+                self.view_model.set_selected_channels(default)
+
+                for i, var in enumerate(self.channel_vars):
+                    var.set(i in default if i < n_channels else False)
+
+    
     def _on_change_stream(self, selection):
-        """Handle stream selection change with immediate plot update and proper channel handling."""
+        """Switch displayed stream WITHOUT affecting streaming state."""
         success = self.view_model.change_stream(selection)
         if not success:
             return
 
+        # Clear pending plot updates
         with self.plot_queue.mutex:
             self.plot_queue.queue.clear()
-        # Get current plot data for the selected stream
-        plot_data = self.view_model.get_plot_data()
-        data = plot_data.get("data")
 
-        if data is None or data.size == 0:
-            self.view_model.set_channel(0)
-            self.channel_var.set(1)
-        elif data.ndim == 1:
-            self.view_model.set_channel(0)
-            self.channel_var.set(1)
-        else:
-            n_channels = data.shape[1]  # Use 1st dim = samples, 2nd dim = channels
-            current_channel = self.view_model.get_channel()
-            if current_channel >= n_channels:
-                self.view_model.set_channel(0)
-                self.channel_var.set(1)
-            else:
-                self.channel_var.set(current_channel + 1)
-
-
-        # Force immediate redraw of the new stream data
         plot_data = self.view_model.get_plot_data()
         self._render_plot_data(plot_data)
+
 
 
     def _on_toggle_amp(self):
@@ -570,35 +559,41 @@ class PlotterView(EventClass):
             self._show_no_data_message()
             return
 
+        signals = plot_data['signals']
+        time_axis = plot_data['time_axis']
+        channel_indices = plot_data['channel_indices']
+
         subplot_index = 1
-        labels = plot_data['labels']
-        
+
+        # -------- AMPLITUDE --------
         if plot_data['show_amplitude']:
-            ax1 = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
+            ax = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
+            for sig, ch in zip(signals, channel_indices):
+                ax.plot(time_axis, sig, label=f"Ch {ch + 1}")
+            ax.set_title(plot_data['labels']['amplitude']['title'])
+            ax.set_xlabel(plot_data['labels']['amplitude']['xlabel'])
+            ax.set_ylabel(plot_data['labels']['amplitude']['ylabel'])
+            ax.legend(loc="upper right")
             subplot_index += 1
-            ax1.plot(plot_data['time_axis'], plot_data['data'], color="blue")
-            
-            ax1.set_title(labels["amplitude"]["title"])
-            ax1.set_ylabel(labels["amplitude"]["ylabel"])
-            ax1.set_xlabel(labels["amplitude"]["xlabel"])
-            ax1.set_ylim([-100, 100])
 
+        # -------- POWER SPECTRUM --------
         if plot_data['show_power']:
-            ax2 = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
+            ax = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
+            for psd, ch in zip(plot_data['psds'], channel_indices):
+                ax.plot(plot_data['freqs'], psd, label=f"Ch {ch + 1}")
+            ax.set_title(plot_data['labels']['power']['title'])
+            ax.set_xlabel(plot_data['labels']['power']['xlabel'])
+            ax.set_ylabel(plot_data['labels']['power']['ylabel'])
+            ax.legend(loc="upper right")
             subplot_index += 1
-            ax2.plot(plot_data['freqs'], plot_data['psd'], color="green")
-            ax2.set_xlim([0, 50])  # up to 50 Hz
-            ax2.set_title(labels["power"]["title"])
-            ax2.set_xlabel(labels["power"]["xlabel"])
-            ax2.set_ylabel(labels["power"]["ylabel"])
 
+        # -------- BAND POWERS --------
         if plot_data['show_bands']:
-            ax3 = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
-            ax3.bar(plot_data['band_labels'], plot_data['band_powers'], color="orange")
-            ax3.set_title(labels["bands"]["title"])
-            ax3.set_xlabel(labels["bands"]["xlabel"])
-            ax3.set_ylabel(labels["bands"]["ylabel"])
-            ax3.tick_params(axis='x', rotation=30)
+            ax = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
+            ax.bar(plot_data['band_labels'], plot_data['band_powers'])
+            ax.set_title(plot_data['labels']['bands']['title'])
+            ax.set_xlabel(plot_data['labels']['bands']['xlabel'])
+            ax.set_ylabel(plot_data['labels']['bands']['ylabel'])
 
 
 # Changed: Factory function to create both ViewModel and View together

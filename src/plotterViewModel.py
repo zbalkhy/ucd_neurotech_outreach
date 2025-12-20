@@ -7,12 +7,14 @@ from dataStream import DataStream, StreamType
 class PlotterViewModel(EventClass):
     def __init__(self, user_model: UserModel):
         super().__init__()
-        self.current_channel = 0  # 0-based index (Channel 1)
         self._stream_version = 0
+        self.selected_channels = []  # list of 0-based channel indices
+        self.max_visible_channels = 4
+
 
         self.user_model = user_model
         self.continue_plotting = True
-        self.simulated = False
+        self.simulated = True
         
 
         self.subscribe_to_subject(self.user_model)
@@ -73,6 +75,21 @@ class PlotterViewModel(EventClass):
         if isinstance(data, np.ndarray) and data.ndim == 2:
             return data.shape[1]
         return 1
+
+    def _default_selected_channels(self, n_channels):
+        return list(range(min(self.max_visible_channels, n_channels)))
+    
+    def set_selected_channels(self, channels):
+        """channels: list of 0-based indices"""
+        n_channels = self.get_channel_count()
+        self.selected_channels = [
+            ch for ch in channels
+            if 0 <= ch < n_channels
+        ][:self.max_visible_channels]
+
+    def get_selected_channels(self):
+        return list(self.selected_channels)
+
 
 
     def _get_display_name(self, stream):
@@ -183,9 +200,9 @@ class PlotterViewModel(EventClass):
             self.current_stream_index = self.stream_names.index(selection)
 
             # Clamp channel index to new stream's channel count
+            # Reset channel selection for new stream
             n_ch = self.get_channel_count()
-            if self.current_channel >= n_ch:
-                self.current_channel = 0  # reset to Channel 1
+            self.selected_channels = self._default_selected_channels(n_ch)
 
             self._stream_version += 1
 
@@ -219,17 +236,6 @@ class PlotterViewModel(EventClass):
             return True
         return False
     
-    def set_channel(self, channel_index: int):
-        n_ch = self.get_channel_count()
-        if 0 <= channel_index < n_ch:
-            self.current_channel = channel_index
-            return True
-        return False
-    
-    def get_channel(self):
-        return self.current_channel
-
-
 
     def get_plot_data(self):
         if self.simulated:
@@ -240,36 +246,48 @@ class PlotterViewModel(EventClass):
         if data is None or data.size == 0:
             return {
                 'has_data': False,
-                'data': None,
+                'signals': [],
                 'n_channels': 0
             }
 
-        # Normalize once
         data = np.asarray(data)
 
-        # Determine channel structure
         if data.ndim == 1:
+            signals = [data]
+            channel_indices = [0]
             n_channels = 1
-            data_to_plot = data
-            self.current_channel = 0
+            self.selected_channels = [0]
+
         elif data.ndim == 2:
             n_channels = data.shape[1]
-            ch = min(self.current_channel, n_channels - 1)
-            self.current_channel = ch
-            data_to_plot = data[:, ch]
+
+            # Initialize defaults if empty or invalid
+            if not self.selected_channels:
+                self.selected_channels = self._default_selected_channels(n_channels)
+
+            # Clamp to available channels
+            self.selected_channels = [
+                ch for ch in self.selected_channels if ch < n_channels
+            ]
+
+            signals = [data[:, ch] for ch in self.selected_channels]
+            channel_indices = list(self.selected_channels)
+
         else:
             return {'has_data': False}
 
+
         fs = 250
+        time_axis = np.arange(len(signals[0])) / fs
 
-        # Time axis must match plotted signal
-        time_axis = np.arange(len(data_to_plot)) / fs
+        # ---------- POWER SPECTRA (PER CHANNEL) ----------
+        freqs = np.fft.rfftfreq(len(signals[0]), 1 / fs)
+        psds = [
+            np.abs(np.fft.rfft(sig)) ** 2
+            for sig in signals
+        ]
 
-        # Power spectrum
-        freqs = np.fft.rfftfreq(len(data_to_plot), 1 / fs)
-        psd = np.abs(np.fft.rfft(data_to_plot)) ** 2
-
-        # Band powers
+        # ---------- BAND POWERS (AVERAGED ACROSS SHOWN CHANNELS) ----------
         band_powers = []
         band_labels = []
 
@@ -278,17 +296,25 @@ class PlotterViewModel(EventClass):
                 continue
 
             idx = (freqs >= low) & (freqs <= high)
-            band_powers.append(psd[idx].mean() if np.any(idx) else 0.0)
+
+            # mean over channels
+            values = [
+                psd[idx].mean() if np.any(idx) else 0.0
+                for psd in psds
+            ]
+            band_powers.append(np.mean(values))
             band_labels.append(band)
 
         return {
             'has_data': True,
-            'data': data_to_plot,          # always 1D (what we plot)
+            'signals': signals,
+            'channel_indices': channel_indices,
             'time_axis': time_axis,
             'freqs': freqs,
-            'psd': psd,
+            'psds': psds,
             'band_powers': band_powers,
             'band_labels': band_labels,
+            'n_channels': n_channels,
             'n_subplots': sum([
                 self.show_amplitude,
                 self.show_power,
@@ -298,9 +324,11 @@ class PlotterViewModel(EventClass):
             'show_amplitude': self.show_amplitude,
             'show_power': self.show_power,
             'show_bands': self.show_bands,
-            'n_channels': n_channels,       # 🔑 SOURCE OF TRUTH
-            'current_channel': self.current_channel
         }
+
+
+
+
 
 
     def _generate_simulated_data(self):
