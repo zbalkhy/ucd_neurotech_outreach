@@ -588,12 +588,35 @@ class PlotterView(EventClass):
             subplot_index += 1
 
         # -------- BAND POWERS --------
+        # -------- BAND POWERS --------
         if plot_data['show_bands']:
             ax = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
-            ax.bar(plot_data['band_labels'], plot_data['band_powers'])
+
+            band_labels = plot_data['band_labels']
+            band_powers = np.array(plot_data['band_powers'])  # shape: (n_channels, n_bands)
+            channel_indices = plot_data['channel_indices']
+
+            n_channels, n_bands = band_powers.shape
+
+            x = np.arange(n_bands)  # band positions
+            total_width = 0.8
+            bar_width = total_width / n_channels
+
+            for i, ch in enumerate(channel_indices):
+                ax.bar(
+                    x + i * bar_width,
+                    band_powers[i],
+                    width=bar_width,
+                    label=f"Ch {ch + 1}"
+                )
+
+            ax.set_xticks(x + total_width / 2 - bar_width / 2)
+            ax.set_xticklabels(band_labels)
+
             ax.set_title(plot_data['labels']['bands']['title'])
             ax.set_xlabel(plot_data['labels']['bands']['xlabel'])
             ax.set_ylabel(plot_data['labels']['bands']['ylabel'])
+            ax.legend(loc="upper right")
 
 
 # Changed: Factory function to create both ViewModel and View together

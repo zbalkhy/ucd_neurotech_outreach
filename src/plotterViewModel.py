@@ -14,7 +14,7 @@ class PlotterViewModel(EventClass):
 
         self.user_model = user_model
         self.continue_plotting = True
-        self.simulated = True
+        self.simulated = False
         
 
         self.subscribe_to_subject(self.user_model)
@@ -287,23 +287,30 @@ class PlotterViewModel(EventClass):
             for sig in signals
         ]
 
-        # ---------- BAND POWERS (AVERAGED ACROSS SHOWN CHANNELS) ----------
-        band_powers = []
+        # ---------- BAND POWERS (PER CHANNEL) ----------
         band_labels = []
+        band_powers = []  # shape: [n_channels_shown, n_bands]
 
         for band, (low, high) in self.bands.items():
             if not self.band_visibility.get(band, True):
                 continue
 
+            band_labels.append(band)
+
             idx = (freqs >= low) & (freqs <= high)
 
-            # mean over channels
-            values = [
-                psd[idx].mean() if np.any(idx) else 0.0
-                for psd in psds
-            ]
-            band_powers.append(np.mean(values))
-            band_labels.append(band)
+            band_values_per_channel = []
+            for psd in psds:
+                if np.any(idx):
+                    band_values_per_channel.append(psd[idx].mean())
+                else:
+                    band_values_per_channel.append(0.0)
+
+            band_powers.append(band_values_per_channel)
+
+        # transpose → channels x bands
+        band_powers = np.array(band_powers).T
+
 
         return {
             'has_data': True,
