@@ -8,13 +8,13 @@ class PlotterViewModel(EventClass):
     def __init__(self, user_model: UserModel):
         super().__init__()
         self._stream_version = 0
-        self.selected_channels = []  # list of 0-based channel indices
+        self.selected_sources = []  # list[(stream_idx, channel_idx)]
         self.max_visible_channels = 4
 
 
         self.user_model = user_model
         self.continue_plotting = True
-        self.simulated = False
+        self.simulated = True
         
 
         self.subscribe_to_subject(self.user_model)
@@ -63,33 +63,56 @@ class PlotterViewModel(EventClass):
             "amplitude": {"title": "Amplitude vs Time", "xlabel": "Time (s)", "ylabel": "Amplitude (µV)"},
             "power": {"title": "Power Spectrum", "xlabel": "Frequency (Hz)", "ylabel": "Power"},
             "bands": {"title": "Band Power", "xlabel": "Band", "ylabel": "Power"},
-        }
-    
-        
-    def get_channel_count(self):
+        }  
+
+    def set_selected_sources(self, sources):
+        """
+        sources: list of (stream_index, channel_index)
+        """
+        valid = []
+
+        for stream_idx, ch_idx in sources:
+            if stream_idx < 0 or stream_idx >= len(self.streams):
+                continue
+
+            data = self._get_data_for_stream(stream_idx)
+            if data is None or data.ndim != 2:
+                continue
+
+            if 0 <= ch_idx < data.shape[1]:
+                valid.append((stream_idx, ch_idx))
+
+            if len(valid) == self.max_visible_channels:
+                break
+
+        self.selected_sources = valid
+
+    def _get_data_for_stream(self, stream_idx):
         if self.simulated:
-            data = self._generate_simulated_data()
+            return self._generate_simulated_data_for_index(stream_idx)
+
+        stream = self.streams[stream_idx]
+        raw = stream.get_stream_data()
+        if raw is None:
+            return None
+
+        data = np.asarray(raw)
+
+        # ---- NORMALIZE REAL DATA ----
+        if data.ndim == 1:
+            # Single-channel stream → make it (samples, 1)
+            data = data.reshape(-1, 1)
+
+        elif data.ndim == 2:
+            # Could be (channels, samples) → transpose if needed
+            if data.shape[0] < data.shape[1]:
+                # assume (channels, samples)
+                data = data.T
+
         else:
-            data = self._get_real_data()
+            return None
 
-        if isinstance(data, np.ndarray) and data.ndim == 2:
-            return data.shape[1]
-        return 1
-
-    def _default_selected_channels(self, n_channels):
-        return list(range(min(self.max_visible_channels, n_channels)))
-    
-    def set_selected_channels(self, channels):
-        """channels: list of 0-based indices"""
-        n_channels = self.get_channel_count()
-        self.selected_channels = [
-            ch for ch in channels
-            if 0 <= ch < n_channels
-        ][:self.max_visible_channels]
-
-    def get_selected_channels(self):
-        return list(self.selected_channels)
-
+        return data
 
 
     def _get_display_name(self, stream):
@@ -188,26 +211,17 @@ class PlotterViewModel(EventClass):
             self.notify(self.stream_names, EventType.STREAMLISTUPDATE)
 
     def toggle_plotting(self):
-        if not self.continue_plotting:
-            self.continue_plotting = not self.continue_plotting
-            return True  # Should start plotting
-        else:
-            self.continue_plotting = not self.continue_plotting
-            return False  # Should stop plotting
+        self.continue_plotting = not self.continue_plotting
+        return self.continue_plotting
+
     
     def change_stream(self, selection):
         if selection in self.stream_names:
             self.current_stream_index = self.stream_names.index(selection)
-
-            # Clamp channel index to new stream's channel count
-            # Reset channel selection for new stream
-            n_ch = self.get_channel_count()
-            self.selected_channels = self._default_selected_channels(n_ch)
-
             self._stream_version += 1
-
             return True
         return False
+
 
     def toggle_amplitude(self):
         self.show_amplitude = not self.show_amplitude
@@ -235,121 +249,117 @@ class PlotterViewModel(EventClass):
             self.labels[graph_type]["ylabel"] = ylabel
             return True
         return False
-    
 
     def get_plot_data(self):
-        if self.simulated:
-            data = self._generate_simulated_data()
-        else:
-            data = self._get_real_data()
+        if not self.selected_sources:
+            return {"has_data": False}
 
-        if data is None or data.size == 0:
-            return {
-                'has_data': False,
-                'signals': [],
-                'n_channels': 0
-            }
+        fs = 250  # Hz
 
-        data = np.asarray(data)
+        signals = []
+        time_axes = []
+        psds = []
+        freqs_list = []
+        sources = []
 
-        if data.ndim == 1:
-            signals = [data]
-            channel_indices = [0]
-            n_channels = 1
-            self.selected_channels = [0]
-
-        elif data.ndim == 2:
-            n_channels = data.shape[1]
-
-            # Initialize defaults if empty or invalid
-            if not self.selected_channels:
-                self.selected_channels = self._default_selected_channels(n_channels)
-
-            # Clamp to available channels
-            self.selected_channels = [
-                ch for ch in self.selected_channels if ch < n_channels
-            ]
-
-            signals = [data[:, ch] for ch in self.selected_channels]
-            channel_indices = list(self.selected_channels)
-
-        else:
-            return {'has_data': False}
-
-
-        fs = 250
-        time_axis = np.arange(len(signals[0])) / fs
-
-        # ---------- POWER SPECTRA (PER CHANNEL) ----------
-        freqs = np.fft.rfftfreq(len(signals[0]), 1 / fs)
-        psds = [
-            np.abs(np.fft.rfft(sig)) ** 2
-            for sig in signals
-        ]
-
-        # ---------- BAND POWERS (PER CHANNEL) ----------
-        band_labels = []
-        band_powers = []  # shape: [n_channels_shown, n_bands]
-
-        for band, (low, high) in self.bands.items():
-            if not self.band_visibility.get(band, True):
+        # -----------------------------
+        # Collect per-channel data
+        # -----------------------------
+        for stream_idx, ch_idx in self.selected_sources:
+            data = self._get_data_for_stream(stream_idx)
+            if data is None or data.ndim != 2:
+                continue
+            if ch_idx >= data.shape[1]:
                 continue
 
+            sig = np.asarray(data[:, ch_idx]).flatten()
+            if sig.size < 8:
+                continue
+
+            t = np.arange(len(sig)) / fs
+
+            n = len(sig)
+            freqs = np.fft.rfftfreq(n, 1 / fs)
+            psd = np.abs(np.fft.rfft(sig)) ** 2
+
+            signals.append(sig)
+            time_axes.append(t)
+            psds.append(psd)
+            freqs_list.append(freqs)
+            sources.append((stream_idx, ch_idx))
+
+        if not signals:
+            return {"has_data": False}
+
+        # -----------------------------
+        # Band powers (SAFE)
+        # -----------------------------
+        band_labels = []
+        band_powers = []
+
+        visible_bands = [
+            (band, rng)
+            for band, rng in self.bands.items()
+            if self.band_visibility.get(band, True)
+        ]
+
+        for band, (low, high) in visible_bands:
             band_labels.append(band)
+            values = []
 
-            idx = (freqs >= low) & (freqs <= high)
+            for psd, freqs in zip(psds, freqs_list):
+                n = min(len(psd), len(freqs))
+                if n == 0:
+                    values.append(0.0)
+                    continue
 
-            band_values_per_channel = []
-            for psd in psds:
-                if np.any(idx):
-                    band_values_per_channel.append(psd[idx].mean())
-                else:
-                    band_values_per_channel.append(0.0)
+                psd_n = psd[:n]
+                freqs_n = freqs[:n]
 
-            band_powers.append(band_values_per_channel)
+                idx = (freqs_n >= low) & (freqs_n <= high)
+                values.append(psd_n[idx].mean() if np.any(idx) else 0.0)
 
-        # transpose → channels x bands
+            band_powers.append(values)
+
         band_powers = np.array(band_powers).T
 
-
         return {
-            'has_data': True,
-            'signals': signals,
-            'channel_indices': channel_indices,
-            'time_axis': time_axis,
-            'freqs': freqs,
-            'psds': psds,
-            'band_powers': band_powers,
-            'band_labels': band_labels,
-            'n_channels': n_channels,
-            'n_subplots': sum([
-                self.show_amplitude,
-                self.show_power,
-                self.show_bands
-            ]),
-            'labels': self.labels,
-            'show_amplitude': self.show_amplitude,
-            'show_power': self.show_power,
-            'show_bands': self.show_bands,
+            "has_data": True,
+
+            # Time-domain
+            "signals": signals,
+            "time_axes": time_axes,
+            "sources": sources,
+
+            # Frequency-domain
+            "psds": psds,
+            "freqs_list": freqs_list,   # ✅ IMPORTANT
+
+            # Band power
+            "band_labels": band_labels,
+            "band_powers": band_powers,
+
+            # Plot config
+            "n_channels": len(signals),
+            "n_subplots": int(self.show_amplitude)
+                        + int(self.show_power)
+                        + int(self.show_bands),
+            "labels": self.labels,
+            "show_amplitude": self.show_amplitude,
+            "show_power": self.show_power,
+            "show_bands": self.show_bands,
         }
 
 
-
-
-
-
-    def _generate_simulated_data(self):
+    def _generate_simulated_data_for_index(self, stream_idx):
         fs = 250
         t = np.linspace(0, 2, 2*fs, endpoint=False)
 
-        if not self.streams or self.current_stream_index >= len(self.streams):
-            # No streams left — return empty 2D array
-            return np.empty((0, 1))
+        if stream_idx >= len(self.streams):
+            return None
 
-        # Identify stream uniquely by its name
-        stream_name = getattr(self.streams[self.current_stream_index], "stream_name", "")
+        stream_name = getattr(self.streams[stream_idx], "stream_name", "")
 
-        # Assign frequency, amplitude, noise, and number of channels based on stream
         if "SimStream1" in stream_name:
             freq, amp, noise, n_ch = 10, 50, 10, 8
         elif "SimStream2" in stream_name:
@@ -361,8 +371,7 @@ class PlotterViewModel(EventClass):
         else:
             freq, amp, noise, n_ch = 8, 25, 10, 1
 
-        # Generate multi-channel signal
-        channels = np.stack([
+        return np.stack([
             amp * np.sin(2 * np.pi * (freq + i) * t) + noise * np.random.randn(len(t))
             for i in range(n_ch)
         ], axis=1)

@@ -12,7 +12,11 @@ import queue
 import time
 import numpy as np
 
+CHOOSE_STREAM = "Choose Stream"
+CHOOSE_CHANNEL = "Choose Channel"
+
 class PlotterView(EventClass):
+    
     def __init__(self, frame: tk.Frame, view_model: PlotterViewModel):
         super().__init__()
         self.frame = frame
@@ -33,6 +37,8 @@ class PlotterView(EventClass):
         # Start the plotting thread
         self._start_plot_thread()
 
+
+
     def _setup_canvas(self):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.frame)
         self.canvas.draw()
@@ -40,6 +46,10 @@ class PlotterView(EventClass):
                                 lambda event: print(f"you pressed {event.key}"))
         self.canvas.mpl_connect("key_press_event", key_press_handler)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+    def _stream_dropdown_values(self):
+        return [CHOOSE_STREAM] + self.view_model.get_stream_names()
+
 
     def _setup_controls(self):
         controls = tk.Frame(self.frame, bd=1, relief=tk.FLAT)
@@ -88,24 +98,55 @@ class PlotterView(EventClass):
         
         self.stream_menu.grid(row=0, column=0, padx=6, pady=6, sticky="ew")
 
-        self.channel_frame = tk.LabelFrame(controls, text="Channel")
+        self.channel_frame = tk.LabelFrame(controls, text="Selected Channels (Max 4)")
         self.channel_frame.grid(row=2, column=0, columnspan=6, sticky="ew", padx=6)
         self.channel_frame.grid_columnconfigure((0,1,2,3), weight=1)
 
-        self.channel_vars = []
+        self.source_selectors = []
 
-        for i in range(8):
-            var = tk.BooleanVar()
-            cb = tk.Checkbutton(
+        for i in range(4):
+            stream_var = tk.StringVar(value="Choose Stream")  # default selection
+            channel_var = tk.StringVar(value="Choose Channel")  # default selection
+
+            ttk.Label(self.channel_frame, text=f"Slot {i+1}").grid(row=i, column=0, padx=4)
+
+            stream_cb = ttk.Combobox(
                 self.channel_frame,
-                text=f"Ch {i+1}",
-                variable=var,
-                command=self._on_channel_change
+                textvariable=stream_var,
+                values=self._stream_dropdown_values(),
+                state="readonly",
+                width=15
             )
-            cb.grid(row=i // 4, column=i % 4, sticky="w")
-            self.channel_vars.append(var)
+            stream_var.set(CHOOSE_STREAM)
+            stream_cb.grid(row=i, column=1, padx=4)
 
+            channel_cb = ttk.Combobox(
+                self.channel_frame,
+                textvariable=channel_var,
+                values=["Choose Channel"],  # start with default
+                state="readonly",
+                width=10
+            )
+            channel_cb.grid(row=i, column=2, padx=4)
 
+            # Update channels when a stream is selected
+            stream_cb.bind(
+                "<<ComboboxSelected>>",
+                lambda e, sv=stream_var, cv=channel_var: self._update_channel_choices(sv, cv)
+            )
+
+            # Update plots when a channel is selected
+            channel_cb.bind(
+                "<<ComboboxSelected>>",
+                lambda e: self._on_source_change()
+            )
+
+            self.source_selectors.append({
+                "stream_var": stream_var,
+                "channel_var": channel_var,
+                "stream_cb": stream_cb,
+                "channel_cb": channel_cb
+            })
 
 
         self.toggle_amplitude = tk.Button(controls, text="Hide Amp", command=self._on_toggle_amp)
@@ -251,23 +292,73 @@ class PlotterView(EventClass):
         tk.Button(popup, text="Apply", command=apply_new_name).grid(row=2, column=0, columnspan=2, pady=8)
         popup.columnconfigure(1, weight=1)
 
-    def _on_channel_change(self):
-        selected = [
-            i for i, var in enumerate(self.channel_vars)
-            if var.get()
-        ]
-
-        if not selected:
+    def _update_channel_choices(self, stream_var, channel_var):
+        stream_name = stream_var.get()
+        
+        # If default "Choose Stream" is selected, reset channel
+        if stream_name == "Choose Stream":
+            channel_var.set("Choose Channel")
+            for entry in self.source_selectors:
+                if entry["stream_var"] is stream_var:
+                    entry["channel_cb"]["values"] = ["Choose Channel"]
+            # Update plot immediately
+            self._on_source_change()
             return
 
-        self.view_model.set_selected_channels(selected)
+        # Normal stream selected
+        stream_names = self.view_model.get_stream_names()
+        if stream_name not in stream_names:
+            return
 
+        stream_idx = stream_names.index(stream_name)
+        data = self.view_model._get_data_for_stream(stream_idx)
+        if data is None or data.ndim != 2:
+            return
+
+        n_ch = data.shape[1]
+        channel_choices = ["Choose Channel"] + [str(i) for i in range(1, n_ch + 1)]
+
+        for entry in self.source_selectors:
+            if entry["stream_var"] is stream_var:
+                entry["channel_cb"]["values"] = channel_choices
+                # Keep previous selection if valid, else default
+                if channel_var.get() not in channel_choices:
+                    channel_var.set("Choose Channel")
+
+
+    def _on_source_change(self):
+        sources = []
+        stream_names = self.view_model.get_stream_names()
+
+        for entry in self.source_selectors:
+            stream_name = entry["stream_var"].get()
+            ch_val = entry["channel_var"].get()
+
+            # Skip slots with default selections
+            if stream_name == "Choose Stream" or ch_val == "Choose Channel":
+                continue
+
+            if stream_name not in stream_names:
+                continue
+
+            try:
+                ch_num = int(ch_val)
+            except ValueError:
+                continue
+
+            stream_idx = stream_names.index(stream_name)
+            sources.append((stream_idx, ch_num - 1))
+
+        # Update model with selected sources
+        self.view_model.set_selected_sources(sources)
+
+        # Clear any stale plot data in the queue
         with self.plot_queue.mutex:
             self.plot_queue.queue.clear()
 
+        # Force immediate re-render
         plot_data = self.view_model.get_plot_data()
         self._render_plot_data(plot_data)
-
 
     
     def _clear_graphs(self):
@@ -356,34 +447,11 @@ class PlotterView(EventClass):
             self.frame.after(50, self._process_plot_queue)
 
     def _render_plot_data(self, plot_data):
-        has_data = plot_data.get("has_data", False)
         signals = plot_data.get("signals", [])
-        n_channels = plot_data.get("n_channels", 0)
-        selected = self.view_model.get_selected_channels()
-
-        # ---------- CHANNEL UI ----------
-        if not has_data:
-            self.channel_frame.config(text="Channel")
-            for cb in self.channel_frame.winfo_children():
-                cb.config(state="disabled")
-            
-            # CLEAR OLD VISUALS
+        if not plot_data.get("has_data", False):
             self._clear_graphs()
             return
-
-        self.channel_frame.config(text="Channels")
-
-        for idx, cb in enumerate(self.channel_frame.winfo_children()):
-            if idx < n_channels:
-                cb.config(state="normal")
-                cb_var = self.channel_vars[idx]
-
-                # sync UI with ViewModel
-                cb_var.set(idx in selected)
-            else:
-                cb.config(state="disabled")
-                self.channel_vars[idx].set(False)
-
+        
         # ---------- PLOTTING ----------
         self.fig.clear()
 
@@ -395,9 +463,7 @@ class PlotterView(EventClass):
         self.fig.tight_layout()
         self.canvas.draw()
 
-
-
-    
+ 
     def stop(self):
         """Stop the plotting thread - Added: Cleanup method"""
         self.stop_thread.set()
@@ -406,27 +472,46 @@ class PlotterView(EventClass):
 
     def on_notify(self, eventData, event) -> None:
         if event == EventType.STREAMLISTUPDATE:
-            if eventData and len(eventData) > 0:
-                self.stream_menu["values"] = eventData
+            streams = eventData if eventData else []
+
+            # Update main stream menu
+            if streams:
+                self.stream_menu["values"] = streams
                 current = self.selected_stream.get()
-                if current in eventData:
-                    self.selected_stream.set(current)
-                else:
-                    self.selected_stream.set(eventData[0])
+                self.selected_stream.set(current if current in streams else streams[0])
             else:
-                # No streams left — set dropdown to "No Streams"
                 self.stream_menu["values"] = ["No Streams"]
                 self.selected_stream.set("No Streams")
 
+            # Update each slot's stream dropdown
+            for entry in self.source_selectors:
+                values = [CHOOSE_STREAM] + streams
+                entry["stream_cb"]["values"] = values
+
+                if entry["stream_var"].get() not in values:
+                    entry["stream_var"].set(CHOOSE_STREAM)
+                    entry["channel_var"].set(CHOOSE_CHANNEL)
+                    entry["channel_cb"]["values"] = [CHOOSE_CHANNEL]
+
+  
         elif event == EventType.CLEARALLPLOTS:
             self.stream_menu["values"] = ["No Streams"]
             self.selected_stream.set("No Streams")
+
+            for entry in self.source_selectors:
+                entry["stream_cb"]["values"] = [CHOOSE_STREAM]
+                entry["stream_var"].set(CHOOSE_STREAM)
+
+                entry["channel_cb"]["values"] = [CHOOSE_CHANNEL]
+                entry["channel_var"].set(CHOOSE_CHANNEL)
+
+
             self._clear_graphs()
 
     def _refresh_stream_menu(self, stream_names, new_selection=None):
         # preserve current selection if possible
         current = self.selected_stream.get()
-        self.stream_menu["values"] = stream_names
+        self.stream_menu["values"] = [CHOOSE_STREAM] + stream_names
         if new_selection and new_selection in stream_names:
             self.selected_stream.set(new_selection)
         elif current in stream_names:
@@ -435,35 +520,73 @@ class PlotterView(EventClass):
             self.selected_stream.set(stream_names[0])
 
     def _on_play_pause(self):
-        """Handle play/pause button click - Fixed: Don't call plot() - thread handles it"""
-        should_start = self.view_model.toggle_plotting()
-        # Thread automatically responds to state change - no manual plot() needed
+        is_playing = self.view_model.toggle_plotting()
 
-        if should_start:
-            # Stream is running → update channel defaults
-            plot_data = self.view_model.get_plot_data()
-            n_channels = plot_data.get("n_channels", 0)
+        if is_playing:
+            # Force an immediate plot on PLAY
+            self._on_source_change()
 
-            if n_channels > 0:
-                default = list(range(min(4, n_channels)))
-                self.view_model.set_selected_channels(default)
-
-                for i, var in enumerate(self.channel_vars):
-                    var.set(i in default if i < n_channels else False)
-
-    
-    def _on_change_stream(self, selection):
-        """Switch displayed stream WITHOUT affecting streaming state."""
-        success = self.view_model.change_stream(selection)
-        if not success:
-            return
-
-        # Clear pending plot updates
-        with self.plot_queue.mutex:
-            self.plot_queue.queue.clear()
+            with self.plot_queue.mutex:
+                self.plot_queue.queue.clear()
+        
+        
+        self._on_source_change()
 
         plot_data = self.view_model.get_plot_data()
         self._render_plot_data(plot_data)
+
+        with self.plot_queue.mutex:
+            self.plot_queue.queue.clear()
+
+        stream_names = self.view_model.get_stream_names()
+ 
+        for entry in self.source_selectors:
+            values = self._stream_dropdown_values()
+            entry["stream_cb"]["values"] = values
+
+            if entry["stream_var"].get() not in values:
+                entry["stream_var"].set(CHOOSE_STREAM)
+                entry["channel_var"].set(CHOOSE_CHANNEL)
+                entry["channel_cb"]["values"] = [CHOOSE_CHANNEL]
+
+        slot_idx = 0
+
+        for stream_idx, stream_name in enumerate(stream_names):
+            if slot_idx >= len(self.source_selectors):
+                break
+
+            data = self.view_model._get_data_for_stream(stream_idx)
+            if data is None or data.ndim != 2:
+                continue
+
+            n_ch = data.shape[1]
+
+            for ch in range(n_ch):
+                if slot_idx >= len(self.source_selectors):
+                    break
+
+                entry = self.source_selectors[slot_idx]
+
+                # Skip already-filled slots
+                if entry["stream_var"].get() != CHOOSE_STREAM:
+                    continue
+                entry["stream_var"].set(stream_name)
+
+                slot_idx += 1
+
+        self._on_source_change()
+        for entry in self.source_selectors:
+            if entry["stream_var"].get() and not entry["channel_cb"]["values"]:
+                self._update_channel_choices(entry["stream_var"], entry["channel_var"])
+
+
+
+    
+    def _on_change_stream(self, selection):
+        """Stream dropdown is now informational / management only."""
+        self.view_model.change_stream(selection)
+        # Do NOT touch plot here
+
 
 
 
@@ -560,16 +683,22 @@ class PlotterView(EventClass):
             return
 
         signals = plot_data['signals']
-        time_axis = plot_data['time_axis']
-        channel_indices = plot_data['channel_indices']
+        time_axes = plot_data['time_axes']
 
         subplot_index = 1
 
         # -------- AMPLITUDE --------
         if plot_data['show_amplitude']:
             ax = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
-            for sig, ch in zip(signals, channel_indices):
-                ax.plot(time_axis, sig, label=f"Ch {ch + 1}")
+            for sig, t, (stream_idx, ch_idx) in zip(
+                    signals,
+                    plot_data["time_axes"],
+                    plot_data["sources"]
+            ):
+                stream_name = self.view_model.get_stream_names()[stream_idx]
+                ax.plot(t, sig, label=f"{stream_name} · Ch {ch_idx + 1}")
+
+
             ax.set_title(plot_data['labels']['amplitude']['title'])
             ax.set_xlabel(plot_data['labels']['amplitude']['xlabel'])
             ax.set_ylabel(plot_data['labels']['amplitude']['ylabel'])
@@ -577,38 +706,50 @@ class PlotterView(EventClass):
             subplot_index += 1
 
         # -------- POWER SPECTRUM --------
+        # -------- POWER SPECTRUM --------
         if plot_data['show_power']:
             ax = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
-            for psd, ch in zip(plot_data['psds'], channel_indices):
-                ax.plot(plot_data['freqs'], psd, label=f"Ch {ch + 1}")
+
+            for psd, freqs, (stream_idx, ch_idx) in zip(
+                plot_data["psds"],
+                plot_data["freqs_list"],
+                plot_data["sources"]
+            ):
+                n = min(len(psd), len(freqs))
+                ax.plot(
+                    freqs[:n],
+                    psd[:n],
+                    label=f"{self.view_model.get_stream_names()[stream_idx]} · Ch {ch_idx + 1}"
+                )
+
             ax.set_title(plot_data['labels']['power']['title'])
             ax.set_xlabel(plot_data['labels']['power']['xlabel'])
             ax.set_ylabel(plot_data['labels']['power']['ylabel'])
             ax.legend(loc="upper right")
+
             subplot_index += 1
 
-        # -------- BAND POWERS --------
+
         # -------- BAND POWERS --------
         if plot_data['show_bands']:
             ax = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
 
             band_labels = plot_data['band_labels']
             band_powers = np.array(plot_data['band_powers'])  # shape: (n_channels, n_bands)
-            channel_indices = plot_data['channel_indices']
-
             n_channels, n_bands = band_powers.shape
 
             x = np.arange(n_bands)  # band positions
             total_width = 0.8
             bar_width = total_width / n_channels
 
-            for i, ch in enumerate(channel_indices):
+            for i, (stream_idx, ch_idx) in enumerate(plot_data["sources"]):
+                stream_name = self.view_model.get_stream_names()[stream_idx]
                 ax.bar(
                     x + i * bar_width,
                     band_powers[i],
                     width=bar_width,
-                    label=f"Ch {ch + 1}"
-                )
+                    label=f"{stream_name} · Ch {ch_idx + 1}"
+    )
 
             ax.set_xticks(x + total_width / 2 - bar_width / 2)
             ax.set_xticklabels(band_labels)
