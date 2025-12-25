@@ -14,7 +14,7 @@ class PlotterViewModel(EventClass):
 
         self.user_model = user_model
         self.continue_plotting = True
-        self.simulated = True
+        self.simulated = False
         
 
         self.subscribe_to_subject(self.user_model)
@@ -333,7 +333,7 @@ class PlotterViewModel(EventClass):
 
             # Frequency-domain
             "psds": psds,
-            "freqs_list": freqs_list,   # ✅ IMPORTANT
+            "freqs_list": freqs_list,  
 
             # Band power
             "band_labels": band_labels,

@@ -442,10 +442,6 @@ class PlotterView(EventClass):
             command=apply_settings
         ).grid(row=apply_row, column=0, columnspan=2, pady=8)
 
-
-        
-
-
     def plot(self):
         # This method is no longer used - thread handles all plotting
         pass
@@ -490,8 +486,6 @@ class PlotterView(EventClass):
                 labelspacing=0.3,
                 borderpad=0.3
             )
-
-
 
             subplot_index += 1
 
