@@ -480,10 +480,21 @@ class PlotterView(EventClass):
             ax.set_title(plot_data['labels']['amplitude']['title'])
             ax.set_xlabel(plot_data['labels']['amplitude']['xlabel'])
             ax.set_ylabel(plot_data['labels']['amplitude']['ylabel'])
-            ax.legend(loc="upper right")
+            ax.legend(
+                loc="upper right",
+                fontsize=8,
+                frameon=True,
+                framealpha=0.5,
+                handlelength=1.2,
+                handletextpad=0.4,
+                labelspacing=0.3,
+                borderpad=0.3
+            )
+
+
+
             subplot_index += 1
 
-        # -------- POWER SPECTRUM --------
         # -------- POWER SPECTRUM --------
         if plot_data['show_power']:
             ax = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
@@ -503,7 +514,6 @@ class PlotterView(EventClass):
             ax.set_title(plot_data['labels']['power']['title'])
             ax.set_xlabel(plot_data['labels']['power']['xlabel'])
             ax.set_ylabel(plot_data['labels']['power']['ylabel'])
-            ax.legend(loc="upper right")
 
             subplot_index += 1
 
@@ -535,7 +545,6 @@ class PlotterView(EventClass):
             ax.set_title(plot_data['labels']['bands']['title'])
             ax.set_xlabel(plot_data['labels']['bands']['xlabel'])
             ax.set_ylabel(plot_data['labels']['bands']['ylabel'])
-            ax.legend(loc="upper right")
 
 
 # Changed: Factory function to create both ViewModel and View together
