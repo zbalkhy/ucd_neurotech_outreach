@@ -25,7 +25,10 @@ class DataStream():
     
     # return all data in the queue for the stream
     def get_stream_data(self) -> deque:
-        return np.array(self.data).T
+        if np.array(self.data).ndim == 1:
+            return np.array(self.data)
+        elif np.array(self.data).ndim == 2:
+            return np.array(self.data).T
     
     # This function is meant to be implemented by the inheriting class.
     def _stream(self) -> None:
