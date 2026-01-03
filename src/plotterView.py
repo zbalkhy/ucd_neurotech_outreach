@@ -14,6 +14,7 @@ import numpy as np
 
 CHOOSE_STREAM = "Choose Stream"
 CHOOSE_CHANNEL = "Choose Channel"
+MAX_CHANNELS = 4
 
 class PlotterView(EventClass):
     
@@ -66,9 +67,9 @@ class PlotterView(EventClass):
 
         self.source_selectors = []
 
-        for i in range(4):
-            stream_var = tk.StringVar(value="Choose Stream")  # default selection
-            channel_var = tk.StringVar(value="Choose Channel")  # default selection
+        for i in range(MAX_CHANNELS):
+            stream_var = tk.StringVar(value=CHOOSE_STREAM)  # default selection
+            channel_var = tk.StringVar(value=CHOOSE_CHANNEL)  # default selection
 
             ttk.Label(self.channel_frame, text=f"Slot {i+1}").grid(row=i, column=0, padx=4)
 
@@ -85,7 +86,7 @@ class PlotterView(EventClass):
             channel_cb = ttk.Combobox(
                 self.channel_frame,
                 textvariable=channel_var,
-                values=["Choose Channel"],  # start with default
+                values=[CHOOSE_CHANNEL],  # start with default
                 state="readonly",
                 width=10
             )
@@ -135,11 +136,11 @@ class PlotterView(EventClass):
         stream_name = stream_var.get()
         
         # If default "Choose Stream" is selected, reset channel
-        if stream_name == "Choose Stream":
-            channel_var.set("Choose Channel")
+        if stream_name == CHOOSE_STREAM:
+            channel_var.set(CHOOSE_CHANNEL)
             for entry in self.source_selectors:
                 if entry["stream_var"] is stream_var:
-                    entry["channel_cb"]["values"] = ["Choose Channel"]
+                    entry["channel_cb"]["values"] = [CHOOSE_CHANNEL]
             # Update plot immediately
             self._on_source_change()
             return
@@ -155,14 +156,14 @@ class PlotterView(EventClass):
             return
 
         n_ch = data.shape[1]
-        channel_choices = ["Choose Channel"] + [str(i) for i in range(1, n_ch + 1)]
+        channel_choices = [CHOOSE_CHANNEL] + [str(i) for i in range(1, n_ch + 1)]
 
         for entry in self.source_selectors:
             if entry["stream_var"] is stream_var:
                 entry["channel_cb"]["values"] = channel_choices
                 # Keep previous selection if valid, else default
                 if channel_var.get() not in channel_choices:
-                    channel_var.set("Choose Channel")
+                    channel_var.set(CHOOSE_CHANNEL)
 
 
     def _on_source_change(self):
@@ -174,7 +175,7 @@ class PlotterView(EventClass):
             ch_val = entry["channel_var"].get()
 
             # Skip slots with default selections
-            if stream_name == "Choose Stream" or ch_val == "Choose Channel":
+            if stream_name == CHOOSE_STREAM or ch_val == CHOOSE_CHANNEL:
                 continue
 
             if stream_name not in stream_names:
