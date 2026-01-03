@@ -57,6 +57,7 @@ if __name__ == "__main__":
     
     # initialize user model
     user_model = UserModel()
+    #Change back to ./data.mat
     data = loadmat('./data.mat')
     for key in data.keys():
         if key in ['eyesOpen', 'eyesClosed']:
@@ -70,6 +71,10 @@ if __name__ == "__main__":
 
     data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
     user_model.add_stream(data_stream)
+
+    data_stream2 = SoftwareStream("streamtest2", StreamType.SOFTWARE, 1000)
+    user_model.add_stream(data_stream2)
+
     
     # add default features to the user model
     for type in FeatureType:
