@@ -9,6 +9,9 @@ class EventType(Enum):
     FILTERUPDATE = 4
     FEATUREUPDATE = 5
     STREAMTOGGLED = 6
+    STREAMLISTUPDATE = 7
+    CLEARALLPLOTS = 8
+    CLASSIFIERUPDATE = 9
 
 
 """ This class implements an event sending / receiving mechanism. 

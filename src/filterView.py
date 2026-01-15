@@ -149,7 +149,7 @@ class filterView(EventClass):
 
                
     def on_notify(self, eventData: any, event: EventType ) -> None:
-        if event == EventType.DEVICELISTUPDATE:
+        if event == EventType.STREAMUPDATE:
             self.create_dropdown()
         return
 
