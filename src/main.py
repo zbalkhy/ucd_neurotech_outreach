@@ -84,7 +84,8 @@ if __name__ == "__main__":
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')
-    
+    root.state('zoomed') # make the window take up the whole screen
+
     # create paned window for each row, this allows them to be adjustable
     inner_paned_window = ttk.PanedWindow(root, orient="vertical")
     inner_paned_window.pack(side = "top", fill = "both", expand=True)
@@ -96,7 +97,7 @@ if __name__ == "__main__":
     inner_paned_window.add(bottom_pane)
     
     # create a gride in each pane to hold our widgets
-    top_grid_frames = create_grid(top_pane,1,2, top_grid_names,resize=True)
+    top_grid_frames = create_grid(top_pane,1,2, top_grid_names)
     bottom_grid_frames = create_grid(bottom_pane,1,3, bottom_grid_names)
 
     root.protocol("WM_DELETE_WINDOW", on_closing)
