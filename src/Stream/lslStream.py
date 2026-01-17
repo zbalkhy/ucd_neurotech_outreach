@@ -1,4 +1,4 @@
-from dataStream import *
+from Stream.dataStream import *
 from pylsl import StreamInlet, StreamInfo
 
 

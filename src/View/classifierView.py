@@ -2,8 +2,8 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 
-from eventClass import *
-from classifierViewModel import ClassifierViewModel
+from Classes.eventClass import *
+from Models.classifierViewModel import ClassifierViewModel
 from common import create_grid
 
 class ClassifierView(EventClass):
@@ -48,11 +48,11 @@ class ClassifierView(EventClass):
         tk.Label(self.grid_frames[0][1], text="Filters:").grid(row=4, column=0, padx=5, pady=5, sticky="w")
         self.filter_listbox = tk.Listbox(self.grid_frames[0][1], selectmode=MULTIPLE, exportselection=False, height=5)
         self.filter_listbox.grid(row=4, column=1, padx=5, pady=5, sticky="we")
-
+        
         # Create classifier button
         self.create_button = tk.Button(self.grid_frames[0][1], text="Create Classifier", bg="yellow",
                                        command=self.create_classifier)
-        self.create_button.grid(row=5, column=0, columnspan=2, pady=10)
+        self.create_button.grid(row=6, column=0, columnspan=2, pady=10)
 
         self.refresh_lists()
 

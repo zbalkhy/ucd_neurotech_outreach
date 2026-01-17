@@ -1,4 +1,4 @@
-from dataStream import DataStream, StreamType
+from Stream.dataStream import DataStream, StreamType
 from common import QUEUE_LENGTH
 import numpy as np
 from time import sleep

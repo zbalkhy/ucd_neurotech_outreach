@@ -1,7 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
-from eventClass import *
-from inventoryViewModel import InventoryViewModel
+from Classes.eventClass import *
+from Models.inventoryViewModel import InventoryViewModel
 from common import create_grid
 
 class InventoryView(EventClass):
@@ -58,7 +58,7 @@ class InventoryView(EventClass):
         if item in items:
             index = items.index(item)
             self.inventory_listbox.delete(index)
-    
+
     def populate_streams(self) -> None:
         self.stream_names = self.view_model.get_stream_names()
         for i in range(len(self.stream_names)):
@@ -94,7 +94,9 @@ class InventoryView(EventClass):
     def on_classifier_click(self, event) -> None:
         item = self.classifier_tree.identify('item',event.x,event.y)
         item_name = self.classifier_tree.item(item, "text")
-        if not self.view_model.user_model.get_stream(item_name).is_alive():
+        #crash fix: check if stream exists before "is_alive()"
+        stream = self.view_model.user_model.get_stream(item_name)
+        if stream is None or not stream.is_alive():
             self.classifier_tree.item(item, image=self.stream_running_icon)
             self.view_model.train_classifier(item_name)
             self.view_model.add_classifier_stream(item_name)

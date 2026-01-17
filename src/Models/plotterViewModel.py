@@ -1,7 +1,7 @@
 import numpy as np
-from eventClass import *
-from userModel import UserModel
-from dataStream import DataStream, StreamType
+from Classes.eventClass import *
+from Models.userModel import UserModel
+from Stream.dataStream import DataStream, StreamType
 
 
 class PlotterViewModel(EventClass):

@@ -1,10 +1,10 @@
-from userModel import UserModel
-from deviceStream import DeviceStream
+from Models.userModel import UserModel
+from Stream.deviceStream import DeviceStream
 from common import RETRY_SEC
-from dataStream import DataStream, StreamType
-from eventClass import EventType
-from composedStream import ComposedStream
-from xrpControlStream import XRPControlStream
+from Stream.dataStream import DataStream, StreamType
+from Classes.eventClass import EventType
+from Stream.composedStream import ComposedStream
+from Stream.xrpControlStream import XRPControlStream
 class InventoryViewModel(object):
     def __init__(self, user_model: UserModel):
         self.user_model: UserModel = user_model

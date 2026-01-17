@@ -1,4 +1,4 @@
-from dataStream import *
+from Stream.dataStream import *
 import serial
 
 class XRPControlStream(DataStream):

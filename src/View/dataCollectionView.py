@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import *
 import numpy as np
-from dataCollectionViewModel import dataCollectionViewModel
-from eventClass import *
+from Models.dataCollectionViewModel import dataCollectionViewModel
+from Classes.eventClass import *
 
 class dataCollectionView(EventClass):
     def __init__(self, frame: tk.Frame, view_model: dataCollectionViewModel):

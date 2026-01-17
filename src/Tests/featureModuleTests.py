@@ -1,9 +1,9 @@
 import tkinter as tk
 import numpy as np
-from featureClass import *
-from featureView import FeatureView
-from featureViewModel import FeatureViewModel
-from userModel import UserModel
+from Classes.featureClass import *
+from View.featureView import FeatureView
+from Models.featureViewModel import FeatureViewModel
+from Models.userModel import UserModel
 from common import split_dataset
 
 if __name__ == "__main__":
@@ -21,7 +21,10 @@ if __name__ == "__main__":
             user_model.add_feature(FeatureClass(type))
     
     # load test dataset
-    df = pd.read_csv('../data/eeg-eye-state.csv')
+    import os
+    # load test dataset
+    csv_path = os.path.join(os.path.dirname(__file__), '../../data/eeg-eye-state.csv')
+    df = pd.read_csv(csv_path)
 
     # extract fs hardcode for this dataset right now
     fs = df.shape[0]/117

@@ -1,30 +1,30 @@
 import tkinter as tk
 from tkinter import ttk
-from plotterView import PlotterView, create_plotter
-from plotterViewModel import PlotterViewModel
-from floatTheOrbGame import FloatTheOrb
+from View.plotterView import PlotterView, create_plotter
+from Models.plotterViewModel import PlotterViewModel
+from Game.floatTheOrbGame import FloatTheOrb
 from common import create_grid
-from userModel import UserModel
-from eegDeviceView import EEGDeviceView
-from eegDeviceViewModel import EEGDeviceViewModel
-from inventoryView import InventoryView
-from inventoryViewModel import InventoryViewModel
-from dataStream import DataStream, StreamType
-from softwareStream import SoftwareStream
-from composedStream import ComposedStream
-from filterViewModel import filterViewModel
-from filterView import filterView
-from dataCollectionViewModel import dataCollectionViewModel
-from dataCollectionView import dataCollectionView
-from classifierView import ClassifierView
-from classifierViewModel import ClassifierViewModel
-from featureView import FeatureView
-from featureViewModel import FeatureViewModel
-from featureClass import FeatureClass, FeatureType
+from Models.userModel import UserModel
+from View.eegDeviceView import EEGDeviceView
+from Models.eegDeviceViewModel import EEGDeviceViewModel
+from View.inventoryView import InventoryView
+from Models.inventoryViewModel import InventoryViewModel
+from Stream.dataStream import DataStream, StreamType
+from Stream.softwareStream import SoftwareStream
+from Stream.composedStream import ComposedStream
+from Models.filterViewModel import filterViewModel
+from View.filterView import filterView
+from Models.dataCollectionViewModel import dataCollectionViewModel
+from View.dataCollectionView import dataCollectionView
+from View.classifierView import ClassifierView
+from Models.classifierViewModel import ClassifierViewModel
+from View.featureView import FeatureView
+from Models.featureViewModel import FeatureViewModel
+from Classes.featureClass import FeatureClass, FeatureType
 import pandas as pd
 import numpy as np
-from lslStream import LslStream
-from xrpControlStream import XRPControlStream
+from Stream.lslStream import LslStream
+from Stream.xrpControlStream import XRPControlStream
 from scipy.io import loadmat
 from pylsl import StreamInlet, resolve_streams
 
@@ -58,7 +58,9 @@ if __name__ == "__main__":
     # initialize user model
     user_model = UserModel()
     #Change back to ./data.mat
-    data = loadmat('./data.mat')
+    import os
+    data_path = os.path.join(os.path.dirname(__file__), 'data.mat')
+    data = loadmat(data_path)
     for key in data.keys():
         if key in ['eyesOpen', 'eyesClosed']:
             user_model.add_dataset(key, data[key])

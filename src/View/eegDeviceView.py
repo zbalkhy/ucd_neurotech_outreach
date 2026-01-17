@@ -1,8 +1,8 @@
 import tkinter as tk
 import numpy as np
 from threading import Thread
-from eegDeviceViewModel import EEGDeviceViewModel
-from eventClass import *
+from Models.eegDeviceViewModel import EEGDeviceViewModel
+from Classes.eventClass import *
 
 class EEGDeviceView(EventClass):
     def __init__(self, frame: tk.Frame, view_model: EEGDeviceViewModel):
