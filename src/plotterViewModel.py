@@ -241,6 +241,10 @@ class PlotterViewModel(EventClass):
 
     def get_band_visibility(self):
         return dict(self.band_visibility)
+    
+    def any_band_visible(self):
+        return any(self.band_visibility.values())
+
 
     def update_labels(self, graph_type, title, xlabel, ylabel):
         if graph_type in self.labels:
@@ -303,6 +307,9 @@ class PlotterViewModel(EventClass):
             if self.band_visibility.get(band, True)
         ]
 
+        # If no bands are visible, disable band plot entirely
+        show_bands = self.show_bands and len(visible_bands) > 0
+
         for band, (low, high) in visible_bands:
             band_labels.append(band)
             values = []
@@ -343,11 +350,11 @@ class PlotterViewModel(EventClass):
             "n_channels": len(signals),
             "n_subplots": int(self.show_amplitude)
                         + int(self.show_power)
-                        + int(self.show_bands),
+                        + int(show_bands),
             "labels": self.labels,
             "show_amplitude": self.show_amplitude,
             "show_power": self.show_power,
-            "show_bands": self.show_bands,
+            "show_bands": show_bands,
         }
 
 

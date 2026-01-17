@@ -260,6 +260,7 @@ class PlotterView(EventClass):
 
     def _render_plot_data(self, plot_data):
         signals = plot_data.get("signals", [])
+        self._update_band_toggle_state()
         if not plot_data.get("has_data", False):
             self._clear_graphs()
             return
@@ -381,6 +382,23 @@ class PlotterView(EventClass):
         show_bands = self.view_model.toggle_band_power()
         self.toggle_bands.config(text="Hide Band" if show_bands else "Show Band")
 
+    def _update_band_toggle_state(self):
+        any_visible = self.view_model.any_band_visible()
+
+        if not any_visible:
+            # No bands → disable button and force "Show Band"
+            self.toggle_bands.config(
+                state=tk.DISABLED,
+                text="Show Band"
+            )
+        else:
+            # Bands available → enable button
+            self.toggle_bands.config(
+                state=tk.NORMAL,
+                text="Hide Band" if self.view_model.show_bands else "Show Band"
+            )
+
+
     def _open_settings(self, graph_type):
         """Open settings popup - Fixed: Access labels directly without calling get_plot_data()"""
         popup = tk.Toplevel(self.frame)
@@ -419,6 +437,8 @@ class PlotterView(EventClass):
                     row=row, column=0, columnspan=2, sticky="w"
                 )
                 row += 1
+                self._update_band_toggle_state()
+
 
         def apply_settings():
             self.view_model.update_labels(
