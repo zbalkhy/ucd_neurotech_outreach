@@ -21,7 +21,7 @@ class FilterClass():
             filter_order = self.filters['order'][i]
             normalized_cutoff = cutoff_freq / (.5 * fs)
             b, a = signal.butter(filter_order, normalized_cutoff, btype=filter_type, analog=False)
-            data = signal.filtfilt(b, a, data)
+            data = signal.filtfilt(b, a, data, axis = -1)
         return data
     
     def apply(self, data: ndarray, fs: int) -> ndarray:

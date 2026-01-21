@@ -2,6 +2,7 @@ from threading import Thread, Event
 from common import QUEUE_LENGTH
 from collections import deque
 from enum import Enum
+import numpy as np
 
 class StreamType(Enum):
     DEVICE = 1
@@ -24,7 +25,7 @@ class DataStream():
     
     # return all data in the queue for the stream
     def get_stream_data(self) -> deque:
-        return self.data
+        return np.array(self.data).T
     
     # This function is meant to be implemented by the inheriting class.
     def _stream(self) -> None:
