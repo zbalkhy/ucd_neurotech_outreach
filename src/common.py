@@ -1,6 +1,8 @@
 from tkinter import Frame, Label
 import pandas as pd
 import numpy as np
+import os
+import sys
 
 # streaming
 RETRY_SEC = 1.5
@@ -24,15 +26,22 @@ ALPHA = [8,12]
 BETA = [13,30]
 GAMMA = [30, 45]
 
-
-
-
 def split_dataset(dataset: pd.DataFrame, 
                   nsamples: int, ntrials: int) -> list[np.ndarray]:
     trials = np.zeros((nsamples, len(dataset.columns), ntrials))
     for i in range(ntrials):
         trials[:,:,i] = dataset[i*nsamples:i*nsamples + nsamples]
     return trials
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temporary folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # Otherwise, the script is running as a normal Python script
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 def create_grid(root, rows: int, cols: int, grid_names: list[list[str]], resize: bool = True, show_labels: bool = True) -> list[list[Frame]]:
     # Make the grid expandable
