@@ -1,25 +1,25 @@
 import tkinter as tk
 from tkinter import ttk
 from View.plotterView import PlotterView, create_plotter
-from src.ViewModel.plotterViewModelewModel import PlotterViewModel
+from ViewModel.plotterViewModel import PlotterViewModel
 from Game.floatTheOrbGame import FloatTheOrb
 from common import create_grid
 from Models.userModel import UserModel
 from View.eegDeviceView import EEGDeviceView
-from src.ViewModel.eegDeviceViewModel import EEGDeviceViewModel
+from ViewModel.eegDeviceViewModel import EEGDeviceViewModel
 from View.inventoryView import InventoryView
-from src.ViewModel.inventoryViewModel import InventoryViewModel
+from ViewModel.inventoryViewModel import InventoryViewModel
 from Stream.dataStream import DataStream, StreamType
 from Stream.softwareStream import SoftwareStream
 from Stream.composedStream import ComposedStream
-from src.ViewModel.filterViewModel import filterViewModel
+from ViewModel.filterViewModel import filterViewModel
 from View.filterView import filterView
-from src.ViewModel.dataCollectionViewModel import dataCollectionViewModel
+from ViewModel.dataCollectionViewModel import dataCollectionViewModel
 from View.dataCollectionView import dataCollectionView
 from View.classifierView import ClassifierView
-from src.ViewModel.classifierViewModel import ClassifierViewModel
+from ViewModel.classifierViewModel import ClassifierViewModel
 from View.featureView import FeatureView
-from src.ViewModel.featureViewModel import FeatureViewModel
+from ViewModel.featureViewModel import FeatureViewModel
 from Classes.featureClass import FeatureClass, FeatureType
 import pandas as pd
 import numpy as np

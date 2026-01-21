@@ -1,7 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from Classes.eventClass import *
-from src.ViewModel.inventoryViewModel import InventoryViewModel
+from ViewModel.inventoryViewModel import InventoryViewModel
 from common import create_grid
 
 class InventoryView(EventClass):
