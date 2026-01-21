@@ -57,17 +57,6 @@ if __name__ == "__main__":
     print("main app starting")
     # initialize user model
     user_model = UserModel()
-    #Change back to ./data.mat
-    #data = loadmat('./data.mat')
-    #for key in data.keys():
-    #    if key in ['eyesOpen', 'eyesClosed']:
-    #        user_model.add_dataset(key, data[key])
-
-    # streams = resolve_streams()
-
-    # if len(streams):
-    #     openBCIStream = LslStream(streams[0], 250, "openbci", StreamType.DEVICE, 250)
-    #     user_model.add_stream(openBCIStream)
 
     data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
     user_model.add_stream(data_stream)
