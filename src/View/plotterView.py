@@ -1,12 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
-from eventClass import *
+from Classes.eventClass import *
 # Implement the default Matplotlib key bindings.
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                NavigationToolbar2Tk)
 from matplotlib.figure import Figure
-from plotterViewModel import PlotterViewModel
+from ViewModel.plotterViewModel import PlotterViewModel
 import threading
 import queue
 import time

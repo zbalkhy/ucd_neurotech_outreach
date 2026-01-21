@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import *
-from filterViewModel import filterViewModel
-from eventClass import *
+from ViewModel.filterViewModel import filterViewModel
+from Classes.eventClass import *
 
 class filterView(EventClass):
     def __init__(self, frame: tk.Frame, view_model: filterViewModel):

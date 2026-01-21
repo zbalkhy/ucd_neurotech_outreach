@@ -1,7 +1,7 @@
 import socket
 import time
 from common import QUEUE_LENGTH
-from dataStream import DataStream, StreamType
+from Stream.dataStream import DataStream, StreamType
 
 class DeviceStream(DataStream):
     def __init__(self, host: str, port: int, retry_sec: int, 

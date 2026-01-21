@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple
 import numpy as np
-from featureClass import FeatureClass
-from filterClass import FilterClass
+from Classes.featureClass import FeatureClass
+from Classes.filterClass import FilterClass
 from sklearn.linear_model import LogisticRegression
 from common import SAMPLING_FREQ
 

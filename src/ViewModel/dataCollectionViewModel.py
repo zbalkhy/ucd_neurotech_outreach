@@ -1,4 +1,4 @@
-from userModel import UserModel
+from Models.userModel import UserModel
 from numpy import ndarray
 import numpy as np
 

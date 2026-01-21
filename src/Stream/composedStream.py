@@ -1,10 +1,10 @@
 import numpy as np
 from time import sleep
 from typing import Union
-from filterClass import FilterClass
-from featureClass import FeatureClass
-from classifier import Classifier
-from dataStream import *
+from Classes.filterClass import FilterClass
+from Classes.featureClass import FeatureClass
+from Classes.classifierClass import Classifier
+from Stream.dataStream import *
 from common import SAMPLING_FREQ
 
 class ComposedStream(DataStream):

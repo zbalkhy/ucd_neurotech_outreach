@@ -1,8 +1,8 @@
-from userModel import UserModel
-from classifier import Classifier
-from composedStream import ComposedStream 
-from dataStream import StreamType
-from xrpControlStream import XRPControlStream
+from Models.userModel import UserModel
+from Classes.classifierClass import Classifier
+from Stream.composedStream import ComposedStream 
+from Stream.dataStream import StreamType
+from Stream.xrpControlStream import XRPControlStream
 
 class ClassifierViewModel(object):
     def __init__(self, user_model: UserModel):

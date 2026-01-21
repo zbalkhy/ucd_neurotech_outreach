@@ -4,8 +4,8 @@ import pygame
 from threading import Lock
 from common import *
 import tkinter as tk
-from userModel import UserModel
-from eventClass import *
+from Models.userModel import UserModel
+from Classes.eventClass import *
 class Orb(pygame.sprite.Sprite):
     def __init__(self, color, width, height, user_context: UserModel):
         super().__init__()

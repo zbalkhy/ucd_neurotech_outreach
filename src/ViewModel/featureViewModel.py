@@ -1,6 +1,6 @@
-from userModel import UserModel
+from Models.userModel import UserModel
 import numpy as np 
-from featureClass import FeatureClass
+from Classes.featureClass import FeatureClass
 
 class FeatureViewModel(object):
     def __init__(self, user_model: UserModel):

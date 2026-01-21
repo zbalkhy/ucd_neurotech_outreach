@@ -1,6 +1,6 @@
-from userModel import UserModel
-from dataStream import StreamType
-from composedStream import ComposedStream
+from Models.userModel import UserModel
+from Stream.dataStream import StreamType
+from Stream.composedStream import ComposedStream
 
 class filterViewModel(object):
     def __init__(self, user_model: UserModel):

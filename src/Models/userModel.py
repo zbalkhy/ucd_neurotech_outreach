@@ -1,8 +1,8 @@
-from dataStream import *
-from eventClass import EventClass, EventType
-from filterClass import FilterClass
-from featureClass import FeatureClass
-from classifier import Classifier
+from Stream.dataStream import DataStream, StreamType
+from Classes.eventClass import EventClass, EventType
+from Classes.filterClass import FilterClass
+from Classes.featureClass import FeatureClass
+from Classes.classifierClass import Classifier
 from numpy import ndarray
 
 class UserModel(EventClass):
