@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import *
 import numpy as np
-from Models.dataCollectionViewModel import dataCollectionViewModel
+from src.ViewModel.dataCollectionViewModel import dataCollectionViewModel
 from Classes.eventClass import *
 
 class dataCollectionView(EventClass):

@@ -6,7 +6,7 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                NavigationToolbar2Tk)
 from matplotlib.figure import Figure
-from Models.plotterViewModel import PlotterViewModel
+from src.ViewModel.plotterViewModelewModel import PlotterViewModel
 import threading
 import queue
 import time

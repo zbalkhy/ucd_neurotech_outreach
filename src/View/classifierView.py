@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter import ttk
 
 from Classes.eventClass import *
-from Models.classifierViewModel import ClassifierViewModel
+from src.ViewModel.classifierViewModel import ClassifierViewModel
 from common import create_grid
 
 class ClassifierView(EventClass):

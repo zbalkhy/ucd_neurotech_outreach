@@ -2,7 +2,7 @@ import tkinter as tk
 import numpy as np
 from Classes.featureClass import *
 from View.featureView import FeatureView
-from Models.featureViewModel import FeatureViewModel
+from src.ViewModel.featureViewModel import FeatureViewModel
 from Models.userModel import UserModel
 from common import split_dataset
 

@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import *
-from Models.filterViewModel import filterViewModel
+from src.ViewModel.filterViewModel import filterViewModel
 from Classes.eventClass import *
 
 class filterView(EventClass):

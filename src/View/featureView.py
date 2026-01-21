@@ -1,5 +1,5 @@
 from Classes.eventClass import *
-from Models.featureViewModel import FeatureViewModel
+from src.ViewModel.featureViewModel import FeatureViewModel
 
 import tkinter as tk
 from tkinter import ttk
