@@ -7,6 +7,8 @@ from eventClass import EventType
 class TestUserModel(unittest.TestCase):
     def setUp(self):
         self.user_model = UserModel()
+    def tearDown(self):
+        self.user_model = None
 
     def test_get_stream(self):
         stream_name1 = "stream1"
@@ -18,7 +20,7 @@ class TestUserModel(unittest.TestCase):
         self.user_model.add_stream(data_stream2)
         returned_stream = self.user_model.get_stream(stream_name2)
         self.assertEqual(returned_stream, data_stream2)
-        self.assertNotEqual(returned_stream,data_stream1)
+        self.assertNotEqual(returned_stream,data_stream1) 
 
         #Test get_streams
         returned_streams = self.user_model.get_streams()
@@ -39,18 +41,18 @@ class TestUserModel(unittest.TestCase):
         self.user_model.notify.assert_any_call(None, EventType.DEVICELISTUPDATE)
         self.assertEqual(self.user_model.notify.call_count,2)
 
-# # User model declares:
-# # if a user overrides a stream with the same name, the program loses track of the old stream thread and cannot quit
-# # test whether the implemented check works
-#     def test_add_stream_with_same_name(self):
-#         self.user_model.notify = MagicMock()
-#         stream_name = "stream"
-#         old_stream = DataStream(stream_name, StreamType.SOFTWARE, 100)
-#         new_stream = DataStream(stream_name, StreamType.DEVICE, 100)
-#         self.user_model.add_stream(old_stream)
-#         self.user_model.add_stream(new_stream)
+# User model declares:
+# if a user overrides a stream with the same name, the program loses track of the old stream thread and cannot quit
+# test whether the implemented check works
+    def test_add_stream_with_same_name(self):
+        self.user_model.notify = MagicMock()
+        stream_name = "stream"
+        old_stream = DataStream(stream_name, StreamType.SOFTWARE, 100)
+        new_stream = DataStream(stream_name, StreamType.DEVICE, 100)
+        self.user_model.add_stream(old_stream)
+        self.user_model.add_stream(new_stream)
 
-#         self.assertNotIn(self.user_model.data_streams[stream_name], data_stream2)
+        self.assertNotIn(self.user_model.data_streams[stream_name], old_stream)
         
     def test_remove_stream_by_name(self):
         #remove_stream_by_name has a shutdown event, checks if stream is alive, and a join event
