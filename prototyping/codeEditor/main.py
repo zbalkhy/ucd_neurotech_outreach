@@ -37,7 +37,7 @@ class Editor():
 
         # Insert some Standard Text into the Edit Area
         self.editArea.insert('1.0', """def my_function(t):
-                             return""")
+            return""")
 
         return
     
@@ -49,13 +49,8 @@ class Editor():
     def get_text(self):
         return self.editArea.get('1.0', END)
     
-    def execute(self, event=None):
-        # Write the Content to the Temporary File
-        with open('run.py', 'w', encoding='utf-8') as f:
-            f.write(self.get_text())
-
-        # Start the File in a new CMD Window
-        os.system('"python run.py"')
+    def execute(self):
+        exec(self.get_text())
 
     def search_re(self, pattern, text, groupid=0):
         matches = []
