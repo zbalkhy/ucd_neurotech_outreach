@@ -61,13 +61,16 @@ class PlotterView(EventClass):
         self.button_pause = tk.Button(controls, text="Play/Pause", command=self._on_play_pause)
         self.button_pause.grid(row=0, column=0, columnspan=6, padx=6, pady=6, sticky="n")
 
-        self.channel_frame = tk.LabelFrame(controls, text="Selected Channels (Max 4)")
+        self.channel_frame = tk.LabelFrame(controls, text="Selected Channels")
         self.channel_frame.grid(row=2, column=0, columnspan=6, sticky="ew", padx=6)
         self.channel_frame.grid_columnconfigure((0,1,2,3), weight=1)
 
         self.source_selectors = []
 
-        for i in range(MAX_CHANNELS):
+        slot_count = self.view_model.max_visible_channels
+
+
+        for i in range(slot_count):
             stream_var = tk.StringVar(value=CHOOSE_STREAM)  # default selection
             channel_var = tk.StringVar(value=CHOOSE_CHANNEL)  # default selection
 
@@ -111,24 +114,55 @@ class PlotterView(EventClass):
                 "channel_cb": channel_cb
             })
 
+        
+    
+        if self.view_model.allow_amplitude_plot:
+            self.toggle_amplitude = tk.Button(controls, text="Hide Amp", command=self._on_toggle_amp)
+            self.toggle_amplitude.grid(row=1, column=0, padx=6, pady=6, sticky="ew")
 
-        self.toggle_amplitude = tk.Button(controls, text="Hide Amp", command=self._on_toggle_amp)
-        self.toggle_amplitude.grid(row=1, column=0, padx=6, pady=6, sticky="ew")
+        if self.view_model.allow_amp_settings:
+            self.amp_settings = tk.Button(controls, text="Amp Settings", command=lambda: self._open_settings("amplitude"))
+            self.amp_settings.grid(row=1, column=1, padx=6, pady=6, sticky="ew")
 
-        self.amp_settings = tk.Button(controls, text="Amp Settings", command=lambda: self._open_settings("amplitude"))
-        self.amp_settings.grid(row=1, column=1, padx=6, pady=6, sticky="ew")
+        if self.view_model.allow_power_plot:
+            self.toggle_power = tk.Button(controls, text="Hide Power", command=self._on_toggle_power_spectrum)
+            self.toggle_power.grid(row=1, column=2, padx=6, pady=6, sticky="ew")
 
-        self.toggle_power = tk.Button(controls, text="Hide Power", command=self._on_toggle_power_spectrum)
-        self.toggle_power.grid(row=1, column=2, padx=6, pady=6, sticky="ew")
+        if self.view_model.allow_power_settings:
+            self.power_settings = tk.Button(controls, text="Power Settings", width=15, command=lambda: self._open_settings("power"))
+            self.power_settings.grid(row=1, column=3, padx=6, pady=6, sticky="ew")
 
-        self.power_settings = tk.Button(controls, text="Power Settings", width=15, command=lambda: self._open_settings("power"))
-        self.power_settings.grid(row=1, column=3, padx=6, pady=6, sticky="ew")
+        if self.view_model.allow_band_settings:
+            self.bands_settings = tk.Button(controls, text="Band Settings", command=lambda: self._open_settings("bands"))
+            self.bands_settings.grid(row=1, column=5, padx=6, pady=6, sticky="ew")
 
-        self.toggle_bands = tk.Button(controls, text="Hide Band", command=self._on_toggle_band_power)
-        self.toggle_bands.grid(row=1, column=4, padx=6, pady=6, sticky="ew")
+        if self.view_model.allow_band_plot:
+            hide_text, _ = self.view_model.get_band_button_labels()
 
-        self.bands_settings = tk.Button(controls, text="Band Settings", command=lambda: self._open_settings("bands"))
-        self.bands_settings.grid(row=1, column=5, padx=6, pady=6, sticky="ew")
+            self.toggle_bands = tk.Button(
+                controls,
+                text=hide_text,
+                command=self._on_toggle_band_power
+            )
+
+            if self.view_model.session_id == 1:
+                # Center the button manually for session 1
+                self.toggle_bands.grid(
+                    row=1,
+                    column=2,
+                    columnspan=2,
+                    padx=5,
+                    pady=5,
+                )
+            else:
+                # Default layout for other sessions
+                self.toggle_bands.grid(
+                    row=1,
+                    column=4,
+                    padx=6,
+                    pady=6,
+                    sticky="ew"
+                )
 
 
 
@@ -380,23 +414,28 @@ class PlotterView(EventClass):
 
     def _on_toggle_band_power(self):
         show_bands = self.view_model.toggle_band_power()
-        self.toggle_bands.config(text="Hide Band" if show_bands else "Show Band")
+        hide_text, show_text = self.view_model.get_band_button_labels()
+
+        self.toggle_bands.config(
+            text=hide_text if show_bands else show_text
+        )
+
 
     def _update_band_toggle_state(self):
         any_visible = self.view_model.any_band_visible()
+        hide_text, show_text = self.view_model.get_band_button_labels()
 
         if not any_visible:
-            # No bands → disable button and force "Show Band"
             self.toggle_bands.config(
                 state=tk.DISABLED,
-                text="Show Band"
+                text=show_text
             )
         else:
-            # Bands available → enable button
             self.toggle_bands.config(
                 state=tk.NORMAL,
-                text="Hide Band" if self.view_model.show_bands else "Show Band"
+                text=hide_text if self.view_model.show_bands else show_text
             )
+
 
 
     def _open_settings(self, graph_type):
@@ -438,6 +477,9 @@ class PlotterView(EventClass):
                 )
                 row += 1
                 self._update_band_toggle_state()
+            
+            
+
 
 
         def apply_settings():
@@ -563,8 +605,7 @@ class PlotterView(EventClass):
 
 
 # Changed: Factory function to create both ViewModel and View together
-def create_plotter(frame: tk.Frame, user_model):
-    """Factory function to create a complete plotter with ViewModel and View"""
-    view_model = PlotterViewModel(user_model)
+def create_plotter(frame: tk.Frame, user_model, session_id: int = 0):
+    view_model = PlotterViewModel(user_model, session_id=session_id)
     view = PlotterView(frame, view_model)
     return view_model, view

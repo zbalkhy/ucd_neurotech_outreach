@@ -5,19 +5,18 @@ from dataStream import DataStream, StreamType
 
 
 class PlotterViewModel(EventClass):
-    def __init__(self, user_model: UserModel):
+    def __init__(self, user_model: UserModel, session_id: int = 0):
         super().__init__()
         self._stream_version = 0
         self.selected_sources = []  # list[(stream_idx, channel_idx)]
         self.max_visible_channels = 4
-
+        self.session_id = session_id
 
         self.user_model = user_model
         self.continue_plotting = True
         self.simulated = False
-        
-
         self.subscribe_to_subject(self.user_model)
+        
 
         # --- Get available streams ---
         if self.simulated:
@@ -63,7 +62,58 @@ class PlotterViewModel(EventClass):
             "amplitude": {"title": "Amplitude vs Time", "xlabel": "Time (s)", "ylabel": "Amplitude (µV)"},
             "power": {"title": "Power Spectrum", "xlabel": "Frequency (Hz)", "ylabel": "Power"},
             "bands": {"title": "Band Power", "xlabel": "Band", "ylabel": "Power"},
-        }  
+        }
+
+        self._configure_session()  
+
+    def _configure_session(self):
+        """
+        Configure feature availability based on session_id
+        """
+
+        # ---- DEFAULT (full-feature mode) ----
+        self.max_visible_channels = 4
+
+        self.allow_amplitude_plot = True
+        self.allow_power_plot = True
+        self.allow_band_plot = True
+
+        self.allow_amp_settings = True
+        self.allow_power_settings = True
+        self.allow_band_settings = True
+
+        # ---- SESSION 1 ----
+        if self.session_id == 1:
+            self.max_visible_channels = 1
+
+            self.allow_amplitude_plot = False
+            self.allow_power_plot = False
+            self.allow_band_plot = True
+
+            self.allow_amp_settings = False
+            self.allow_power_settings = False
+            self.allow_band_settings = False
+            
+            self.show_power = False
+            self.show_bands = True
+            self.show_amplitude = False
+
+            # Alpha only
+            self.bands = {"Sorcery (8–13 Unicorns)": (8, 13)}
+            self.band_visibility = {"Sorcery (8–13 Unicorns)": True}
+
+            self.labels = {
+            "bands": {"title": "Cool Magic", "xlabel": "Dragon Flames", "ylabel": "Phoenix Tears"},
+        }
+    
+    def get_band_button_labels(self):
+        """
+        Returns (hide_text, show_text) for the band toggle button
+        """
+        if self.session_id == 1:
+            return "Hide Magic", "Show Magic"
+        return "Hide Band", "Show Band"
+
 
     def set_selected_sources(self, sources):
         """
@@ -224,20 +274,29 @@ class PlotterViewModel(EventClass):
 
 
     def toggle_amplitude(self):
+        if not self.allow_amplitude_plot:
+            return False
         self.show_amplitude = not self.show_amplitude
         return self.show_amplitude
 
+
     def toggle_power_spectrum(self):
+        if not self.allow_power_plot:
+            return False
         self.show_power = not self.show_power
         return self.show_power
+
 
     def toggle_band_power(self):
         self.show_bands = not self.show_bands
         return self.show_bands
 
     def set_band_visibility(self, band_name: str, visible: bool):
+        if not self.allow_band_settings:
+            return
         if band_name in self.band_visibility:
             self.band_visibility[band_name] = visible
+
 
     def get_band_visibility(self):
         return dict(self.band_visibility)
@@ -329,6 +388,10 @@ class PlotterViewModel(EventClass):
             band_powers.append(values)
 
         band_powers = np.array(band_powers).T
+        n_subplots = int(self.show_amplitude) + \
+             int(self.show_power) + \
+             int(show_bands)
+
 
         return {
             "has_data": True,
@@ -348,9 +411,7 @@ class PlotterViewModel(EventClass):
 
             # Plot config
             "n_channels": len(signals),
-            "n_subplots": int(self.show_amplitude)
-                        + int(self.show_power)
-                        + int(show_bands),
+            "n_subplots": n_subplots,
             "labels": self.labels,
             "show_amplitude": self.show_amplitude,
             "show_power": self.show_power,
@@ -428,3 +489,5 @@ class PlotterViewModel(EventClass):
             if current_display == display_name:
                 return inherent
         return None
+    
+    

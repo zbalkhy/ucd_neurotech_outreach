@@ -28,6 +28,13 @@ from xrpControlStream import XRPControlStream
 from scipy.io import loadmat
 from pylsl import StreamInlet, resolve_streams
 
+# Change to activate different UI based on session
+# Currently switches between 0 and 1
+#0 = Default
+#1 = Plotter UI for Session 1
+SESSION_ID = 1
+
+
 top_grid_names = [[f"Inventory", 'Visualizer']]
 bottom_grid_names = [[f"Data Collector", f"Filter Maker", f"Classifier"]]
 
@@ -58,7 +65,7 @@ if __name__ == "__main__":
     # initialize user model
     user_model = UserModel()
     #Change back to ./data.mat
-    data = loadmat('src/data.mat')
+    data = loadmat('./data.mat')
     for key in data.keys():
         if key in ['eyesOpen', 'eyesClosed']:
             user_model.add_dataset(key, data[key])
@@ -118,7 +125,11 @@ if __name__ == "__main__":
     inventory_view = InventoryView(top_grid_frames[0][0], inventory_viewmodel)
 
     # create plotter
-    plotter_view_model, plotter_view = create_plotter(top_grid_frames[0][1], user_model)    
+    plotter_view_model, plotter_view = create_plotter(
+        top_grid_frames[0][1],
+        user_model,
+        session_id=SESSION_ID
+    )
     
     
     # create feature viewer
