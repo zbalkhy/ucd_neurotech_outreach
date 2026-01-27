@@ -1,30 +1,30 @@
 import tkinter as tk
 from tkinter import ttk
-from plotterView import PlotterView, create_plotter
-from plotterViewModel import PlotterViewModel
-from floatTheOrbGame import FloatTheOrb
+from View.plotterView import PlotterView, create_plotter
+from ViewModel.plotterViewModel import PlotterViewModel
+from Game.floatTheOrbGame import FloatTheOrb
 from common import create_grid
-from userModel import UserModel
-from eegDeviceView import EEGDeviceView
-from eegDeviceViewModel import EEGDeviceViewModel
-from inventoryView import InventoryView
-from inventoryViewModel import InventoryViewModel
-from dataStream import DataStream, StreamType
-from softwareStream import SoftwareStream
-from composedStream import ComposedStream
-from filterViewModel import filterViewModel
-from filterView import filterView
-from dataCollectionViewModel import dataCollectionViewModel
-from dataCollectionView import dataCollectionView
-from classifierView import ClassifierView
-from classifierViewModel import ClassifierViewModel
-from featureView import FeatureView
-from featureViewModel import FeatureViewModel
-from featureClass import FeatureClass, FeatureType
+from Models.userModel import UserModel
+from View.eegDeviceView import EEGDeviceView
+from ViewModel.eegDeviceViewModel import EEGDeviceViewModel
+from View.inventoryView import InventoryView
+from ViewModel.inventoryViewModel import InventoryViewModel
+from Stream.dataStream import DataStream, StreamType
+from Stream.softwareStream import SoftwareStream
+from Stream.composedStream import ComposedStream
+from ViewModel.filterViewModel import filterViewModel
+from View.filterView import filterView
+from ViewModel.dataCollectionViewModel import dataCollectionViewModel
+from View.dataCollectionView import dataCollectionView
+from View.classifierView import ClassifierView
+from ViewModel.classifierViewModel import ClassifierViewModel
+from View.featureView import FeatureView
+from ViewModel.featureViewModel import FeatureViewModel
+from Classes.featureClass import FeatureClass, FeatureType
 import pandas as pd
 import numpy as np
-from lslStream import LslStream
-from xrpControlStream import XRPControlStream
+from Stream.lslStream import LslStream
+from Stream.xrpControlStream import XRPControlStream
 from scipy.io import loadmat
 from pylsl import StreamInlet, resolve_streams
 
@@ -61,20 +61,9 @@ def open_feature_viewer(root, view_model):
 
 
 if __name__ == "__main__":
-    
+    print("main app starting")
     # initialize user model
     user_model = UserModel()
-    #Change back to ./data.mat
-    data = loadmat('./data.mat')
-    for key in data.keys():
-        if key in ['eyesOpen', 'eyesClosed']:
-            user_model.add_dataset(key, data[key])
-
-    streams = resolve_streams()
-
-    if len(streams):
-        openBCIStream = LslStream(streams[0], 250, "openbci", StreamType.DEVICE, 250)
-        user_model.add_stream(openBCIStream)
 
     data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
     user_model.add_stream(data_stream)
@@ -91,7 +80,8 @@ if __name__ == "__main__":
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')
-    
+    root.state('zoomed') # make the window take up the whole screen
+
     # create paned window for each row, this allows them to be adjustable
     inner_paned_window = ttk.PanedWindow(root, orient="vertical")
     inner_paned_window.pack(side = "top", fill = "both", expand=True)
@@ -103,7 +93,7 @@ if __name__ == "__main__":
     inner_paned_window.add(bottom_pane)
     
     # create a gride in each pane to hold our widgets
-    top_grid_frames = create_grid(top_pane,1,2, top_grid_names,resize=True)
+    top_grid_frames = create_grid(top_pane,1,2, top_grid_names)
     bottom_grid_frames = create_grid(bottom_pane,1,3, bottom_grid_names)
 
     root.protocol("WM_DELETE_WINDOW", on_closing)
