@@ -4,6 +4,11 @@ from Classes.featureClass import FeatureClass
 from Classes.filterClass import FilterClass
 from sklearn.linear_model import LogisticRegression
 from common import SAMPLING_FREQ
+import joblib
+import os
+
+MODEL_SAVE_DIR = 'user_classifiers'
+
 
 class Classifier:
     def __init__(
@@ -11,13 +16,14 @@ class Classifier:
         label0_datasets: Dict[str, np.ndarray] = None,
         label1_datasets: Dict[str, np.ndarray] = None,
         features: List[FeatureClass] = None,
-        filters: List[FilterClass] = None
+        filters: List[FilterClass] = None,
+        model = None
     ):
         self.label0_datasets: Dict[str, np.ndarray] = label0_datasets if label0_datasets is not None else {}
         self.label1_datasets: Dict[str, np.ndarray] = label1_datasets if label1_datasets is not None else {}
         self.features: List[FeatureClass] = features if features is not None else []
         self.filters: List[FilterClass] = filters if filters is not None else []
-        self.model = None
+        self.model = model
 
     # -----------------------
     # Datasets
@@ -123,3 +129,41 @@ class Classifier:
             return np.array(['eyesOpen'])
         else:
             return np.array(['eyesClosed'])
+
+    def to_dict(self) -> dict:
+        model_filename = None
+        if self.model:
+            model_filename = f'{self.model.__class__.__name__}.joblib'
+            if not os.path.exists(MODEL_SAVE_DIR):
+                os.makedirs(MODEL_SAVE_DIR)
+            joblib.dump(self.model, os.path.join(MODEL_SAVE_DIR, model_filename))
+        return {
+            'label0_datasets': {k: v.tolist() for k, v in self.label0_datasets.items()},
+            'label1_datasets': {k: v.tolist() for k, v in self.label1_datasets.items()},
+            'features': [f.to_dict() for f in self.features],
+            'filters': [f.to_dict() for f in self.filters],
+            'model_filename': model_filename
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Classifier':
+
+        label0_datasets = {k: np.array(v) for k, v in data['label0_datasets'].items()}
+        label1_datasets = {k: np.array(v) for k, v in data['label1_datasets'].items()}
+        features = [FeatureClass.from_dict(f) for f in data['features']]
+        filters = [FilterClass.from_dict(f) for f in data['filters']]
+        model = None
+        if data.get('model_filename'):
+            model_path = os.path.join(MODEL_SAVE_DIR, data['model_filename'])
+            if os.path.exists(model_path):
+                model = joblib.load(model_path)
+            else:
+                print(f"Warning: Model file {model_path} not found.")
+
+        return cls(
+            label0_datasets=label0_datasets,
+            label1_datasets=label1_datasets,
+            features=features,
+            filters=filters,
+            model=model
+        )

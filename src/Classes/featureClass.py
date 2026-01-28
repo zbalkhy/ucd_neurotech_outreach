@@ -66,7 +66,15 @@ class FeatureClass():
                 pass
                 
 
-            
 
+    def to_dict(self) -> dict:
+        return {
+            'type': self.type.value,
+            'custom_name': self.custom_name,
+            #save custom_function later, when it is implemented
+        }
 
-    
+    @classmethod
+    def from_dict(cls, data: dict) -> 'FeatureClass':
+        feature_type = FeatureType(data['type'])
+        return cls(feature_type, custom_name=data.get('custom_name'))

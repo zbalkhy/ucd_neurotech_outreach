@@ -5,6 +5,7 @@ from ViewModel.plotterViewModel import PlotterViewModel
 from Game.floatTheOrbGame import FloatTheOrb
 from common import create_grid
 from Models.userModel import UserModel
+from Models.saveModel import SaveModel
 from View.eegDeviceView import EEGDeviceView
 from ViewModel.eegDeviceViewModel import EEGDeviceViewModel
 from View.inventoryView import InventoryView
@@ -43,7 +44,7 @@ def on_closing():
     for data_stream in user_model.get_streams():
         if data_stream.is_alive():
             data_stream.join()
-    
+    save_model.dump(user_model)
     root.destroy()
 
 def open_feature_viewer(root, view_model):
@@ -56,7 +57,15 @@ def open_feature_viewer(root, view_model):
 if __name__ == "__main__":
     
     # initialize user model
-    user_model = UserModel()
+    save_model =  SaveModel()
+    user_model =  save_model.load() if save_model.save_exists() else UserModel()
+    user_model.add_observer(save_model)
+
+    # create root and frame for the main window
+    root = tk.Tk()
+    root.wm_title('main window')
+    save_model.tk = root
+
     #Change back to ./data.mat
     data = loadmat('./data.mat')
     for key in data.keys():
@@ -81,10 +90,6 @@ if __name__ == "__main__":
         if type != FeatureType.CUSTOM:
             user_model.add_feature(FeatureClass(type))
 
-    # create root and frame for the main window
-    root = tk.Tk()
-    root.wm_title('main window')
-    
     # create paned window for each row, this allows them to be adjustable
     inner_paned_window = ttk.PanedWindow(root, orient="vertical")
     inner_paned_window.pack(side = "top", fill = "both", expand=True)
