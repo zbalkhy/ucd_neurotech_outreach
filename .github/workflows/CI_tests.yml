@@ -25,6 +25,7 @@ jobs:
       - name: Run all tests
         working-directory: src
         run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
           for i in Tests/*.py; do
             python "$i"
           done
