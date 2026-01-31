@@ -39,6 +39,11 @@ jobs:
       - name: Install dependencies
         run: pip install --upgrade -r requirements.txt
 
+      - name: Lint with pycodestyle
+        run: |
+          pycodestyle .  --ignore=E501 > pycodestyle_report.txt || true
+          cat pycodestyle_report.txt
+
       - name: Run all tests (Linux)
         if: runner.os == 'Linux'
         run: |

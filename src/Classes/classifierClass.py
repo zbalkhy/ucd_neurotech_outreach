@@ -5,6 +5,7 @@ from Classes.filterClass import FilterClass
 from sklearn.linear_model import LogisticRegression
 from common import SAMPLING_FREQ
 
+
 class Classifier:
     def __init__(
         self,
@@ -13,9 +14,12 @@ class Classifier:
         features: List[FeatureClass] = None,
         filters: List[FilterClass] = None
     ):
-        self.label0_datasets: Dict[str, np.ndarray] = label0_datasets if label0_datasets is not None else {}
-        self.label1_datasets: Dict[str, np.ndarray] = label1_datasets if label1_datasets is not None else {}
-        self.features: List[FeatureClass] = features if features is not None else []
+        self.label0_datasets: Dict[str,
+                                   np.ndarray] = label0_datasets if label0_datasets is not None else {}
+        self.label1_datasets: Dict[str,
+                                   np.ndarray] = label1_datasets if label1_datasets is not None else {}
+        self.features: List[FeatureClass] = features if features is not None else [
+        ]
         self.filters: List[FilterClass] = filters if filters is not None else []
         self.model = None
 
@@ -75,25 +79,26 @@ class Classifier:
         # extract features per channel
         feature_vectors = []
         for feature in self.features:
-            # TODO: instead of hard-coding SAMPLING_FREQ, have the Features class  
-            #       extract it as metadata from the data (maybe have a data wrapper)
-            feature_vals = feature.apply(data, SAMPLING_FREQ)  # shape: (channels,)
+            # TODO: instead of hard-coding SAMPLING_FREQ, have the Features class
+            # extract it as metadata from the data (maybe have a data wrapper)
+            feature_vals = feature.apply(
+                data, SAMPLING_FREQ)  # shape: (channels,)
             feature_vectors.append(feature_vals)
 
         # flatten into single vector
-        return feature_vectors #np.concatenate(feature_vectors, axis=0)
+        return feature_vectors  # np.concatenate(feature_vectors, axis=0)
 
     def prepare_training_data(self) -> Tuple[np.ndarray, np.ndarray]:
         X, y = [], []
 
         for _, data in self.label0_datasets.items():
             for i in range(data.shape[0]):
-                X.append(self.generate_features(data[i,:]))
+                X.append(self.generate_features(data[i, :]))
                 y.append(0)
 
         for _, data in self.label1_datasets.items():
             for i in range(data.shape[0]):
-                X.append(self.generate_features(data[i,:]))
+                X.append(self.generate_features(data[i, :]))
                 y.append(1)
 
         return np.array(X), np.array(y)
@@ -113,9 +118,9 @@ class Classifier:
             raise RuntimeError("Model not trained yet.")
         features = np.array(self.generate_features(sample)).reshape(1, -1)
         prediction = (features[0] < 7e-7)
-        #prediction = self.model.predict(features)
+        # prediction = self.model.predict(features)
         return int(prediction)
-    
+
     def apply(self, data: np.ndarray, fs: int) -> np.ndarray:
         prediction = self.predict_sample(data)
         print(prediction)

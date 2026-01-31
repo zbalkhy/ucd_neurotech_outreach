@@ -1,5 +1,6 @@
 from machine import Pin, PWM
 
+
 class SinglePWMMotor:
 
     """
@@ -8,9 +9,13 @@ class SinglePWMMotor:
     This version is used for the XRP Beta, which uses the rp2040 processor
     """
 
-    def __init__(self, in1_direction_pin: int|str, in2_speed_pin: int|str, flip_dir:bool=False):
+    def __init__(
+            self,
+            in1_direction_pin: int | str,
+            in2_speed_pin: int | str,
+            flip_dir: bool = False):
         self.flip_dir = flip_dir
-        self._MAX_PWM = 65534 # Motor holds when actually at full power
+        self._MAX_PWM = 65534  # Motor holds when actually at full power
 
         self._in1DirPin = Pin(in1_direction_pin, Pin.OUT)
         self._in2SpeedPin = PWM(Pin(in2_speed_pin, Pin.OUT))
@@ -31,8 +36,8 @@ class SinglePWMMotor:
         else:
             self._set_direction(0)
         # Cap power to [0,1]
-        effort = max(0,min(effort,1))
-        self._in2SpeedPin.duty_u16(int(effort*self._MAX_PWM))
+        effort = max(0, min(effort, 1))
+        self._in2SpeedPin.duty_u16(int(effort * self._MAX_PWM))
 
     def _set_direction(self, direction: int):
         if self.flip_dir:
@@ -42,10 +47,11 @@ class SinglePWMMotor:
 
     def brake(self):
         # Motor holds with the real max duty cycle (65535)
-        self._in2SpeedPin.duty_u16(self._MAX_PWM+1)
+        self._in2SpeedPin.duty_u16(self._MAX_PWM + 1)
 
     def coast(self):
         self.set_effort(0)
+
 
 class DualPWMMotor:
     """
@@ -54,9 +60,13 @@ class DualPWMMotor:
     This version of the Motor class is used for the official release of the XRP
     """
 
-    def __init__(self, in1_pwm_forward: int|str, in2_pwm_backward: int|str, flip_dir:bool=False):
+    def __init__(
+            self,
+            in1_pwm_forward: int | str,
+            in2_pwm_backward: int | str,
+            flip_dir: bool = False):
         self.flip_dir = flip_dir
-        self._MAX_PWM = 65535 # Motor holds when actually at full power
+        self._MAX_PWM = 65535  # Motor holds when actually at full power
 
         self._in1ForwardPin = PWM(Pin(in1_pwm_forward, Pin.OUT))
         self._in2BackwardPin = PWM(Pin(in2_pwm_backward, Pin.OUT))
@@ -73,11 +83,11 @@ class DualPWMMotor:
 
         in1Pwm = (effort < 0) ^ (self.flip_dir)
         if in1Pwm:
-            self._in1ForwardPin.duty_u16(int(abs(effort)*self._MAX_PWM))
+            self._in1ForwardPin.duty_u16(int(abs(effort) * self._MAX_PWM))
             self._in2BackwardPin.duty_u16(int(0))
         else:
             self._in1ForwardPin.duty_u16(int(0))
-            self._in2BackwardPin.duty_u16(int(abs(effort)*self._MAX_PWM))
+            self._in2BackwardPin.duty_u16(int(abs(effort) * self._MAX_PWM))
 
     def brake(self):
         """
@@ -92,5 +102,3 @@ class DualPWMMotor:
         """
         self._in1ForwardPin.duty_u16(int(0))
         self._in2BackwardPin.duty_u16(int(0))
-        
-                
