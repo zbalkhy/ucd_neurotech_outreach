@@ -14,12 +14,6 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
 
-      - name: Set up xvfb
-        uses: coactions/setup-xvfb@v1
-        with:
-          run: npm test
-          working-directory: ./ 
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -46,10 +40,12 @@ jobs:
         run: pip install --upgrade -r requirements.txt
 
       - name: Run all tests
-        working-directory: src
-        run: |
-          for i in Tests/*.py; do
-            xvfb-run -a python "$i"
-          done
-        shell: bash
+        uses: coactions/setup-xvfb@v1
+        with:
+          working-directory: src
+          run: |
+            for i in Tests/*.py; do
+              xvfb-run -a python "$i"
+            done
+          shell: bash
 
