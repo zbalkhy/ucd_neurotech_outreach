@@ -45,4 +45,5 @@ jobs:
           for i in Tests/*.py; do
             xvfb-run -a python "$i"
           done
+        shell: bash
 
