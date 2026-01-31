@@ -48,6 +48,11 @@ class ClassifierView(EventClass):
         tk.Label(self.grid_frames[0][1], text="Filters:").grid(row=4, column=0, padx=5, pady=5, sticky="w")
         self.filter_listbox = tk.Listbox(self.grid_frames[0][1], selectmode=MULTIPLE, exportselection=False, height=5)
         self.filter_listbox.grid(row=4, column=1, padx=5, pady=5, sticky="we")
+
+        # Existing Classifiers
+        tk.Label(self.grid_frames[0][1], text="Classifiers:").grid(row=5, column=0, padx=5, pady=5, sticky="w")
+        self.classifier_listbox = tk.Listbox(self.grid_frames[0][1], selectmode=SINGLE, exportselection=False, height=5)
+        self.classifier_listbox.grid(row=5, column=1, padx=5, pady=5, sticky="we")
         
         # Create classifier button
         self.create_button = tk.Button(self.grid_frames[0][1], text="Create Classifier", bg="yellow",
@@ -65,6 +70,7 @@ class ClassifierView(EventClass):
         self.label1_listbox.delete(0, END)
         self.feature_listbox.delete(0, END)
         self.filter_listbox.delete(0, END)
+        self.classifier_listbox.delete(0, END)
 
         datasets = list(self.view_model.user_model.get_datasets().keys())
         for ds in datasets:
@@ -78,6 +84,10 @@ class ClassifierView(EventClass):
         filters = list(self.view_model.user_model.filters.keys())
         for flt in filters:
             self.filter_listbox.insert(END, flt)
+            
+        classifiers = list(self.view_model.user_model.get_classifiers().keys())
+        for clf in classifiers:
+            self.classifier_listbox.insert(END, clf)
 
     def create_classifier(self):
         """Build a new classifier from selected items and save in the ViewModel."""
@@ -97,13 +107,12 @@ class ClassifierView(EventClass):
 
         self.view_model.create_classifier(name, datasets0, datasets1, features, filters)
 
-        self.classifier_listbox.insert(END, name)
         self.classifier_name.set("")
 
     # -----------------------
     # Events
     # -----------------------
     def on_notify(self, eventData: any, event: EventType):
-        if event in [EventType.DATASETUPDATE, EventType.STREAMUPDATE]:
+        if event in [EventType.DATASETUPDATE, EventType.STREAMUPDATE, EventType.CLASSIFIERUPDATE, EventType.FILTERUPDATE, EventType.FEATUREUPDATE]:
             self.refresh_lists()
         

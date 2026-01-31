@@ -61,4 +61,13 @@ class DataStream():
         else:
             return True
         
-        
+    def to_dict(self) -> dict:
+        return {
+            'stream_name': self.stream_name,
+            'stream_type': self.stream_type.value,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'DataStream':
+        stream_type = StreamType(data['stream_type'])
+        return cls(data['stream_name'], stream_type, QUEUE_LENGTH)
