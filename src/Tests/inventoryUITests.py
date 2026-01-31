@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+import unittest
 from Models.userModel import UserModel
 from ViewModel.inventoryViewModel import InventoryViewModel
 from View.inventoryView import InventoryView 
