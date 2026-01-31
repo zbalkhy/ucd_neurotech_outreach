@@ -42,10 +42,8 @@ jobs:
       - name: Run all tests
         uses: coactions/setup-xvfb@v1
         with:
-          working-directory: src
           run: |
             for i in Tests/*.py; do
               xvfb-run -a python "$i"
             done
-          shell: bash
-
+          working-directory: ./src/
