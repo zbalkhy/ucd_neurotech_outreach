@@ -29,6 +29,13 @@ from Stream.xrpControlStream import XRPControlStream
 from scipy.io import loadmat
 from pylsl import StreamInlet, resolve_streams
 
+# Change to activate different UI based on session
+# Currently switches between 0 and 1
+#0 = Default
+#1 = Plotter UI for Session 1
+SESSION_ID = 1
+
+
 top_grid_names = [[f"Inventory", 'Visualizer']]
 bottom_grid_names = [[f"Data Collector", f"Filter Maker", f"Classifier"]]
 
@@ -55,28 +62,12 @@ def open_feature_viewer(root, view_model):
 
 
 if __name__ == "__main__":
-    
+    print("main app starting")
     # initialize user model
     save_model =  SaveModel()
     user_model =  save_model.load() if save_model.save_exists() else UserModel()
     user_model.add_observer(save_model)
 
-    # create root and frame for the main window
-    root = tk.Tk()
-    root.wm_title('main window')
-    save_model.tk = root
-
-    #Change back to ./data.mat
-    data = loadmat('./data.mat')
-    for key in data.keys():
-        if key in ['eyesOpen', 'eyesClosed']:
-            user_model.add_dataset(key, data[key])
-
-    streams = resolve_streams()
-
-    if len(streams):
-        openBCIStream = LslStream(streams[0], 250, "openbci", StreamType.DEVICE, 250)
-        user_model.add_stream(openBCIStream)
 
     data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
     user_model.add_stream(data_stream)
@@ -90,6 +81,11 @@ if __name__ == "__main__":
         if type != FeatureType.CUSTOM:
             user_model.add_feature(FeatureClass(type))
 
+    # create root and frame for the main window
+    root = tk.Tk()
+    root.wm_title('main window')
+    root.state('zoomed') # make the window take up the whole screen
+
     # create paned window for each row, this allows them to be adjustable
     inner_paned_window = ttk.PanedWindow(root, orient="vertical")
     inner_paned_window.pack(side = "top", fill = "both", expand=True)
@@ -101,7 +97,7 @@ if __name__ == "__main__":
     inner_paned_window.add(bottom_pane)
     
     # create a gride in each pane to hold our widgets
-    top_grid_frames = create_grid(top_pane,1,2, top_grid_names,resize=True)
+    top_grid_frames = create_grid(top_pane,1,2, top_grid_names)
     bottom_grid_frames = create_grid(bottom_pane,1,3, bottom_grid_names)
 
     root.protocol("WM_DELETE_WINDOW", on_closing)
@@ -123,7 +119,11 @@ if __name__ == "__main__":
     inventory_view = InventoryView(top_grid_frames[0][0], inventory_viewmodel)
 
     # create plotter
-    plotter_view_model, plotter_view = create_plotter(top_grid_frames[0][1], user_model)    
+    plotter_view_model, plotter_view = create_plotter(
+        top_grid_frames[0][1],
+        user_model,
+        session_id=SESSION_ID
+    )
     
     
     # create feature viewer
