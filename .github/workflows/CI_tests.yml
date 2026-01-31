@@ -63,6 +63,7 @@ jobs:
 
       - name: Run all tests (other platforms)
         if: runner.os != 'Linux'
+        if: runner.os != 'Linux'
         uses: coactions/setup-xvfb@v1
         with:
           run: python -m unittest
