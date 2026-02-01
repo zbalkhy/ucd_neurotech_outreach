@@ -1,10 +1,17 @@
 import tkinter as tk
 import numpy as np
+import unittest
 from Classes.featureClass import *
 from View.featureView import FeatureView
 from ViewModel.featureViewModel import FeatureViewModel
 from Models.userModel import UserModel
 from common import split_dataset
+
+
+class DummyTest(unittest.TestCase):
+    def test_dummy(self):
+        self.assertEqual(1, 1)
+
 
 if __name__ == "__main__":
     # initialize tk, setup root and frame

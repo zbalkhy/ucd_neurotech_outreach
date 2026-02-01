@@ -12,20 +12,58 @@ jobs:
 
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - uses: actions/cache@v5
+        if: startsWith(runner.os, 'Linux')
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+              
+      - uses: actions/cache@v5
+        if: startsWith(runner.os, 'macOS')
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-      - name: Run all tests
-        working-directory: src
+      - uses: actions/cache@v5
+        if: startsWith(runner.os, 'Windows')
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Set up tkinter (ubuntu only)
+        if: startsWith(runner.os, 'Linux')
         run: |
-          for i in Tests/*.py; do
-            python "$i"
-          done
+          sudo apt-get update
+          sudo apt-get install -y python3-tk
 
+      - name: Install dependencies
+        run: pip install --upgrade -r requirements.txt
+
+      - name: Run all tests (Linux)
+        if: startsWith(runner.os, 'Linux')
+        run: |
+          xvfb-run -a python -m unittest
+        working-directory: ./src/
+
+      - name: Run all tests (other platforms)
+        if: runner.os != 'Linux'
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: python -m unittest
+          working-directory: ./src/
