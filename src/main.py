@@ -5,6 +5,7 @@ from ViewModel.plotterViewModel import PlotterViewModel
 from Game.floatTheOrbGame import FloatTheOrb
 from common import create_grid
 from Models.userModel import UserModel
+from Models.saveModel import SaveModel
 from View.eegDeviceView import EEGDeviceView
 from ViewModel.eegDeviceViewModel import EEGDeviceViewModel
 from View.inventoryView import InventoryView
@@ -51,7 +52,7 @@ def on_closing():
     for data_stream in user_model.get_streams():
         if data_stream.is_alive():
             data_stream.join()
-
+    save_model.dump(user_model)
     root.destroy()
 
 
@@ -64,7 +65,10 @@ def open_feature_viewer(root, view_model):
 if __name__ == "__main__":
     print("main app starting")
     # initialize user model
-    user_model = UserModel()
+    save_model =  SaveModel()
+    user_model =  save_model.load() if save_model.save_exists() else UserModel()
+    user_model.add_observer(save_model)
+
 
     data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
     user_model.add_stream(data_stream)

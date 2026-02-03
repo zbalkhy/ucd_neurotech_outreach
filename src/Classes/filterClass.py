@@ -28,3 +28,15 @@ class FilterClass():
 
     def apply(self, data: ndarray, fs: int) -> ndarray:
         return self.filter_data(data, fs)
+
+    def to_dict(self) -> dict:
+        return {
+            'filter_name': self.filter_name,
+            'filters': self.filters
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'FilterClass':
+        obj = cls(data['filter_name'])
+        obj.filters = data['filters']
+        return obj

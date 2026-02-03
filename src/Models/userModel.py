@@ -4,6 +4,7 @@ from Classes.filterClass import FilterClass
 from Classes.featureClass import FeatureClass
 from Classes.classifierClass import Classifier
 from numpy import ndarray
+import numpy as np
 
 
 class UserModel(EventClass):
@@ -38,8 +39,8 @@ class UserModel(EventClass):
                     stream.stream_name} already exists. Overwriting.")
 
         self.data_streams[stream.stream_name] = stream
-        self.notify(None, EventType.STREAMUPDATE)
-
+        self.notify(self, EventType.STREAMUPDATE)
+ 
     def rename_stream(self, old_name: str, new_name: str) -> bool:
         """Rename a stream from old_name to new_name."""
         if old_name not in self.data_streams:
@@ -54,7 +55,7 @@ class UserModel(EventClass):
         self.data_streams[new_name] = stream
 
         print(f"[UserModel] Renamed stream {old_name} to {new_name}")
-        self.notify(None, EventType.STREAMUPDATE)
+        self.notify(self, EventType.STREAMUPDATE)
         return True
 
     def remove_stream_by_name(self, name: str) -> bool:
@@ -68,7 +69,7 @@ class UserModel(EventClass):
         # Gracefully stop the stream thread if it's running
         stream.stop()
         print(f"[UserModel] Removed stream {name}")
-        self.notify(None, EventType.STREAMUPDATE)
+        self.notify(self, EventType.STREAMUPDATE)
         return True
 
     # add filter
@@ -86,9 +87,11 @@ class UserModel(EventClass):
         self.filters[name].add_filters('filter', filter_type)
         self.filters[name].add_filters('order', order)
         self.filters[name].add_filters('frequency', frequency)
+        self.notify(self, EventType.FILTERUPDATE)
 
     def remove_filter(self, name: str) -> None:
         del self.filters[name]
+        self.notify(self, EventType.FILTERUPDATE)
 
     def get_filter(self, name: str) -> None:
         if name in self.filters.keys():
@@ -99,14 +102,14 @@ class UserModel(EventClass):
     def delete_dataset(self, name: str) -> bool:
         if name in self.data_sets.keys():
             del self.data_sets[name]
-            self.notify(None, EventType.DATASETUPDATE)
+            self.notify(self, EventType.DATASETUPDATE)
             return True
         else:
             return False
 
     def add_dataset(self, name: str, data_set: ndarray) -> None:
         self.data_sets[name] = data_set
-        self.notify(None, EventType.DATASETUPDATE)
+        self.notify(self, EventType.DATASETUPDATE)
 
     def get_dataset(self, name: str) -> ndarray:
         if name in self.data_sets.keys():
@@ -127,7 +130,7 @@ class UserModel(EventClass):
         self.data_sets[new_name] = data_set
 
         print(f"[UserModel] Renamed dataset {old_name} to {new_name}")
-        self.notify(None, EventType.DATASETUPDATE)
+        self.notify(self, EventType.DATASETUPDATE)
         return True
 
     def get_datasets(self) -> dict[str, ndarray]:
@@ -138,18 +141,19 @@ class UserModel(EventClass):
 
     def add_feature(self, feature: FeatureClass) -> None:
         self.features[str(feature)] = feature
+        self.notify(self, EventType.FEATUREUPDATE)
 
     def remove_classifier(self, name: str) -> bool:
         if name in self.classifiers.keys():
             del self.classifiers[name]
-            self.notify(None, EventType.CLASSIFIERUPDATE)
+            self.notify(self, EventType.CLASSIFIERUPDATE)
             return True
         else:
             return False
 
     def add_classifier(self, name: str, classifier: Classifier) -> None:
         self.classifiers[name] = classifier
-        self.notify(None, EventType.CLASSIFIERUPDATE)
+        self.notify(self, EventType.CLASSIFIERUPDATE)
 
     def get_classifier(self, name: str) -> Classifier:
         if name in self.classifiers.keys():
@@ -173,5 +177,39 @@ class UserModel(EventClass):
         self.classifiers[new_name] = classifier
 
         print(f"[UserModel] Renamed classifier {old_name} to {new_name}")
-        self.notify(None, EventType.CLASSIFIERUPDATE)
+        self.notify(self, EventType.CLASSIFIERUPDATE)
         return True
+
+    def to_dict(self) -> dict:
+        return {
+            'data_streams': {k: v.to_dict() for k, v in self.data_streams.items()},
+            'filters': {k: v.to_dict() for k, v in self.filters.items()},
+            'data_sets': {k: v.tolist() for k, v in self.data_sets.items()},
+            'features': {k: v.to_dict() for k, v in self.features.items()},
+            'classifiers': {k: v.to_dict() for k, v in self.classifiers.items()}
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> 'UserModel':
+        #restore user state from json dictionary
+        user_model = UserModel()
+        if 'data_streams' in data:
+            for k, v in data['data_streams'].items():
+                user_model.data_streams[k] = DataStream.from_dict(v)
+
+        if 'filters' in data:
+            for k, v in data['filters'].items():
+                user_model.filters[k] = FilterClass.from_dict(v)
+
+        if 'data_sets' in data:
+            for k, v in data['data_sets'].items():
+                user_model.data_sets[k] = np.array(v)
+
+        if 'features' in data:
+            for k, v in data['features'].items():
+                user_model.features[k] = FeatureClass.from_dict(v)       
+        if 'classifiers' in data:
+            for k, v in data['classifiers'].items():
+                user_model.classifiers[k] = Classifier.from_dict(v)
+
+        return user_model
