@@ -1,5 +1,6 @@
 import time
 
+
 class Timeout:
     def __init__(self, timeout):
         """
@@ -10,7 +11,7 @@ class Timeout:
         """
         self.timeout = timeout
         self.start_time = time.time()
-    
+
     def is_done(self):
         """
         :return: True if the timeout has expired, False otherwise

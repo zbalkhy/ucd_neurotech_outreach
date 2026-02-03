@@ -16,70 +16,74 @@ CHOOSE_STREAM = "Choose Stream"
 CHOOSE_CHANNEL = "Choose Channel"
 MAX_CHANNELS = 4
 
+
 class PlotterView(EventClass):
-    
+
     def __init__(self, frame: tk.Frame, view_model: PlotterViewModel):
         super().__init__()
         self.frame = frame
         self.view_model = view_model
-        
+
         self.subscribe_to_subject(self.view_model)
-        
+
         self.fig = Figure(figsize=(6, 8), dpi=100)  # taller for multiple plots
-        
-        
-        self.plot_queue = queue.Queue(maxsize=2)  # Small queue to avoid memory buildup
+
+        # Small queue to avoid memory buildup
+        self.plot_queue = queue.Queue(maxsize=2)
         self.plot_thread = None
         self.stop_thread = threading.Event()
 
         self._setup_canvas()
         self._setup_controls()
-        
+
         # Start the plotting thread
         self._start_plot_thread()
-
-
 
     def _setup_canvas(self):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.frame)
         self.canvas.draw()
-        self.canvas.mpl_connect("key_press_event",
-                                lambda event: print(f"you pressed {event.key}"))
+        self.canvas.mpl_connect(
+            "key_press_event",
+            lambda event: print(
+                f"you pressed {
+                    event.key}"))
         self.canvas.mpl_connect("key_press_event", key_press_handler)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-    
-
-
     def _setup_controls(self):
         controls = tk.Frame(self.frame, bd=1, relief=tk.FLAT)
-        controls.pack(side=tk.BOTTOM, fill=tk.X, before=self.canvas.get_tk_widget())
+        controls.pack(side=tk.BOTTOM, fill=tk.X,
+                      before=self.canvas.get_tk_widget())
 
         for col in range(6):
             controls.grid_columnconfigure(col, weight=1, uniform="controls")
 
-        self.button_pause = tk.Button(controls, text="Play/Pause", command=self._on_play_pause)
-        self.button_pause.grid(row=0, column=0, columnspan=6, padx=6, pady=6, sticky="n")
+        self.button_pause = tk.Button(
+            controls, text="Play/Pause", command=self._on_play_pause)
+        self.button_pause.grid(
+            row=0, column=0, columnspan=6, padx=6, pady=6, sticky="n")
 
         self.channel_frame = tk.LabelFrame(controls, text="Selected Channels")
-        self.channel_frame.grid(row=2, column=0, columnspan=6, sticky="ew", padx=6)
-        self.channel_frame.grid_columnconfigure((0,1,2,3), weight=1)
+        self.channel_frame.grid(
+            row=2, column=0, columnspan=6, sticky="ew", padx=6)
+        self.channel_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
 
         self.source_selectors = []
 
         slot_count = self.view_model.max_visible_channels
 
-
         for i in range(slot_count):
             stream_var = tk.StringVar(value=CHOOSE_STREAM)  # default selection
-            channel_var = tk.StringVar(value=CHOOSE_CHANNEL)  # default selection
+            channel_var = tk.StringVar(
+                value=CHOOSE_CHANNEL)  # default selection
 
-            ttk.Label(self.channel_frame, text=f"Slot {i+1}").grid(row=i, column=0, padx=4)
+            ttk.Label(self.channel_frame,
+                      text=f"Slot {i + 1}").grid(row=i, column=0, padx=4)
 
             stream_cb = ttk.Combobox(
                 self.channel_frame,
                 textvariable=stream_var,
-                values = [CHOOSE_STREAM] + self.view_model.get_stream_names(),
+                values=[CHOOSE_STREAM] + self.view_model.get_stream_names(),
                 state="readonly",
                 width=15
             )
@@ -98,8 +102,11 @@ class PlotterView(EventClass):
             # Update channels when a stream is selected
             stream_cb.bind(
                 "<<ComboboxSelected>>",
-                lambda e, sv=stream_var, cv=channel_var: self._update_channel_choices(sv, cv)
-            )
+                lambda e,
+                sv=stream_var,
+                cv=channel_var: self._update_channel_choices(
+                    sv,
+                    cv))
 
             # Update plots when a channel is selected
             channel_cb.bind(
@@ -114,27 +121,44 @@ class PlotterView(EventClass):
                 "channel_cb": channel_cb
             })
 
-        
-    
         if self.view_model.allow_amplitude_plot:
-            self.toggle_amplitude = tk.Button(controls, text="Hide Amp", command=self._on_toggle_amp)
-            self.toggle_amplitude.grid(row=1, column=0, padx=6, pady=6, sticky="ew")
+            self.toggle_amplitude = tk.Button(
+                controls, text="Hide Amp", command=self._on_toggle_amp)
+            self.toggle_amplitude.grid(
+                row=1, column=0, padx=6, pady=6, sticky="ew")
 
         if self.view_model.allow_amp_settings:
-            self.amp_settings = tk.Button(controls, text="Amp Settings", command=lambda: self._open_settings("amplitude"))
-            self.amp_settings.grid(row=1, column=1, padx=6, pady=6, sticky="ew")
+            self.amp_settings = tk.Button(
+                controls,
+                text="Amp Settings",
+                command=lambda: self._open_settings("amplitude"))
+            self.amp_settings.grid(
+                row=1, column=1, padx=6, pady=6, sticky="ew")
 
         if self.view_model.allow_power_plot:
-            self.toggle_power = tk.Button(controls, text="Hide Power", command=self._on_toggle_power_spectrum)
-            self.toggle_power.grid(row=1, column=2, padx=6, pady=6, sticky="ew")
+            self.toggle_power = tk.Button(
+                controls,
+                text="Hide Power",
+                command=self._on_toggle_power_spectrum)
+            self.toggle_power.grid(
+                row=1, column=2, padx=6, pady=6, sticky="ew")
 
         if self.view_model.allow_power_settings:
-            self.power_settings = tk.Button(controls, text="Power Settings", width=15, command=lambda: self._open_settings("power"))
-            self.power_settings.grid(row=1, column=3, padx=6, pady=6, sticky="ew")
+            self.power_settings = tk.Button(
+                controls,
+                text="Power Settings",
+                width=15,
+                command=lambda: self._open_settings("power"))
+            self.power_settings.grid(
+                row=1, column=3, padx=6, pady=6, sticky="ew")
 
         if self.view_model.allow_band_settings:
-            self.bands_settings = tk.Button(controls, text="Band Settings", command=lambda: self._open_settings("bands"))
-            self.bands_settings.grid(row=1, column=5, padx=6, pady=6, sticky="ew")
+            self.bands_settings = tk.Button(
+                controls,
+                text="Band Settings",
+                command=lambda: self._open_settings("bands"))
+            self.bands_settings.grid(
+                row=1, column=5, padx=6, pady=6, sticky="ew")
 
         if self.view_model.allow_band_plot:
             hide_text, _ = self.view_model.get_band_button_labels()
@@ -164,11 +188,9 @@ class PlotterView(EventClass):
                     sticky="ew"
                 )
 
-
-
     def _update_channel_choices(self, stream_var, channel_var):
         stream_name = stream_var.get()
-        
+
         # If default "Choose Stream" is selected, reset channel
         if stream_name == CHOOSE_STREAM:
             channel_var.set(CHOOSE_CHANNEL)
@@ -190,7 +212,8 @@ class PlotterView(EventClass):
             return
 
         n_ch = data.shape[1]
-        channel_choices = [CHOOSE_CHANNEL] + [str(i) for i in range(1, n_ch + 1)]
+        channel_choices = [CHOOSE_CHANNEL] + \
+            [str(i) for i in range(1, n_ch + 1)]
 
         for entry in self.source_selectors:
             if entry["stream_var"] is stream_var:
@@ -198,7 +221,6 @@ class PlotterView(EventClass):
                 # Keep previous selection if valid, else default
                 if channel_var.get() not in channel_choices:
                     channel_var.set(CHOOSE_CHANNEL)
-
 
     def _on_source_change(self):
         sources = []
@@ -234,7 +256,6 @@ class PlotterView(EventClass):
         plot_data = self.view_model.get_plot_data()
         self._render_plot_data(plot_data)
 
-    
     def _clear_graphs(self):
         """Clear all graph axes and display 'No data'."""
         try:
@@ -243,14 +264,14 @@ class PlotterView(EventClass):
             ax.text(0.5, 0.5, "No data", ha="center", va="center", fontsize=12)
             ax.set_axis_off()
             self.canvas.draw_idle()
-            
+
         except Exception as e:
             print("[PlotterView] Error clearing graphs:", e)
 
-
     def _start_plot_thread(self):
         self.stop_thread.clear()
-        self.plot_thread = threading.Thread(target=self._plot_loop, daemon=True)
+        self.plot_thread = threading.Thread(
+            target=self._plot_loop, daemon=True)
         self.plot_thread.start()
         # Start the UI update loop
         self._process_plot_queue()
@@ -261,7 +282,7 @@ class PlotterView(EventClass):
                 try:
                     # Get plot data in background thread
                     plot_data = self.view_model.get_plot_data()
-                    
+
                     # Send to UI thread via queue (non-blocking)
                     try:
                         self.plot_queue.put(plot_data, block=False)
@@ -270,11 +291,11 @@ class PlotterView(EventClass):
                         try:
                             self.plot_queue.get_nowait()
                             self.plot_queue.put(plot_data, block=False)
-                        except:
+                        except BaseException:
                             pass
                 except Exception as e:
                     print(f"Error in plot loop: {e}")
-            
+
             time.sleep(0.05)
 
     def _process_plot_queue(self):
@@ -288,7 +309,7 @@ class PlotterView(EventClass):
             pass
         except Exception as e:
             print(f"Error processing plot queue: {e}")
-        
+
         if not self.stop_thread.is_set():
             self.frame.after(50, self._process_plot_queue)
 
@@ -298,7 +319,7 @@ class PlotterView(EventClass):
         if not plot_data.get("has_data", False):
             self._clear_graphs()
             return
-        
+
         # ---------- PLOTTING ----------
         self.fig.clear()
 
@@ -310,7 +331,6 @@ class PlotterView(EventClass):
         self.fig.tight_layout()
         self.canvas.draw()
 
- 
     def stop(self):
         """Stop the plotting thread - Added: Cleanup method"""
         self.stop_thread.set()
@@ -331,7 +351,6 @@ class PlotterView(EventClass):
                     entry["channel_var"].set(CHOOSE_CHANNEL)
                     entry["channel_cb"]["values"] = [CHOOSE_CHANNEL]
 
-  
         elif event == EventType.CLEARALLPLOTS:
 
             for entry in self.source_selectors:
@@ -340,7 +359,6 @@ class PlotterView(EventClass):
 
                 entry["channel_cb"]["values"] = [CHOOSE_CHANNEL]
                 entry["channel_var"].set(CHOOSE_CHANNEL)
-
 
             self._clear_graphs()
 
@@ -353,8 +371,7 @@ class PlotterView(EventClass):
 
             with self.plot_queue.mutex:
                 self.plot_queue.queue.clear()
-        
-        
+
         self._on_source_change()
 
         plot_data = self.view_model.get_plot_data()
@@ -364,9 +381,10 @@ class PlotterView(EventClass):
             self.plot_queue.queue.clear()
 
         stream_names = self.view_model.get_stream_names()
- 
+
         for entry in self.source_selectors:
-            values = values = [CHOOSE_STREAM] + self.view_model.get_stream_names()
+            values = values = [CHOOSE_STREAM] + \
+                self.view_model.get_stream_names()
             entry["stream_cb"]["values"] = values
 
             if entry["stream_var"].get() not in values:
@@ -402,15 +420,18 @@ class PlotterView(EventClass):
         self._on_source_change()
         for entry in self.source_selectors:
             if entry["stream_var"].get() and not entry["channel_cb"]["values"]:
-                self._update_channel_choices(entry["stream_var"], entry["channel_var"])
+                self._update_channel_choices(
+                    entry["stream_var"], entry["channel_var"])
 
     def _on_toggle_amp(self):
         show_amplitude = self.view_model.toggle_amplitude()
-        self.toggle_amplitude.config(text="Hide Amp" if show_amplitude else "Show Amp")
+        self.toggle_amplitude.config(
+            text="Hide Amp" if show_amplitude else "Show Amp")
 
     def _on_toggle_power_spectrum(self):
         show_power = self.view_model.toggle_power_spectrum()
-        self.toggle_power.config(text="Hide Power" if show_power else "Show Power")
+        self.toggle_power.config(
+            text="Hide Power" if show_power else "Show Power")
 
     def _on_toggle_band_power(self):
         show_bands = self.view_model.toggle_band_power()
@@ -419,7 +440,6 @@ class PlotterView(EventClass):
         self.toggle_bands.config(
             text=hide_text if show_bands else show_text
         )
-
 
     def _update_band_toggle_state(self):
         any_visible = self.view_model.any_band_visible()
@@ -435,8 +455,6 @@ class PlotterView(EventClass):
                 state=tk.NORMAL,
                 text=hide_text if self.view_model.show_bands else show_text
             )
-
-
 
     def _open_settings(self, graph_type):
         """Open settings popup - Fixed: Access labels directly without calling get_plot_data()"""
@@ -461,9 +479,11 @@ class PlotterView(EventClass):
         ylabel_entry.grid(row=2, column=1)
 
         if graph_type == "bands":
-            tk.Label(popup, text="Visible Bands:", font=("Arial", 10, "bold")).grid(
-                row=3, column=0, columnspan=2, pady=(10, 4), sticky="w"
-            )
+            tk.Label(
+                popup, text="Visible Bands:", font=(
+                    "Arial", 10, "bold")).grid(
+                row=3, column=0, columnspan=2, pady=(
+                    10, 4), sticky="w")
 
             band_vars = {}
             visibility = self.view_model.get_band_visibility()
@@ -477,10 +497,6 @@ class PlotterView(EventClass):
                 )
                 row += 1
                 self._update_band_toggle_state()
-            
-            
-
-
 
         def apply_settings():
             self.view_model.update_labels(
@@ -495,7 +511,6 @@ class PlotterView(EventClass):
                     self.view_model.set_band_visibility(band, var.get())
 
             popup.destroy()
-
 
         apply_row = row if graph_type == "bands" else 3
 
@@ -526,7 +541,8 @@ class PlotterView(EventClass):
 
         # -------- AMPLITUDE --------
         if plot_data['show_amplitude']:
-            ax = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
+            ax = self.fig.add_subplot(
+                plot_data['n_subplots'], 1, subplot_index)
             for sig, t, (stream_idx, ch_idx) in zip(
                     signals,
                     plot_data["time_axes"],
@@ -534,7 +550,6 @@ class PlotterView(EventClass):
             ):
                 stream_name = self.view_model.get_stream_names()[stream_idx]
                 ax.plot(t, sig, label=f"{stream_name} · Ch {ch_idx + 1}")
-
 
             ax.set_title(plot_data['labels']['amplitude']['title'])
             ax.set_xlabel(plot_data['labels']['amplitude']['xlabel'])
@@ -554,7 +569,8 @@ class PlotterView(EventClass):
 
         # -------- POWER SPECTRUM --------
         if plot_data['show_power']:
-            ax = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
+            ax = self.fig.add_subplot(
+                plot_data['n_subplots'], 1, subplot_index)
 
             for psd, freqs, (stream_idx, ch_idx) in zip(
                 plot_data["psds"],
@@ -574,13 +590,14 @@ class PlotterView(EventClass):
 
             subplot_index += 1
 
-
         # -------- BAND POWERS --------
         if plot_data['show_bands']:
-            ax = self.fig.add_subplot(plot_data['n_subplots'], 1, subplot_index)
+            ax = self.fig.add_subplot(
+                plot_data['n_subplots'], 1, subplot_index)
 
             band_labels = plot_data['band_labels']
-            band_powers = np.array(plot_data['band_powers'])  # shape: (n_channels, n_bands)
+            # shape: (n_channels, n_bands)
+            band_powers = np.array(plot_data['band_powers'])
             n_channels, n_bands = band_powers.shape
 
             x = np.arange(n_bands)  # band positions
@@ -594,7 +611,7 @@ class PlotterView(EventClass):
                     band_powers[i],
                     width=bar_width,
                     label=f"{stream_name} · Ch {ch_idx + 1}"
-    )
+                )
 
             ax.set_xticks(x + total_width / 2 - bar_width / 2)
             ax.set_xticklabels(band_labels)

@@ -4,11 +4,12 @@ import re
 import os
 import numpy as np
 
+
 class Editor():
     def __init__(self, root):
         self.root = root
         self.frame = tk.Frame(self.root)
-        
+
         # Define colors for the variouse types of tokens
         self.normal = self._from_rgb((234, 234, 234))
         self.keywords = self._from_rgb((234, 95, 95))
@@ -26,7 +27,7 @@ class Editor():
             ['".*?"', self.string],
             ['\'.*?\'', self.string],
             ['#.*?$', self.comments],]
-        
+
         # import keywords are not handled yet but this regex should get us therequit
         # import_pattern = r'^\s*from\s+(\S+)\s+import\s+(\S+)(?:\s+as\s+(\S+))?'
 
@@ -53,11 +54,12 @@ class Editor():
             expand=1
         )
 
-        self.button_execute = tk.Button(master=root, text="execute_code", command=self.execute_python)
+        self.button_execute = tk.Button(
+            master=root, text="execute_code", command=self.execute_python)
         self.button_execute.pack(side=tk.BOTTOM)
         self.changes()
         return
-    
+
     # Translates an rgb tuple of int to a tkinter friendly color code
     def _from_rgb(self, rgb):
         return "#%02x%02x%02x" % rgb
@@ -87,11 +89,11 @@ class Editor():
         # If actually no changes have been made stop / return the function
         if self.get_text() == self.previousText:
             return
-        
+
         # Remove all tags so they can be redrawn
         for tag in self.editArea.tag_names():
             self.editArea.tag_remove(tag, "1.0", "end")
-        
+
         # Add tags where the search_re function found the pattern
         i = 0
         for pattern, color in self.repl:
@@ -99,8 +101,8 @@ class Editor():
                 self.editArea.tag_add(f'{i}', start, end)
                 self.editArea.tag_config(f'{i}', foreground=color)
 
-                i+=1
-        
+                i += 1
+
         self.previousText = self.get_text()
 
 
@@ -111,7 +113,3 @@ if __name__ == "__main__":
 
     editor = Editor(root)
     root.mainloop()
-
-
-
-
