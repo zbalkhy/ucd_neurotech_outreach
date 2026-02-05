@@ -30,7 +30,7 @@ class UserModel(EventClass):
         return list(self.data_streams.values())
 
     def add_stream(self, stream: DataStream) -> None:
-        if hasattr(self.data_streams, stream.stream_name):
+        if stream.stream_name in self.data_streams:
             # stop the stream if it is running
             self.data_streams[stream.stream_name].stop()
             self.data_streams.pop(stream.stream_name)
