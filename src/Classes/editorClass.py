@@ -3,7 +3,7 @@ from tkinter import ttk
 import ast
 from idlelib.percolator import Percolator
 from idlelib.colorizer import ColorDelegator
-from eventClass import EventClass, EventType
+from Classes.eventClass import EventClass, EventType
 
 ERROR_HEIGHT = 50
 PARSE_DELAY_MS = 100
@@ -55,7 +55,7 @@ class EditorClass(EventClass):
         Percolator(self.editArea).insertfilter(self.cd)
         self.editArea.bind("<KeyRelease>", self.on_text_change)
 
-        self.save_btn = Button(root, text="Save Function", command=self.save_fcn(self.get_text()))
+        self.save_btn = Button(root, text="Save Function", command=lambda: self.save_fcn(self.get_text()))
         self.save_btn.pack(pady=5)
 
     def get_text(self) -> str:
@@ -65,11 +65,13 @@ class EditorClass(EventClass):
         exec(self.get_text(), {})
 
     def save_fcn(self, txt: str):
+        self.check_syntax(txt)
         fcns = {}
         tree = ast.parse(txt)
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
                 fcns[node.name] = ast.get_source_segment(txt, node)
+                print(node.name)
         self.notify(fcns, EventType.FUNCTIONUPDATE)
 
     def on_text_change(self, event=None):

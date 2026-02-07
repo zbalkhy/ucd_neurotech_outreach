@@ -20,7 +20,10 @@ class UserModel(EventClass):
     def on_notify(self, eventData: any, event: EventType ) -> None:
         match(event):
             case EventType.FUNCTIONUPDATE:
+                print("Function Update")
                 self.functions.update(eventData)
+                print(self.functions)
+                self.notify(self.functions, EventType.FUNCTIONUPDATE)
             case default:
                 pass
 
@@ -38,9 +41,7 @@ class UserModel(EventClass):
             # stop the stream if it is running
             self.data_streams[stream.stream_name].stop()
             self.data_streams.pop(stream.stream_name)
-            print(
-                f"[UserModel] Stream {
-                    stream.stream_name} already exists. Overwriting.")
+            print(f"[UserModel] Stream {stream.stream_name} already exists. Overwriting.")
 
         self.data_streams[stream.stream_name] = stream
         self.notify(self, EventType.STREAMUPDATE)
@@ -190,7 +191,8 @@ class UserModel(EventClass):
             'filters': {k: v.to_dict() for k, v in self.filters.items()},
             'data_sets': {k: v.tolist() for k, v in self.data_sets.items()},
             'features': {k: v.to_dict() for k, v in self.features.items()},
-            'classifiers': {k: v.to_dict() for k, v in self.classifiers.items()}
+            'classifiers': {k: v.to_dict() for k, v in self.classifiers.items()},
+            'functions': self.functions
         }
 
     @staticmethod
@@ -215,5 +217,8 @@ class UserModel(EventClass):
         if 'classifiers' in data:
             for k, v in data['classifiers'].items():
                 user_model.classifiers[k] = Classifier.from_dict(v)
+
+        if 'functions' in data:
+                user_model.functions = data['functions']
 
         return user_model

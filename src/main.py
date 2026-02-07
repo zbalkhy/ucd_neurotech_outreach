@@ -22,6 +22,7 @@ from ViewModel.classifierViewModel import ClassifierViewModel
 from View.featureView import FeatureView
 from ViewModel.featureViewModel import FeatureViewModel
 from Classes.featureClass import FeatureClass, FeatureType
+from Classes.editorClass import EditorClass
 import pandas as pd
 import numpy as np
 from Stream.lslStream import LslStream
@@ -43,7 +44,6 @@ bottom_grid_names = [[f"Data Collector", f"Filter Maker", f"Classifier"]]
 def on_closing():
     # Stop the plotter thread
     plotter_view.stop()
-
     # send shutdown event to each stream thread
     for data_stream in user_model.get_streams():
         data_stream.shutdown_event.set()
@@ -53,6 +53,7 @@ def on_closing():
         if data_stream.is_alive():
             data_stream.join()
     save_model.dump(user_model)
+    print("Saved User")
     root.destroy()
 
 
@@ -61,6 +62,12 @@ def open_feature_viewer(root, view_model):
     t.wm_title('Feature Viewer')
     feature_view = FeatureView(t, feature_view_model)
 
+def open_function_editor(root, user_model):
+    t = tk.Toplevel(root)
+    t.wm_title('Function Editor')
+    editor = EditorClass(t)
+    editor.add_observer(user_model)
+
 
 if __name__ == "__main__":
     print("main app starting")
@@ -68,7 +75,6 @@ if __name__ == "__main__":
     save_model =  SaveModel()
     user_model =  save_model.load() if save_model.save_exists() else UserModel()
     user_model.add_observer(save_model)
-
 
     data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
     user_model.add_stream(data_stream)
@@ -127,7 +133,6 @@ if __name__ == "__main__":
         user_model,
         session_id=SESSION_ID
     )
-    
 
     # create feature viewer
     feature_view_model = FeatureViewModel(user_model)
@@ -142,7 +147,10 @@ if __name__ == "__main__":
             root,
             feature_view_model))
     root.config(menu=menubar)
-
+    actions.add_command(
+        label='Open Code Editor',
+        command=lambda: open_function_editor(root, user_model))
+    root.config(menu=menubar)
     # create game
     # float_the_orb = FloatTheOrb(frames[1][0], user_context, user_context_lock)
     # float_the_orb.start_pygame()
