@@ -59,7 +59,6 @@ def open_feature_viewer(root, view_model):
     feature_view = FeatureView(t, feature_view_model)
 
 
-
 if __name__ == "__main__":
     print("main app starting")
     # initialize user model
@@ -121,7 +120,7 @@ if __name__ == "__main__":
         session_id=SESSION_ID
     )
     
-    
+
     # create feature viewer
     feature_view_model = FeatureViewModel(user_model)
 

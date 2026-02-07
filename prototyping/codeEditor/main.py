@@ -7,12 +7,12 @@ from idlelib.colorizer import ColorDelegator
 ERROR_HEIGHT = 50
 PARSE_DELAY_MS = 100
 
-
 class Editor:
     def __init__(self, root: Tk):
         self.root = root
         self._parse_job = None
-
+        self.save_btn = Button(root, text="Save Function", command=self.save_fcn)
+        self.save_btn.pack(pady=10)
         self.error_bar = Frame(root, bg="#2b2b2b", height=0)
         self.error_bar.pack(side=BOTTOM, fill="x")
         self.error_bar.pack_propagate(False)
@@ -27,7 +27,6 @@ class Editor:
         )
         scroll = ttk.Scrollbar(self.error_bar, orient="vertical", command=self.errorArea.yview)
         self.errorArea.configure(yscrollcommand=scroll.set)
-
         self.errorArea.pack(side=LEFT, fill="both", expand=True)
         scroll.pack(side=RIGHT, fill="y")
 
@@ -61,6 +60,14 @@ class Editor:
     def execute(self):
         exec(self.get_text(), {})
 
+    def save_fcn(self, txt: str) -> dict:
+        fcns = {}
+        tree = ast.parse(txt)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                fcns.append({node.name,ast.get_source_segment(txt, node)})
+        return fcns
+
     def on_text_change(self, event=None):
         if self._parse_job is not None:
             self.root.after_cancel(self._parse_job)
@@ -77,17 +84,16 @@ class Editor:
 
     def show_error(self, msg: str):
         self.error_bar.configure(height=ERROR_HEIGHT)
-
         self.errorArea.config(state="normal")
         self.errorArea.delete("1.0", "end")
         self.errorArea.insert("1.0", msg)
         self.errorArea.config(state="disabled")
 
     def clear_error(self):
-        self.errorArea.delete()
+        self.errorArea.config(state="normal")
+        self.errorArea.delete("1.0", "end")
+        self.errorArea.config(state="disabled")
         self.error_bar.configure(height=0)
-
-
 
 if __name__ == "__main__":
     root = Tk()

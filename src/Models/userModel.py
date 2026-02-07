@@ -12,11 +12,15 @@ class UserModel(EventClass):
         self.data_sets: dict[str, ndarray] = {}
         self.features: dict[str, FeatureClass] = {}
         self.classifiers: dict[str, Classifier] = {}
+        self.functions: dict[str, str] = {} #fcn name, fcn text
         super().__init__()
 
     def on_notify(self, eventData: any, event: EventType ) -> None:
-        # no need to implement this function here yet.
-        pass
+        match(event):
+            case EventType.FUNCTIONUPDATE:
+                self.functions.update(eventData)
+            case default:
+                pass
 
     def get_stream(self, name: str) -> DataStream:
         if name in self.data_streams.keys():
