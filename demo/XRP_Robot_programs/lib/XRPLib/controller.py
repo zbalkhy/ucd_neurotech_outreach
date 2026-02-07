@@ -16,7 +16,6 @@ class Controller:
         pass
 
     def is_done(self) -> bool:
-        
         """
         :return: If the controller has reached or  settled at its desired value
         :rtype: bool

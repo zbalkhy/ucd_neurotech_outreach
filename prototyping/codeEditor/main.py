@@ -32,68 +32,69 @@ class Editor:
 
         self.editArea = Text(
             root,
-            bg="#1e1e1e",
-            fg="#d4d4d4",
-            insertbackground="#d4d4d4",
-            selectbackground="#264f78",
-            undo=True,
+            background=self.background,
+            foreground=self.normal,
+            insertbackground=self.normal,
+            relief=FLAT,
+            borderwidth=30,
+            font=self.font
         )
-        self.editArea.insert("1.0", "def my_function(t):\n\treturn\n")
-        self.editArea.pack(side=TOP, fill="both", expand=True)
 
-        self.cd = ColorDelegator()
-        self.cd.tagdefs.update(
-            {
-                "COMMENT": {"foreground": "#6a9955"},
-                "KEYWORD": {"foreground": "#569cd6"},
-                "STRING": {"foreground": "#ce9178"},
-                "BUILTIN": {"foreground": "#4ec9b0"},
-                "DEFINITION": {"foreground": "#dcdcaa"},
-            }
-        )
-        Percolator(self.editArea).insertfilter(self.cd)
-        self.editArea.bind("<KeyRelease>", self.on_text_change)
+        # Insert some Standard Text into the Edit Area
+        self.editArea.insert('1.0', """def my_function(t):
+            return""")
 
-    def get_text(self) -> str:
-        return self.editArea.get("1.0", "end-1c")
+        return
+    
 
+    def _from_rgb(self, rgb):
+        """translates an rgb tuple of int to a tkinter friendly color code"""
+        return "#%02x%02x%02x" % rgb
+    
+    def get_text(self):
+        return self.editArea.get('1.0', END)
+    
     def execute(self):
         exec(self.get_text(), {})
 
-    def save_fcn(self, txt: str) -> dict:
-        fcns = {}
-        tree = ast.parse(txt)
-        for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef):
-                fcns.append({node.name,ast.get_source_segment(txt, node)})
-        return fcns
+    def search_re(self, pattern, text, groupid=0):
+        matches = []
 
-    def on_text_change(self, event=None):
-        if self._parse_job is not None:
-            self.root.after_cancel(self._parse_job)
-        self._parse_job = self.root.after(PARSE_DELAY_MS, lambda: self.check_syntax(self.get_text()))
+        text = text.splitlines()
+        for i, line in enumerate(text):
+            for match in re.finditer(pattern, line):
 
-    def check_syntax(self, src: str):
-        try:
-            ast.parse(src)
-            self.clear_error()
-        except SyntaxError as e:
-            lineno = e.lineno or 1
-            msg = e.msg or "Syntax error"
-            self.show_error(f"Line {lineno}: {msg}")
+                matches.append(
+                    (f"{i + 1}.{match.start()}", f"{i + 1}.{match.end()}")
+                )
 
-    def show_error(self, msg: str):
-        self.error_bar.configure(height=ERROR_HEIGHT)
-        self.errorArea.config(state="normal")
-        self.errorArea.delete("1.0", "end")
-        self.errorArea.insert("1.0", msg)
-        self.errorArea.config(state="disabled")
+        return matches
 
-    def clear_error(self):
-        self.errorArea.config(state="normal")
-        self.errorArea.delete("1.0", "end")
-        self.errorArea.config(state="disabled")
-        self.error_bar.configure(height=0)
+    # Register Changes made to the Editor Content
+    def changes(self, event=None):
+        global previousText
+
+        # If actually no changes have been made stop / return the function
+        if self.get_text() == previousText:
+            return
+        
+        # Remove all tags so they can be redrawn
+        for tag in self.editArea.tag_names():
+            self.editArea.tag_remove(tag, "1.0", "end")
+        
+        # Add tags where the search_re function found the pattern
+        i = 0
+        for pattern, color in self.repl:
+            for start, end in self.search_re(pattern, self.get_text()):
+                self.editArea.tag_add(f'{i}', start, end)
+                self.editArea.tag_config(f'{i}', foreground=color)
+
+                i+=1
+        
+        previousText = self.get_text()
+
+
+
 
 if __name__ == "__main__":
     root = Tk()
