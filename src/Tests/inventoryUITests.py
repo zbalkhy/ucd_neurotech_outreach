@@ -1,10 +1,12 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+import unittest
 from Models.userModel import UserModel
 from ViewModel.inventoryViewModel import InventoryViewModel
-from View.inventoryView import InventoryView 
+from View.inventoryView import InventoryView
 from Stream.softwareStream import SoftwareStream
 from scipy.io import loadmat
+
 
 class App:
     def __init__(self):
@@ -30,10 +32,10 @@ class App:
         # create inventory view model
         self.inventory_view_model = InventoryViewModel(self.user_model)
         # create inventory view
-        self.inventory_view = InventoryView(self.root, self.inventory_view_model)
+        self.inventory_view = InventoryView(
+            self.root, self.inventory_view_model)
         self.root.mainloop()
 
-    
 
 if __name__ == "__main__":
     app = App()

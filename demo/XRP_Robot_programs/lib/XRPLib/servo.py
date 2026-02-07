@@ -1,6 +1,7 @@
 from machine import Pin, PWM
 import sys
 
+
 class Servo:
 
     _DEFAULT_SERVO_ONE_INSTANCE = None
@@ -9,7 +10,7 @@ class Servo:
     _DEFAULT_SERVO_FOUR_INSTANCE = None
 
     @classmethod
-    def get_default_servo(cls, index:int):
+    def get_default_servo(cls, index: int):
         """
         Gets one of the default XRP servo instances. These are singletons, so only one instance of each servo will ever exist.
         Raises an exception if an invalid index is requested.
@@ -37,10 +38,10 @@ class Servo:
             return Exception("Invalid servo index")
         return servo
 
-    def __init__(self, signal_pin: int|str):
+    def __init__(self, signal_pin: int | str):
         """
         A simple class for interacting with a servo through PWM
-        
+
         :param signal_pin: The pin the servo is connected to
         :type signal_pin: int | str
         """
@@ -57,7 +58,8 @@ class Servo:
         :param degrees: The angle to set the servo to [0,200]
         :ptype degrees: float
         """
-        self._servo.duty_ns(int(degrees * self.MICROSEC_PER_DEGREE + self.LOW_ANGLE_OFFSET))
+        self._servo.duty_ns(
+            int(degrees * self.MICROSEC_PER_DEGREE + self.LOW_ANGLE_OFFSET))
 
     def free(self):
         """

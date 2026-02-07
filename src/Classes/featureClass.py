@@ -5,6 +5,7 @@ from common import *
 from typing import Tuple
 from types import FunctionType
 
+
 class FeatureType(Enum):
     DELTA = 1
     THETA = 2
@@ -13,10 +14,11 @@ class FeatureType(Enum):
     GAMMA = 5
     CUSTOM = 6
 
+
 class FeatureClass():
-    def __init__(self, feature_type:FeatureType, 
-                 custom_name: str=None, 
-                 custom_function: FunctionType=None):
+    def __init__(self, feature_type: FeatureType,
+                 custom_name: str = None,
+                 custom_function: FunctionType = None):
         self.type = feature_type
         self.custom_name = custom_name
         self.custom_function = custom_function
@@ -35,12 +37,12 @@ class FeatureClass():
                 return "Gamma Power"
             case _:
                 return self.custom_name
-    
+
     def get_fft(self, data: ndarray, fs: int) -> Tuple[ndarray, ndarray]:
         freqs = rfftfreq(data.shape[0], 1 / fs)
         psd = abs(rfft(data, axis=0)) ** 2
         return psd, freqs
-    
+
     def apply(self, data: ndarray, fs: int) -> ndarray:
         if self.type != FeatureType.CUSTOM:
             psd, freqs = self.get_fft(data, fs)
@@ -60,12 +62,11 @@ class FeatureClass():
             return psd[np.where(idx)].mean(axis=0)
         else:
             try:
-                return self.custom_function(data,fs)
-            except:
-                # need to have some way to bubble up that the function is not valid
+                return self.custom_function(data, fs)
+            except BaseException:
+                # need to have some way to bubble up that the function is not
+                # valid
                 pass
-                
-
 
     def to_dict(self) -> dict:
         return {
