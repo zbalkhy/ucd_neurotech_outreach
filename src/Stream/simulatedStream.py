@@ -1,7 +1,8 @@
 from dataStream import DataStream, StreamType
 from common import QUEUE_LENGTH, resource_path
-from scipy.io import loadmat 
+from scipy.io import loadmat
 from time import sleep
+
 
 class SimulatedStream(DataStream):
     def __init__(
@@ -11,7 +12,10 @@ class SimulatedStream(DataStream):
         queue_length: int = QUEUE_LENGTH,
     ):
         super().__init__(stream_name, stream_type, queue_length)
-        mat = loadmat(resource_path("data.mat"), squeeze_me=True, struct_as_record=False)
+        mat = loadmat(
+            resource_path("data.mat"),
+            squeeze_me=True,
+            struct_as_record=False)
         self.eyesOpen = mat['eyesOpen']
         self.eyesClosed = mat['eyesClosed']
 
