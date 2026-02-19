@@ -1,15 +1,16 @@
+from time import sleep
+from PIL import Image, ImageTk
+import pygame
+import threading
+import tkinter as tk
 import os
 os.environ["SDL_VIDEODRIVER"] = "dummy"  # Headless Pygame
 
-import tkinter as tk
-import threading
-import pygame
-from PIL import Image, ImageTk
-from time import sleep
 
 # --- Pygame Class ---
+
 class Game:
-    def __init__(self,size,fps):
+    def __init__(self, size, fps):
         self.width = size[0]
         self.height = size[1]
         self.fps = fps
@@ -57,11 +58,13 @@ class Game:
         self.screen.fill("black")
         pygame.draw.circle(self.screen, "orange", self.pos, 16)
 
-        fps = round(min(10000,self.clock.get_fps()))
+        fps = round(min(10000, self.clock.get_fps()))
         fps_text = self.font.render(f"FPS: {fps}", True, "white")
         self.screen.blit(fps_text, (10, 10))
 
 # --- Tkinter App Class ---
+
+
 class App:
     def __init__(self, game, width=500, height=500):
         self.game = game
@@ -71,7 +74,8 @@ class App:
         self.root.geometry(f"{width}x{height}")
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        self.title_label = tk.Label(self.root, text="Bouncing Ball", font=("Arial", 16, "bold"))
+        self.title_label = tk.Label(
+            self.root, text="Bouncing Ball", font=("Arial", 16, "bold"))
         self.title_label.pack(pady=10)
 
         self.label = tk.Label(self.root)
@@ -79,7 +83,7 @@ class App:
 
         self.pos_label = tk.Label(self.root, text="", font=("Arial", 12))
         self.pos_label.pack(pady=5)
-        
+
         self.update_label()
         self.root.mainloop()
 
@@ -89,20 +93,23 @@ class App:
 
     def update_label(self):
         raw_data = pygame.image.tobytes(self.game.screen, "RGB")
-        image = Image.frombytes("RGB", pygame.display.get_window_size(), raw_data)
+        image = Image.frombytes(
+            "RGB", pygame.display.get_window_size(), raw_data)
         image_tk = ImageTk.PhotoImage(image)
 
         self.label.config(image=image_tk)
-        self.label.image = image_tk 
+        self.label.image = image_tk
 
-        self.pos_label.config(text=f"Ball position: ({int(self.game.pos.x)}, {int(self.game.pos.y)})")
+        self.pos_label.config(
+            text=f"Ball position: ({int(self.game.pos.x)}, {int(self.game.pos.y)})")
 
         # Schedule next update
         self.root.after(1, self.update_label)
 
+
 # --- Main ---
 if __name__ == "__main__":
-    game = Game(size=(400,400), fps=60)
+    game = Game(size=(400, 400), fps=60)
     game.start()  # Run Pygame in its own thread
     sleep(1)
     app = App(game, width=500, height=500)

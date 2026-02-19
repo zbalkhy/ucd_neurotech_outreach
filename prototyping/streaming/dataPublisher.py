@@ -6,6 +6,7 @@ from scipy import interpolate
 from random import random as rand
 from pylsl import StreamInfo, StreamOutlet, local_clock
 
+
 class DataPublisher:
     def __init__(self):
         self.sampleRate = 250
@@ -17,7 +18,7 @@ class DataPublisher:
 
     def interp(self, x):
         t_temp = self.t[x.index[~x.isnull()]]
-        x = x[x.index[ ~x.isnull()]]
+        x = x[x.index[~x.isnull()]]
         clf = interpolate.interp1d(t_temp, x, kind='cubic')
         return clf(self.t)
 
@@ -25,9 +26,9 @@ class DataPublisher:
         # this is all very hand wavy for now.
         # because of that we are heavily preprocessing the data
         df = pd.read_csv(fileName)
-        fs = df.shape[0]/117
+        fs = df.shape[0] / 117
         self.sampleRate = fs
-        self.t = np.arange(0, len(df) * 1 / fs, 1/fs)
+        self.t = np.arange(0, len(df) * 1 / fs, 1 / fs)
 
         # Data comes in channel and eye state, separate the state out
         Y = df['class']
@@ -35,11 +36,12 @@ class DataPublisher:
 
         # Find outliers and put Nan instead
         X = X.apply(stats.zscore, axis=0)
-        X = X.applymap(lambda x: np.nan if (abs(x) > 4) else x )
+        X = X.applymap(lambda x: np.nan if (abs(x) > 4) else x)
 
-        # recalculate outliers ignoring nans since the first calculation was biased with the huge outliers!
+        # recalculate outliers ignoring nans since the first calculation was
+        # biased with the huge outliers!
         X = X.apply(stats.zscore, nan_policy='omit', axis=0)
-        X = X.applymap(lambda x: np.nan if (abs(x) > 4) else x )
+        X = X.applymap(lambda x: np.nan if (abs(x) > 4) else x)
 
         # interpolate the nans using cubic spline method
         X_interp = X.apply(self.interp, axis=0)
@@ -59,7 +61,8 @@ class DataPublisher:
         # last value would be the serial number of the device or some other more or
         # less locally unique identifier for the stream as far as available (you
         # could also omit it but interrupted connections wouldn't auto-recover)
-        info = StreamInfo(name, type, n_channels, srate, 'float32', 'myuid34234')
+        info = StreamInfo(name, type, n_channels, srate,
+                          'float32', 'myuid34234')
 
         # next make an outlet
         outlet = StreamOutlet(info)
@@ -81,7 +84,7 @@ class DataPublisher:
                     self.dataIndex = 0
             sent_samples += required_samples
             # now send it and wait for a bit before trying again.
-            time.sleep(1/self.sampleRate)
+            time.sleep(1 / self.sampleRate)
 
 
 if __name__ == '__main__':

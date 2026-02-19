@@ -5,6 +5,7 @@ from .controller import Controller
 from .pid import PID
 import sys
 
+
 class EncodedMotor:
 
     ZERO_EFFORT_BREAK = True
@@ -16,7 +17,7 @@ class EncodedMotor:
     _DEFAULT_MOTOR_FOUR_INSTANCE = None
 
     @classmethod
-    def get_default_encoded_motor(cls, index:int = 1):
+    def get_default_encoded_motor(cls, index: int = 1):
         """
         Get one of the default XRP motor instances. These are singletons, so only one instance of each of these will ever exist.
         Raises an exception if an invalid index is requested.
@@ -24,7 +25,7 @@ class EncodedMotor:
         :param index: The index of the motor to get; 1 for left, 2 for right, 3 for motor 3, 4 for motor 4
         :type index: int
         """
-        
+
         if "RP2350" in sys.implementation._machine:
             MotorImplementation = DualPWMMotor
         else:
@@ -33,7 +34,8 @@ class EncodedMotor:
         if index == 1:
             if cls._DEFAULT_LEFT_MOTOR_INSTANCE is None:
                 cls._DEFAULT_LEFT_MOTOR_INSTANCE = cls(
-                    MotorImplementation("MOTOR_L_IN_1", "MOTOR_L_IN_2", flip_dir=True),
+                    MotorImplementation(
+                        "MOTOR_L_IN_1", "MOTOR_L_IN_2", flip_dir=True),
                     Encoder(0, "MOTOR_L_ENCODER_A", "MOTOR_L_ENCODER_B")
                 )
             motor = cls._DEFAULT_LEFT_MOTOR_INSTANCE
@@ -47,7 +49,8 @@ class EncodedMotor:
         elif index == 3:
             if cls._DEFAULT_MOTOR_THREE_INSTANCE is None:
                 cls._DEFAULT_MOTOR_THREE_INSTANCE = cls(
-                    MotorImplementation("MOTOR_3_IN_1", "MOTOR_3_IN_2", flip_dir=True),
+                    MotorImplementation(
+                        "MOTOR_3_IN_1", "MOTOR_3_IN_2", flip_dir=True),
                     Encoder(2, "MOTOR_3_ENCODER_A", "MOTOR_3_ENCODER_B")
                 )
             motor = cls._DEFAULT_MOTOR_THREE_INSTANCE
@@ -61,9 +64,9 @@ class EncodedMotor:
         else:
             return Exception("Invalid motor index")
         return motor
-    
+
     def __init__(self, motor, encoder: Encoder):
-        
+
         self._motor = motor
         self._encoder = encoder
 
@@ -79,11 +82,11 @@ class EncodedMotor:
         self.speedController = self.DEFAULT_SPEED_CONTROLLER
         self.prev_position = 0
         self.speed = 0
-        # Use a virtual timer so we can leave the hardware timers up for the user
+        # Use a virtual timer so we can leave the hardware timers up for the
+        # user
         self.updateTimer = Timer(-1)
         # If the update timer is not running, start it at 50 Hz (20ms updates)
-        self.updateTimer.init(period=20, callback=lambda t:self._update())
-
+        self.updateTimer.init(period=20, callback=lambda t: self._update())
 
     def set_effort(self, effort: float):
         """
@@ -94,7 +97,7 @@ class EncodedMotor:
             self.brake()
         else:
             self._motor.set_effort(effort)
-    
+
     # EncodedMotor.set_zero_effort_behavior(EncodedMotor.ZERO_POWER_BRAKE)
     def set_zero_effort_behavior(self, brake_at_zero_effort):
         """
@@ -108,7 +111,7 @@ class EncodedMotor:
         """
         Causes the motor to resist rotation.
         """
-        # Exact impl of brake depends on which board is being used. 
+        # Exact impl of brake depends on which board is being used.
         self._motor.brake()
 
     def coast(self):
@@ -126,8 +129,8 @@ class EncodedMotor:
             invert = -1
         else:
             invert = 1
-        return self._encoder.get_position()*invert
-    
+        return self._encoder.get_position() * invert
+
     def get_position_counts(self) -> int:
         """
         :return: The position of the encoded motor, in encoder counts, relative to the last time reset was called.
@@ -137,7 +140,7 @@ class EncodedMotor:
             invert = -1
         else:
             invert = 1
-        return self._encoder.get_position_counts()*invert
+        return self._encoder.get_position_counts() * invert
 
     def reset_encoder_position(self):
         """
@@ -151,7 +154,7 @@ class EncodedMotor:
         :rtype: float
         """
         # Convert from counts per 20ms to rpm (60 sec/min, 50 Hz)
-        return self.speed*(60*50)/self._encoder.resolution
+        return self.speed * (60 * 50) / self._encoder.resolution
 
     def set_speed(self, speed_rpm: float = None):
         """
@@ -166,7 +169,7 @@ class EncodedMotor:
             self.set_effort(0)
             return
         # Convert from rev per min to counts per 20ms (60 sec/min, 50 Hz)
-        self.target_speed = speed_rpm*self._encoder.resolution/(60*50)
+        self.target_speed = speed_rpm * self._encoder.resolution / (60 * 50)
 
     def set_speed_controller(self, new_controller: Controller):
         """

@@ -10,7 +10,7 @@ class LslStream(DataStream):
         self.stream = stream
         self.fs = fs
         super().__init__(stream_name, stream_type, queue_length)
-    
+
     def _stream(self) -> None:
         try:
             # create a new inlet to read from the stream
@@ -20,14 +20,15 @@ class LslStream(DataStream):
                 # interested in it)
                 sample, timestamp = inlet.pull_sample()
 
-                # add time correction to get system local time, and append timestamp to data
-                timestamp =  timestamp + inlet.time_correction()
+                # add time correction to get system local time, and append
+                # timestamp to data
+                timestamp = timestamp + inlet.time_correction()
                 if sample:
                     sample.append(timestamp)
                     try:
                         self.data.append(sample[0])
-                    except:
+                    except BaseException:
                         pass
-                    
+
         except Exception as e:
             print(e)

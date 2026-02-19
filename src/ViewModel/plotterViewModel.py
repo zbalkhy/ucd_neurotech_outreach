@@ -5,18 +5,16 @@ from Stream.dataStream import DataStream, StreamType
 
 
 class PlotterViewModel(EventClass):
-    def __init__(self, user_model: UserModel):
+    def __init__(self, user_model: UserModel, session_id: int = 0):
         super().__init__()
         self._stream_version = 0
         self.selected_sources = []  # list[(stream_idx, channel_idx)]
         self.max_visible_channels = 4
-
+        self.session_id = session_id
 
         self.user_model = user_model
         self.continue_plotting = True
         self.simulated = False
-        
-
         self.subscribe_to_subject(self.user_model)
 
         # --- Get available streams ---
@@ -24,19 +22,24 @@ class PlotterViewModel(EventClass):
             # Simulated 4 "streams" with different frequencies
             types = [StreamType.FILTER, StreamType.DEVICE, StreamType.SOFTWARE]
             self.streams = [
-                DataStream(stream_name=f"SimStream{i+1}", stream_type=types[i % len(types)])
+                DataStream(
+                    stream_name=f"SimStream{i + 1}", stream_type=types[i % len(types)])
                 for i in range(4)
             ]
         else:
-            self.streams = [s for s in self.user_model.get_streams() if s.stream_type in [StreamType.FILTER, StreamType.DEVICE, StreamType.SOFTWARE]]
-        
+            self.streams = [
+                s for s in self.user_model.get_streams() if s.stream_type in [
+                    StreamType.FILTER,
+                    StreamType.DEVICE,
+                    StreamType.SOFTWARE]]
+
         # Track user-defined names separately
         self.custom_names = {}
 
         self.stream_names = [self._get_display_name(s) for s in self.streams]
         self.current_stream_index = 0
 
-        # EEG frequency bands 
+        # EEG frequency bands
         self.bands = {
             "delta (0.5–4 Hz)": (0.5, 4),
             "theta (4–8 Hz)": (4, 8),
@@ -53,17 +56,77 @@ class PlotterViewModel(EventClass):
             "gamma (30–45 Hz)": True,
         }
 
-        
         self.show_amplitude = True
         self.show_power = True
         self.show_bands = True
 
-        
         self.labels = {
-            "amplitude": {"title": "Amplitude vs Time", "xlabel": "Time (s)", "ylabel": "Amplitude (µV)"},
-            "power": {"title": "Power Spectrum", "xlabel": "Frequency (Hz)", "ylabel": "Power"},
-            "bands": {"title": "Band Power", "xlabel": "Band", "ylabel": "Power"},
-        }  
+            "amplitude": {
+                "title": "Amplitude vs Time",
+                "xlabel": "Time (s)",
+                "ylabel": "Amplitude (µV)"},
+            "power": {
+                "title": "Power Spectrum",
+                "xlabel": "Frequency (Hz)",
+                "ylabel": "Power"},
+            "bands": {
+                "title": "Band Power",
+                "xlabel": "Band",
+                "ylabel": "Power"},
+        }
+
+        self._configure_session()
+
+    def _configure_session(self):
+        """
+        Configure feature availability based on session_id
+        """
+
+        # ---- DEFAULT (full-feature mode) ----
+        self.max_visible_channels = 4
+
+        self.allow_amplitude_plot = True
+        self.allow_power_plot = True
+        self.allow_band_plot = True
+
+        self.allow_amp_settings = True
+        self.allow_power_settings = True
+        self.allow_band_settings = True
+
+        # ---- SESSION 1 ----
+        if self.session_id == 1:
+            self.max_visible_channels = 1
+
+            self.allow_amplitude_plot = False
+            self.allow_power_plot = False
+            self.allow_band_plot = True
+
+            self.allow_amp_settings = False
+            self.allow_power_settings = False
+            self.allow_band_settings = False
+
+            self.show_power = False
+            self.show_bands = True
+            self.show_amplitude = False
+
+            # Alpha only
+            self.bands = {"Sorcery (8–13 Unicorns)": (8, 13)}
+            self.band_visibility = {"Sorcery (8–13 Unicorns)": True}
+
+            self.labels = {
+                "bands": {
+                    "title": "Cool Magic",
+                    "xlabel": "Dragon Flames",
+                    "ylabel": "Phoenix Tears"},
+            }
+
+    def get_band_button_labels(self):
+        """
+        Returns (hide_text, show_text) for the band toggle button
+        """
+        if self.session_id == 1:
+            return "Hide Magic", "Show Magic"
+        return "Hide Band", "Show Band"
 
     def set_selected_sources(self, sources):
         """
@@ -114,7 +177,6 @@ class PlotterViewModel(EventClass):
 
         return data
 
-
     def _get_display_name(self, stream):
         """Return user-customized name if available, else inherent name."""
         inherent = getattr(stream, "stream_name", None) or "UnnamedStream"
@@ -132,11 +194,13 @@ class PlotterViewModel(EventClass):
                 continue
             current_display = self.custom_names.get(inherent, inherent)
             if current_display == display_name:
-                # set new custom name 
+                # set new custom name
                 self.custom_names[inherent] = new_name
                 # refresh stream_names and notify UI
-                self.stream_names = [self._get_display_name(s) for s in self.streams]
-                self.notify_subscribers(EventType.STREAMLISTUPDATE, self.stream_names)
+                self.stream_names = [
+                    self._get_display_name(s) for s in self.streams]
+                self.notify_subscribers(
+                    EventType.STREAMLISTUPDATE, self.stream_names)
                 return True
         return False
 
@@ -144,7 +208,7 @@ class PlotterViewModel(EventClass):
         """Delete a stream (simulated or real) by its display name."""
         inherent_name = self.get_inherent_name(display_name) or display_name
 
-        #  Find and remove stream 
+        #  Find and remove stream
         target = None
         for s in list(self.streams):
             if getattr(s, "stream_name", None) == inherent_name:
@@ -161,7 +225,8 @@ class PlotterViewModel(EventClass):
             if target.is_alive():
                 target.join(timeout=0.5)
         except Exception as e:
-            print(f"[PlotterViewModel] Warning stopping stream {inherent_name}: {e}")
+            print(
+                f"[PlotterViewModel] Warning stopping stream {inherent_name}: {e}")
 
         # Remove from internal list
         self.streams.remove(target)
@@ -175,11 +240,14 @@ class PlotterViewModel(EventClass):
             try:
                 if hasattr(self.user_model, "remove_stream_by_name"):
                     self.user_model.remove_stream_by_name(inherent_name)
-                    print(f"[PlotterViewModel] Removed '{inherent_name}' from user_model.")
+                    print(
+                        f"[PlotterViewModel] Removed '{inherent_name}' from user_model.")
                 else:
-                    print("[PlotterViewModel] WARNING: user_model missing remove_stream_by_name()")
+                    print(
+                        "[PlotterViewModel] WARNING: user_model missing remove_stream_by_name()")
             except Exception as e:
-                print(f"[PlotterViewModel] Error removing from user_model: {e}")
+                print(
+                    f"[PlotterViewModel] Error removing from user_model: {e}")
 
         # --- Refresh internal state and notify UI ---
         self.stream_names = [self._get_display_name(s) for s in self.streams]
@@ -194,14 +262,14 @@ class PlotterViewModel(EventClass):
             self.notify_subscribers(EventType.CLEARALLPLOTS, None)
 
         return True
-        
 
     def refresh_stream_list(self):
         if not self.simulated:
             self.streams = [
-                s for s in self.user_model.get_streams()
-                if s.stream_type in [StreamType.FILTER, StreamType.DEVICE, StreamType.SOFTWARE]
-            ]
+                s for s in self.user_model.get_streams() if s.stream_type in [
+                    StreamType.FILTER,
+                    StreamType.DEVICE,
+                    StreamType.SOFTWARE]]
         self.stream_names = [self._get_display_name(s) for s in self.streams]
         return self.stream_names
 
@@ -214,7 +282,6 @@ class PlotterViewModel(EventClass):
         self.continue_plotting = not self.continue_plotting
         return self.continue_plotting
 
-    
     def change_stream(self, selection):
         if selection in self.stream_names:
             self.current_stream_index = self.stream_names.index(selection)
@@ -222,12 +289,15 @@ class PlotterViewModel(EventClass):
             return True
         return False
 
-
     def toggle_amplitude(self):
+        if not self.allow_amplitude_plot:
+            return False
         self.show_amplitude = not self.show_amplitude
         return self.show_amplitude
 
     def toggle_power_spectrum(self):
+        if not self.allow_power_plot:
+            return False
         self.show_power = not self.show_power
         return self.show_power
 
@@ -236,11 +306,16 @@ class PlotterViewModel(EventClass):
         return self.show_bands
 
     def set_band_visibility(self, band_name: str, visible: bool):
+        if not self.allow_band_settings:
+            return
         if band_name in self.band_visibility:
             self.band_visibility[band_name] = visible
 
     def get_band_visibility(self):
         return dict(self.band_visibility)
+
+    def any_band_visible(self):
+        return any(self.band_visibility.values())
 
     def update_labels(self, graph_type, title, xlabel, ylabel):
         if graph_type in self.labels:
@@ -303,6 +378,9 @@ class PlotterViewModel(EventClass):
             if self.band_visibility.get(band, True)
         ]
 
+        # If no bands are visible, disable band plot entirely
+        show_bands = self.show_bands and len(visible_bands) > 0
+
         for band, (low, high) in visible_bands:
             band_labels.append(band)
             values = []
@@ -322,6 +400,9 @@ class PlotterViewModel(EventClass):
             band_powers.append(values)
 
         band_powers = np.array(band_powers).T
+        n_subplots = int(self.show_amplitude) + \
+            int(self.show_power) + \
+            int(show_bands)
 
         return {
             "has_data": True,
@@ -333,7 +414,7 @@ class PlotterViewModel(EventClass):
 
             # Frequency-domain
             "psds": psds,
-            "freqs_list": freqs_list,  
+            "freqs_list": freqs_list,
 
             # Band power
             "band_labels": band_labels,
@@ -341,19 +422,16 @@ class PlotterViewModel(EventClass):
 
             # Plot config
             "n_channels": len(signals),
-            "n_subplots": int(self.show_amplitude)
-                        + int(self.show_power)
-                        + int(self.show_bands),
+            "n_subplots": n_subplots,
             "labels": self.labels,
             "show_amplitude": self.show_amplitude,
             "show_power": self.show_power,
-            "show_bands": self.show_bands,
+            "show_bands": show_bands,
         }
-
 
     def _generate_simulated_data_for_index(self, stream_idx):
         fs = 250
-        t = np.linspace(0, 2, 2*fs, endpoint=False)
+        t = np.linspace(0, 2, 2 * fs, endpoint=False)
 
         if stream_idx >= len(self.streams):
             return None
@@ -378,7 +456,6 @@ class PlotterViewModel(EventClass):
 
         return channels  # Return full multi-channel array
 
-        
     def _get_real_data(self):
         if not self.streams or self.current_stream_index >= len(self.streams):
             print("No streams or invalid index")
@@ -394,8 +471,6 @@ class PlotterViewModel(EventClass):
         data = np.asarray(raw)
         return data
 
-    
-
     def should_continue_plotting(self):
         return self.continue_plotting
 
@@ -408,9 +483,10 @@ class PlotterViewModel(EventClass):
     def get_current_stream_name(self):
         """Return the display name for the currently selected stream index."""
         if 0 <= self.current_stream_index < len(self.streams):
-            return self._get_display_name(self.streams[self.current_stream_index])
+            return self._get_display_name(
+                self.streams[self.current_stream_index])
         return ""
-    
+
     def get_inherent_name(self, display_name):
         """Given a display name (possibly user-customized), return the inherent streamname."""
         for stream in self.streams:

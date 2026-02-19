@@ -6,27 +6,33 @@ from .timeout import Timeout
 import time
 import math
 
+
 class DifferentialDrive:
 
-    _DEFAULT_DIFFERENTIAL_DRIVE_INSTANCE =None
+    _DEFAULT_DIFFERENTIAL_DRIVE_INSTANCE = None
 
     @classmethod
     def get_default_differential_drive(cls):
-
         """
         Get the default XRP differential drive instance. This is a singleton, so only one instance of the drivetrain will ever exist.
         """
 
         if cls._DEFAULT_DIFFERENTIAL_DRIVE_INSTANCE is None:
             cls._DEFAULT_DIFFERENTIAL_DRIVE_INSTANCE = cls(
-            EncodedMotor.get_default_encoded_motor(index=1),
-            EncodedMotor.get_default_encoded_motor(index=2),
-            IMU.get_default_imu()
-        )
-            
+                EncodedMotor.get_default_encoded_motor(index=1),
+                EncodedMotor.get_default_encoded_motor(index=2),
+                IMU.get_default_imu()
+            )
+
         return cls._DEFAULT_DIFFERENTIAL_DRIVE_INSTANCE
 
-    def __init__(self, left_motor: EncodedMotor, right_motor: EncodedMotor, imu: IMU = None, wheel_diam:float = 6.0, wheel_track:float = 15.5):
+    def __init__(
+            self,
+            left_motor: EncodedMotor,
+            right_motor: EncodedMotor,
+            imu: IMU = None,
+            wheel_diam: float = 6.0,
+            wheel_track: float = 15.5):
         """
         A Differential Drive class designed for the XRP two-wheeled drive robot.
 
@@ -41,7 +47,7 @@ class DifferentialDrive:
         :param wheelTrack: The distance between the wheels in inches. Defaults to 15.5 cm.
         :type wheelTrack: float
         """
-        
+
         self.left_motor = left_motor
         self.right_motor = right_motor
         self.imu = imu
@@ -74,11 +80,10 @@ class DifferentialDrive:
         """
         # Convert from cm/s to RPM
         cmpsToRPM = 60 / (math.pi * self.wheel_diam)
-        self.left_motor.set_speed(left_speed*cmpsToRPM)
-        self.right_motor.set_speed(right_speed*cmpsToRPM)
+        self.left_motor.set_speed(left_speed * cmpsToRPM)
+        self.right_motor.set_speed(right_speed * cmpsToRPM)
 
     def set_zero_effort_behavior(self, brake_at_zero_effort):
-
         """
         Sets the behavior of both motor at 0 effort to either brake (hold position) or coast (free spin)
         :param brake_at_zero_effort: Whether or not to brake at 0 effort. Can use EncodedMotor.ZERO_EFFORT_BREAK or EncodedMotor.ZERO_EFFORT_COAST for clarity.
@@ -93,9 +98,9 @@ class DifferentialDrive:
         """
         self.left_motor.set_speed()
         self.right_motor.set_speed()
-        self.set_effort(0,0)
+        self.set_effort(0, 0)
 
-    def arcade(self, straight:float, turn:float):
+    def arcade(self, straight: float, turn: float):
         """
         Sets the raw effort of both motors based on the arcade drive scheme
 
@@ -107,9 +112,9 @@ class DifferentialDrive:
         if straight == 0 and turn == 0:
             self.set_effort(0, 0)
         else:
-            scale = max(abs(straight), abs(turn))/(abs(straight) + abs(turn))
-            left_speed = (straight - turn)*scale
-            right_speed = (straight + turn)*scale
+            scale = max(abs(straight), abs(turn)) / (abs(straight) + abs(turn))
+            left_speed = (straight - turn) * scale
+            right_speed = (straight + turn) * scale
             self.set_effort(left_speed, right_speed)
 
     def reset_encoder_position(self) -> None:
@@ -125,17 +130,22 @@ class DifferentialDrive:
         :return: the current position of the left motor's encoder in cm.
         :rtype: float
         """
-        return self.left_motor.get_position()*math.pi*self.wheel_diam
+        return self.left_motor.get_position() * math.pi * self.wheel_diam
 
     def get_right_encoder_position(self) -> float:
         """
         :return: the current position of the right motor's encoder in cm.
         :rtype: float
         """
-        return self.right_motor.get_position()*math.pi*self.wheel_diam
+        return self.right_motor.get_position() * math.pi * self.wheel_diam
 
-
-    def straight(self, distance: float, max_effort: float = 0.5, timeout: float = None, main_controller: Controller = None, secondary_controller: Controller = None) -> bool:
+    def straight(
+            self,
+            distance: float,
+            max_effort: float = 0.5,
+            timeout: float = None,
+            main_controller: Controller = None,
+            secondary_controller: Controller = None) -> bool:
         """
         Go forward the specified distance in centimeters, and exit function when distance has been reached.
         Max_effort is bounded from -1 (reverse at full speed) to 1 (forward at full speed)
@@ -153,7 +163,8 @@ class DifferentialDrive:
         :return: if the distance was reached before the timeout
         :rtype: bool
         """
-        # ensure effort is always positive while distance could be either positive or negative
+        # ensure effort is always positive while distance could be either
+        # positive or negative
         if max_effort < 0:
             max_effort *= -1
             distance *= -1
@@ -162,23 +173,22 @@ class DifferentialDrive:
         starting_left = self.get_left_encoder_position()
         starting_right = self.get_right_encoder_position()
 
-
         if main_controller is None:
             main_controller = PID(
-                kp = 0.1,
-                ki = 0.04,
-                kd = 0.04,
-                min_output = 0.3,
-                max_output = max_effort,
-                max_integral = 10,
-                tolerance = 0.25,
-                tolerance_count = 3,
+                kp=0.1,
+                ki=0.04,
+                kd=0.04,
+                min_output=0.3,
+                max_output=max_effort,
+                max_integral=10,
+                tolerance=0.25,
+                tolerance_count=3,
             )
 
         # Secondary controller to keep encoder values in sync
         if secondary_controller is None:
             secondary_controller = PID(
-                kp = 0.075, kd=0.001,
+                kp=0.075, kd=0.001,
             )
 
         if self.imu is not None:
@@ -197,7 +207,7 @@ class DifferentialDrive:
             # PID for distance
             distance_error = distance - dist_traveled
             effort = main_controller.update(distance_error)
-            
+
             if main_controller.is_done() or time_out.is_done():
                 break
 
@@ -206,11 +216,14 @@ class DifferentialDrive:
                 # record current heading to maintain it
                 current_heading = self.imu.get_yaw()
             else:
-                current_heading = ((right_delta-left_delta)/2)*360/(self.track_width*math.pi)
+                current_heading = ((right_delta - left_delta) / 2) * \
+                    360 / (self.track_width * math.pi)
 
-            headingCorrection = secondary_controller.update(initial_heading - current_heading)
-            
-            self.set_effort(effort - headingCorrection, effort + headingCorrection)
+            headingCorrection = secondary_controller.update(
+                initial_heading - current_heading)
+
+            self.set_effort(effort - headingCorrection,
+                            effort + headingCorrection)
 
             time.sleep(0.01)
 
@@ -218,8 +231,14 @@ class DifferentialDrive:
 
         return not time_out.is_done()
 
-
-    def turn(self, turn_degrees: float, max_effort: float = 0.5, timeout: float = None, main_controller: Controller = None, secondary_controller: Controller = None, use_imu:bool = True) -> bool:
+    def turn(
+            self,
+            turn_degrees: float,
+            max_effort: float = 0.5,
+            timeout: float = None,
+            main_controller: Controller = None,
+            secondary_controller: Controller = None,
+            use_imu: bool = True) -> bool:
         """
         Turn the robot some relative heading given in turnDegrees, and exit function when the robot has reached that heading.
         effort is bounded from -1 (turn counterclockwise the relative heading at full speed) to 1 (turn clockwise the relative heading at full speed)
@@ -254,39 +273,41 @@ class DifferentialDrive:
                 # kp = 0.2,
                 # ki = 0.004,
                 # kd = 0.0036,
-                kd = 0.0036 + 0.0034 * (max(max_effort, 0.5) - 0.5) * 2,
-                kp = 0.2,
-                ki = 0.004,
-                #kd = 0.007,
-                min_output = 0.1,
-                max_output = max_effort,
-                max_integral = 30,
-                tolerance = 1,
-                tolerance_count = 3
+                kd=0.0036 + 0.0034 * (max(max_effort, 0.5) - 0.5) * 2,
+                kp=0.2,
+                ki=0.004,
+                # kd = 0.007,
+                min_output=0.1,
+                max_output=max_effort,
+                max_integral=30,
+                tolerance=1,
+                tolerance_count=3
             )
 
         # Secondary controller to keep encoder values in sync
         if secondary_controller is None:
             secondary_controller = PID(
-                kp = 0.25,
+                kp=0.25,
             )
- 
+
         if use_imu and (self.imu is not None):
             turn_degrees += self.imu.get_yaw()
 
         while True:
-            
+
             # calculate encoder correction to minimize drift
             left_delta = self.get_left_encoder_position() - starting_left
             right_delta = self.get_right_encoder_position() - starting_right
-            encoder_correction = secondary_controller.update(left_delta + right_delta)
+            encoder_correction = secondary_controller.update(
+                left_delta + right_delta)
 
             if use_imu and (self.imu is not None):
                 # calculate turn error (in degrees) from the imu
                 turn_error = turn_degrees - self.imu.get_yaw()
             else:
                 # calculate turn error (in degrees) from the encoder counts
-                turn_error = turn_degrees - ((right_delta-left_delta)/2)*360/(self.track_width*math.pi)
+                turn_error = turn_degrees - \
+                    ((right_delta - left_delta) / 2) * 360 / (self.track_width * math.pi)
 
             # Pass the turn error to the main controller to get a turn speed
             turn_speed = main_controller.update(turn_error)
@@ -295,7 +316,8 @@ class DifferentialDrive:
             if main_controller.is_done() or time_out.is_done():
                 break
 
-            self.set_effort(-turn_speed - encoder_correction, turn_speed - encoder_correction)
+            self.set_effort(-turn_speed - encoder_correction,
+                            turn_speed - encoder_correction)
 
             time.sleep(0.01)
 
