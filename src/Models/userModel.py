@@ -92,6 +92,7 @@ class UserModel(EventClass):
     def delete_dataset(self, name: str) -> bool:
         if name in self.data_sets.keys():
             del self.data_sets[name]
+            del self.label_sets[name]
             self.notify(None, EventType.DATASETUPDATE)
             return True
         else:
@@ -127,7 +128,10 @@ class UserModel(EventClass):
             return False
 
         data_set = self.data_sets.pop(old_name)
+        label_set = self.label_sets.pop(old_name)
+
         self.data_sets[new_name] = data_set
+        self.label_sets[new_name] = label_set
 
         print(f"[UserModel] Renamed dataset {old_name} to {new_name}")
         self.notify(None, EventType.DATASETUPDATE)
@@ -135,6 +139,9 @@ class UserModel(EventClass):
     
     def get_datasets(self) -> dict[str, ndarray]:
         return self.data_sets
+    
+    def get_labelsets(self) -> dict[str, ndarray]:
+        return self.label_sets
     
     def get_features(self) -> dict[str, FeatureClass]:
         return self.features

@@ -53,7 +53,7 @@ class dataCollectionView(EventClass):
         self.dataset_name_entry = tk.Entry(self.save_dataset_frame, textvariable = self.dataset_name).pack(expand = True, padx = 10)
 
         #button to save dataset, unlocks the dropdown
-        self.save_dataset_button = tk.Button(self.save_dataset_frame, text = "Save Dataset", width=6, height=1, command = self.save_dataset).pack(pady = 10, padx = 10)
+        self.save_dataset_button = tk.Button(self.save_dataset_frame, text = "Save Dataset", width=15, height=1, command = self.save_dataset).pack(pady = 10, padx = 10)
         
     def start_collection(self) -> None:
         self.view_model.start_collecting()
