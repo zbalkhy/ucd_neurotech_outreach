@@ -10,6 +10,7 @@ class UserModel(EventClass):
         self.data_streams: dict = {}
         self.filters: dict = {}
         self.data_sets: dict[str, ndarray] = {}
+        self.label_sets: dict[str, ndarray] = {}
         self.features: dict[str, FeatureClass] = {}
         self.classifiers: dict[str, Classifier] = {}
         super().__init__()
@@ -103,6 +104,16 @@ class UserModel(EventClass):
     def get_dataset(self, name: str) -> ndarray:
         if name in self.data_sets.keys():
             return self.data_sets[name]
+        else:
+            return None
+        
+    def add_labelset(self, name: str, label_set: ndarray) -> None:
+        self.data_sets[name] = label_set
+        self.notify(None, EventType.DATASETUPDATE)
+        
+    def get_labelset(self, name: str) -> ndarray:
+        if name in self.label_sets.keys():
+            return self.label_sets[name]
         else:
             return None
         
