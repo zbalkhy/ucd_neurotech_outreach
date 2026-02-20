@@ -64,11 +64,14 @@ jobs:
         if: startsWith(runner.os, 'Linux')
         run: |
           xvfb-run -a python -m unittest
+          xvfb-run -a python -m pytest Tests/ --doctest-modules --junitxml=junit/test-results.xml
         working-directory: ./src/
 
       - name: Run all tests (other platforms)
         if: runner.os != 'Linux'
         uses: coactions/setup-xvfb@v1
         with:
-          run: python -m unittest
+          run: |
+              python -m unittest
+              python -m pytest Tests/ --doctest-modules --junitxml=junit/test-results.xml
           working-directory: ./src/
