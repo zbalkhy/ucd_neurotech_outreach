@@ -42,30 +42,21 @@ class PlotterView(EventClass):
     def _setup_canvas(self):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.frame)
         self.canvas.draw()
-        self.canvas.mpl_connect(
-            "key_press_event",
-            lambda event: print(
-                f"you pressed {
-                    event.key}"))
+        self.canvas.mpl_connect("key_press_event", lambda event: print(f"you pressed {event.key}"))
         self.canvas.mpl_connect("key_press_event", key_press_handler)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def _setup_controls(self):
         controls = tk.Frame(self.frame, bd=1, relief=tk.FLAT)
+        TOTAL_COLS = 12
+        for col in range(TOTAL_COLS):
+            controls.grid_columnconfigure(col, weight=1)
         controls.pack(side=tk.BOTTOM, fill=tk.X,
-                      before=self.canvas.get_tk_widget())
-
-        for col in range(6):
-            controls.grid_columnconfigure(col, weight=1, uniform="controls")
-
-        self.button_pause = tk.Button(
-            controls, text="Play/Pause", command=self._on_play_pause)
-        self.button_pause.grid(
-            row=0, column=0, columnspan=6, padx=6, pady=6, sticky="n")
+                      before=self.canvas.get_tk_widget())  
 
         self.channel_frame = tk.LabelFrame(controls, text="Selected Channels")
         self.channel_frame.grid(
-            row=2, column=0, columnspan=6, sticky="ew", padx=6)
+            row=2, column=0, columnspan=12, sticky="ew", padx=6)
         self.channel_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
 
         self.source_selectors = []
@@ -121,71 +112,89 @@ class PlotterView(EventClass):
                 "channel_cb": channel_cb
             })
 
+        # -----------------------
+        # Dynamic Button Layout
+        # -----------------------
+
+        buttons = []
+
         if self.view_model.allow_amplitude_plot:
             self.toggle_amplitude = tk.Button(
                 controls, text="Hide Amp", command=self._on_toggle_amp)
-            self.toggle_amplitude.grid(
-                row=1, column=0, padx=6, pady=6, sticky="ew")
+            buttons.append(self.toggle_amplitude)
 
         if self.view_model.allow_amp_settings:
             self.amp_settings = tk.Button(
                 controls,
                 text="Amp Settings",
                 command=lambda: self._open_settings("amplitude"))
-            self.amp_settings.grid(
-                row=1, column=1, padx=6, pady=6, sticky="ew")
+            buttons.append(self.amp_settings)
 
         if self.view_model.allow_power_plot:
             self.toggle_power = tk.Button(
                 controls,
                 text="Hide Power",
                 command=self._on_toggle_power_spectrum)
-            self.toggle_power.grid(
-                row=1, column=2, padx=6, pady=6, sticky="ew")
+            buttons.append(self.toggle_power)
 
         if self.view_model.allow_power_settings:
             self.power_settings = tk.Button(
                 controls,
                 text="Power Settings",
-                width=15,
                 command=lambda: self._open_settings("power"))
-            self.power_settings.grid(
-                row=1, column=3, padx=6, pady=6, sticky="ew")
+            buttons.append(self.power_settings)
 
         if self.view_model.allow_band_settings:
             self.bands_settings = tk.Button(
                 controls,
                 text="Band Settings",
                 command=lambda: self._open_settings("bands"))
-            self.bands_settings.grid(
-                row=1, column=5, padx=6, pady=6, sticky="ew")
+            buttons.append(self.bands_settings)
 
         if self.view_model.allow_band_plot:
             hide_text, _ = self.view_model.get_band_button_labels()
-
             self.toggle_bands = tk.Button(
                 controls,
                 text=hide_text,
                 command=self._on_toggle_band_power
             )
+            buttons.append(self.toggle_bands)
+        # -------- CENTER THEM --------
 
-            if self.view_model.session_id == 1:
-                # Center the button manually for session 1
-                self.toggle_bands.grid(
+        TOTAL_COLS = 12
+        center_col = TOTAL_COLS // 2
+        button_count = len(buttons)
+
+        # ---- Place Play/Pause FIRST (based on count) ----
+        self.button_pause = tk.Button(
+            controls, text="Play/Pause", command=self._on_play_pause)
+
+        if button_count % 2 == 0:
+            self.button_pause.grid(
+                row=0,
+                column=center_col - 1,
+                columnspan=2,
+                padx=6,
+                pady=6
+            )
+        else:
+            self.button_pause.grid(
+                row=0,
+                column=center_col,
+                padx=6,
+                pady=6
+            )
+
+        # ---- Place Dynamic Buttons ----
+        if button_count > 0:
+            start_col = center_col - button_count // 2
+
+            for i, button in enumerate(buttons):
+                button.grid(
                     row=1,
-                    column=2,
-                    columnspan=2,
-                    padx=5,
-                    pady=5,
-                )
-            else:
-                # Default layout for other sessions
-                self.toggle_bands.grid(
-                    row=1,
-                    column=4,
+                    column=start_col + i,
                     padx=6,
-                    pady=6,
-                    sticky="ew"
+                    pady=6
                 )
 
     def _update_channel_choices(self, stream_var, channel_var):

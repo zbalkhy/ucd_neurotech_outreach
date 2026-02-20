@@ -81,6 +81,7 @@ class PlotterViewModel(EventClass):
         """
         Configure feature availability based on session_id
         """
+        
 
         # ---- DEFAULT (full-feature mode) ----
         self.max_visible_channels = 4
@@ -119,6 +120,27 @@ class PlotterViewModel(EventClass):
                     "xlabel": "Dragon Flames",
                     "ylabel": "Phoenix Tears"},
             }
+        
+        # ---- SESSION 2 ----
+        elif self.session_id == 2:
+            self.max_visible_channels = 1
+
+            self.allow_amplitude_plot = True
+            self.allow_power_plot = False
+            self.allow_band_plot = True
+
+            self.allow_amp_settings = True
+            self.allow_power_settings = False
+            
+            self.allow_band_settings = False
+
+            self.show_amplitude = True
+            self.show_power = False
+            self.show_bands = True
+
+            #Only alpha
+            self.bands = {"alpha (8–13 Hz)": (8, 13)}
+            self.band_visibility = {"alpha (8–13 Hz)": True}
 
     def get_band_button_labels(self):
         """
