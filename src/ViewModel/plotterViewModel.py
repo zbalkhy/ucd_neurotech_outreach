@@ -131,14 +131,14 @@ class PlotterViewModel(EventClass):
 
             self.allow_amp_settings = True
             self.allow_power_settings = False
-            #Set to true if all bands needed
+            
             self.allow_band_settings = False
 
             self.show_amplitude = True
             self.show_power = False
             self.show_bands = True
 
-            #Delete if all bands needed
+            #Only alpha
             self.bands = {"alpha (8–13 Hz)": (8, 13)}
             self.band_visibility = {"alpha (8–13 Hz)": True}
 
