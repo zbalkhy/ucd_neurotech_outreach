@@ -33,7 +33,8 @@ from pylsl import StreamInlet, resolve_streams
 # Currently switches between 0 and 1
 # 0 = Default
 # 1 = Plotter UI for Session 1
-SESSION_ID = 1
+# 2 = Plotter UI for Session 2
+SESSION_ID = 2
 
 
 top_grid_names = [[f"Inventory", 'Visualizer']]

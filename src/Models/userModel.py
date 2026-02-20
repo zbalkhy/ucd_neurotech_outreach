@@ -34,9 +34,7 @@ class UserModel(EventClass):
             # stop the stream if it is running
             self.data_streams[stream.stream_name].stop()
             self.data_streams.pop(stream.stream_name)
-            print(
-                f"[UserModel] Stream {
-                    stream.stream_name} already exists. Overwriting.")
+            print(f"[UserModel] Stream {stream.stream_name} already exists. Overwriting.")
 
         self.data_streams[stream.stream_name] = stream
         self.notify(self, EventType.STREAMUPDATE)
