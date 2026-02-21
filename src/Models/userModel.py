@@ -24,7 +24,7 @@ class UserModel(EventClass):
                 self.functions.update(eventData)
                 print(self.functions)
                 self.notify(self.functions, EventType.FUNCTIONUPDATE)
-            case default:
+            case _:
                 pass
 
     def get_stream(self, name: str) -> DataStream:
