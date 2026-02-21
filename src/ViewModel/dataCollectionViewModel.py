@@ -2,6 +2,7 @@ from Models.userModel import UserModel
 from numpy import ndarray
 import numpy as np
 
+
 class dataCollectionViewModel(object):
     def __init__(self, user_model: UserModel):
         self.user_model: UserModel = user_model
@@ -10,11 +11,12 @@ class dataCollectionViewModel(object):
         self.labelset = np.array([])
         self.collecting = False
 
-    #creating new dataset
+    # creating new dataset
     def clear_dataset(self) -> None:
         self.labelset = np.array([])
         self.dataset = np.array([])
 
+<<<<<<< FilterModuleBranch
     def start_collecting(self) -> None:
         self.collecting = True
 
@@ -41,8 +43,26 @@ class dataCollectionViewModel(object):
                 self.dataset = np.stack([self.dataset, data], axis = 0)
                 self.first_trial = False
     
+=======
+    def add_dataset(self, collection_stream: str) -> None:
+        stream = self.user_model.get_stream(collection_stream)
+        data = np.array(list(stream.get_stream_data()))
+        axis = self.dataset.ndim
+        if self.dataset.size == 0:
+            # if dataset is empty, populate
+            self.dataset = data
+            self.first_trial = True
+        elif axis != data.ndim:
+            # add to largest axis
+            self.dataset = np.append(self.dataset, np.array([data]), axis=0)
+        else:
+            # if data set only has one entry, make new axis
+            self.dataset = np.stack([self.dataset, data], axis=0)
+            self.first_trial = False
+
+>>>>>>> main
     def get_trial_number(self) -> int:
-        if self.first_trial == True:
+        if self.first_trial:
             return 1
         else:
             size = self.dataset.shape
@@ -61,5 +81,3 @@ class dataCollectionViewModel(object):
 
     def get_streams(self):
         return self.user_model.get_streams()
-        
-        

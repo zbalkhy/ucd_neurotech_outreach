@@ -22,6 +22,7 @@ webserver.add_button("Servo Down", lambda: servo_one.set_angle(0))
 # webserver.log_data("Dict", {"a":1,"b":2,"c":3})
 # webserver.log_data("Tuple", (1,2,3))
 
+
 def log_time_and_range():
     # This function is called every second to update the data on the webserver
     webserver.log_data("Time", time.time())
@@ -30,8 +31,11 @@ def log_time_and_range():
     webserver.log_data("Right Motor", right_motor.get_position())
     webserver.log_data("Button State", board.is_button_pressed())
 
+
 timer = Timer(-1)
-timer.init(freq=4, mode=Timer.PERIODIC, callback=lambda t: log_time_and_range())
+timer.init(freq=4, mode=Timer.PERIODIC,
+           callback=lambda t: log_time_and_range())
+
 
 def connect_and_start_webserver():
     # Connect to the network and start the webserver in bridge mode
@@ -39,10 +43,12 @@ def connect_and_start_webserver():
     webserver.connect_to_network()
     webserver.start_server()
 
+
 def start_network_and_webserver():
     # Start the webserver in access point mode
     # Network ssid and password are stored in root/secrets.json
     webserver.start_network()
     webserver.start_server()
+
 
 start_network_and_webserver()
