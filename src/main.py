@@ -150,7 +150,6 @@ if __name__ == "__main__":
     actions.add_command(
         label='Open Code Editor',
         command=lambda: open_function_editor(root, user_model))
-    root.config(menu=menubar)
     # create game
     # float_the_orb = FloatTheOrb(frames[1][0], user_context, user_context_lock)
     # float_the_orb.start_pygame()
