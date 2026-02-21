@@ -72,7 +72,7 @@ class FeatureClass():
         return {
             'type': self.type.value,
             'custom_name': self.custom_name,
-            #save custom_function later, when it is implemented
+            # save custom_function later, when it is implemented
         }
 
     @classmethod

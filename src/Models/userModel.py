@@ -12,6 +12,7 @@ class UserModel(EventClass):
         self.data_streams: dict = {}
         self.filters: dict = {}
         self.data_sets: dict[str, ndarray] = {}
+        self.label_sets: dict[str, ndarray] = {}
         self.features: dict[str, FeatureClass] = {}
         self.classifiers: dict[str, Classifier] = {}
         super().__init__()
@@ -35,11 +36,12 @@ class UserModel(EventClass):
             self.data_streams[stream.stream_name].stop()
             self.data_streams.pop(stream.stream_name)
             print(
-                f"[UserModel] Stream {stream.stream_name} already exists. Overwriting.")
+                f"[UserModel] Stream {
+                    stream.stream_name} already exists. Overwriting.")
 
         self.data_streams[stream.stream_name] = stream
         self.notify(self, EventType.STREAMUPDATE)
- 
+
     def rename_stream(self, old_name: str, new_name: str) -> bool:
         """Rename a stream from old_name to new_name."""
         if old_name not in self.data_streams:
@@ -101,6 +103,8 @@ class UserModel(EventClass):
     def delete_dataset(self, name: str) -> bool:
         if name in self.data_sets.keys():
             del self.data_sets[name]
+            del self.label_sets[name]
+            self.notify(None, EventType.DATASETUPDATE)
             self.notify(self, EventType.DATASETUPDATE)
             return True
         else:
@@ -116,6 +120,16 @@ class UserModel(EventClass):
         else:
             return None
 
+    def add_labelset(self, name: str, label_set: ndarray) -> None:
+        self.data_sets[name] = label_set
+        self.notify(None, EventType.DATASETUPDATE)
+
+    def get_labelset(self, name: str) -> ndarray:
+        if name in self.label_sets.keys():
+            return self.label_sets[name]
+        else:
+            return None
+
     def rename_dataset(self, old_name: str, new_name: str) -> bool:
         """Rename a dataset from old_name to new_name."""
         if old_name not in self.data_sets:
@@ -126,7 +140,10 @@ class UserModel(EventClass):
             return False
 
         data_set = self.data_sets.pop(old_name)
+        label_set = self.label_sets.pop(old_name)
+
         self.data_sets[new_name] = data_set
+        self.label_sets[new_name] = label_set
 
         print(f"[UserModel] Renamed dataset {old_name} to {new_name}")
         self.notify(self, EventType.DATASETUPDATE)
@@ -190,7 +207,7 @@ class UserModel(EventClass):
 
     @staticmethod
     def from_dict(data: dict) -> 'UserModel':
-        #restore user state from json dictionary
+        # restore user state from json dictionary
         user_model = UserModel()
         if 'data_streams' in data:
             for k, v in data['data_streams'].items():
@@ -204,9 +221,13 @@ class UserModel(EventClass):
             for k, v in data['data_sets'].items():
                 user_model.data_sets[k] = np.array(v)
 
+        if 'label_sets' in data:
+            for k, v in data['label_sets'].items():
+                user_model.label_sets[k] = np.array(v)
+
         if 'features' in data:
             for k, v in data['features'].items():
-                user_model.features[k] = FeatureClass.from_dict(v)       
+                user_model.features[k] = FeatureClass.from_dict(v)
         if 'classifiers' in data:
             for k, v in data['classifiers'].items():
                 user_model.classifiers[k] = Classifier.from_dict(v)

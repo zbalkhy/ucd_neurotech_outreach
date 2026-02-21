@@ -65,10 +65,9 @@ def open_feature_viewer(root, view_model):
 if __name__ == "__main__":
     print("main app starting")
     # initialize user model
-    save_model =  SaveModel()
-    user_model =  save_model.load() if save_model.save_exists() else UserModel()
+    save_model = SaveModel()
+    user_model = save_model.load() if save_model.save_exists() else UserModel()
     user_model.add_observer(save_model)
-
 
     data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
     user_model.add_stream(data_stream)

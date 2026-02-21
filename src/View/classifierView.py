@@ -76,9 +76,21 @@ class ClassifierView(EventClass):
         self.filter_listbox.grid(row=4, column=1, padx=5, pady=5, sticky="we")
 
         # Existing Classifiers
-        tk.Label(self.grid_frames[0][1], text="Classifiers:").grid(row=5, column=0, padx=5, pady=5, sticky="w")
-        self.classifier_listbox = tk.Listbox(self.grid_frames[0][1], selectmode=SINGLE, exportselection=False, height=5)
-        self.classifier_listbox.grid(row=5, column=1, padx=5, pady=5, sticky="we")
+        tk.Label(
+            self.grid_frames[0][1],
+            text="Classifiers:").grid(
+            row=5,
+            column=0,
+            padx=5,
+            pady=5,
+            sticky="w")
+        self.classifier_listbox = tk.Listbox(
+            self.grid_frames[0][1],
+            selectmode=SINGLE,
+            exportselection=False,
+            height=5)
+        self.classifier_listbox.grid(
+            row=5, column=1, padx=5, pady=5, sticky="we")
 
         # Create classifier button
         self.create_button = tk.Button(
@@ -113,7 +125,7 @@ class ClassifierView(EventClass):
         filters = list(self.view_model.user_model.filters.keys())
         for flt in filters:
             self.filter_listbox.insert(END, flt)
-            
+
         classifiers = list(self.view_model.user_model.get_classifiers().keys())
         for clf in classifiers:
             self.classifier_listbox.insert(END, clf)
@@ -143,5 +155,10 @@ class ClassifierView(EventClass):
     # Events
     # -----------------------
     def on_notify(self, eventData: any, event: EventType):
-        if event in [EventType.DATASETUPDATE, EventType.STREAMUPDATE, EventType.CLASSIFIERUPDATE, EventType.FILTERUPDATE, EventType.FEATUREUPDATE]:
+        if event in [
+                EventType.DATASETUPDATE,
+                EventType.STREAMUPDATE,
+                EventType.CLASSIFIERUPDATE,
+                EventType.FILTERUPDATE,
+                EventType.FEATUREUPDATE]:
             self.refresh_lists()

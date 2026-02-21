@@ -62,7 +62,7 @@ class DataStream():
             return False
         else:
             return True
-   
+
     def to_dict(self) -> dict:
         return {
             'stream_name': self.stream_name,
