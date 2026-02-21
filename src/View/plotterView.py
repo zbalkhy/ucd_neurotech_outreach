@@ -45,14 +45,7 @@ class PlotterView(EventClass):
 
 
 << << << < FilterModuleBranch
-        # sorry Kirtana
-        # commented out for now because it interferes with the data collection
-        # we can get this working later by using the tkinter.focus_set function
-        # I don't think this is in use yet -Andy
 
-        # self.canvas.mpl_connect("key_press_event",
-                                # lambda event: print(f"you pressed {event.key}"))
-        # self.canvas.mpl_connect("key_press_event", key_press_handler)
 == == == =
         self.canvas.mpl_connect(
             "key_press_event",
