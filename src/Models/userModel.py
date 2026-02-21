@@ -104,6 +104,7 @@ class UserModel(EventClass):
             del self.data_sets[name]
             del self.label_sets[name]
             self.notify(None, EventType.DATASETUPDATE)
+            self.notify(self, EventType.DATASETUPDATE)
             return True
         else:
             return False
@@ -117,7 +118,6 @@ class UserModel(EventClass):
             return self.data_sets[name]
         else:
             return None
-<<<<<<< FilterModuleBranch
         
     def add_labelset(self, name: str, label_set: ndarray) -> None:
         self.data_sets[name] = label_set
@@ -129,9 +129,6 @@ class UserModel(EventClass):
         else:
             return None
         
-=======
-
->>>>>>> main
     def rename_dataset(self, old_name: str, new_name: str) -> bool:
         """Rename a dataset from old_name to new_name."""
         if old_name not in self.data_sets:
@@ -153,7 +150,7 @@ class UserModel(EventClass):
 
     def get_datasets(self) -> dict[str, ndarray]:
         return self.data_sets
-    
+
     def get_features(self) -> dict[str, FeatureClass]:
         return self.features
 
@@ -223,6 +220,10 @@ class UserModel(EventClass):
             for k, v in data['data_sets'].items():
                 user_model.data_sets[k] = np.array(v)
 
+        if 'label_sets' in data:
+            for k, v in data['label_sets'].items():
+                user_model.label_sets[k] = np.array(v)
+                
         if 'features' in data:
             for k, v in data['features'].items():
                 user_model.features[k] = FeatureClass.from_dict(v)       
