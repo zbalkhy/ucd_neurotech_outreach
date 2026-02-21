@@ -16,9 +16,7 @@ class dataCollectionViewModel(object):
         self.labelset = np.array([])
         self.dataset = np.array([])
 
-
-<< << << < FilterModuleBranch
-   def start_collecting(self) -> None:
+    def start_collecting(self) -> None:
         self.collecting = True
 
     def get_unique_labels(self) -> list:
@@ -43,9 +41,7 @@ class dataCollectionViewModel(object):
                 # if data set only has one entry, make new axis
                 self.dataset = np.stack([self.dataset, data], axis= 0)
                 self.first_trial = False
-
-== =====
-   def add_dataset(self, collection_stream: str) -> None:
+    def add_dataset(self, collection_stream: str) -> None:
         stream = self.user_model.get_stream(collection_stream)
         data = np.array(list(stream.get_stream_data()))
         axis = self.dataset.ndim
@@ -61,14 +57,13 @@ class dataCollectionViewModel(object):
             self.dataset = np.stack([self.dataset, data], axis=0)
             self.first_trial = False
 
->>>>>> > main
-   def get_trial_number(self) -> int:
+    def get_trial_number(self) -> int:
         if self.first_trial:
             return 1
         else:
             size = self.dataset.shape
             return size[0]
-
+        
     def save_dataset(self, name: str) -> None:
         self.collecting = False
         unique_labels = self.get_unique_labels()
