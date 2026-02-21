@@ -53,10 +53,6 @@ class dataCollectionView(EventClass):
     command=self.clear_trials).pack(
         pady=10,
          padx=10)
-        
-        # button to collect trial, locks the dropdown
-        tk.Button(self.trial_mod_frame, text="Collect Trial", width=6,
-                  height=1, command=self.collect_trial).pack(pady=10, padx=10)
 
         # button to clear trials, unlocks the dropdown
         tk.Button(self.trial_mod_frame, text="Clear Trials", width=6,
@@ -89,16 +85,6 @@ class dataCollectionView(EventClass):
             self.save_dataset_frame,
             textvariable=self.dataset_name).pack(
             expand=True,
-            padx=10)
-
-        # button to save dataset, unlocks the dropdown
-        self.save_dataset_button = tk.Button(
-            self.save_dataset_frame,
-            text="Save Dataset",
-            width=6,
-            height=1,
-            command=self.save_dataset).pack(
-            pady=10,
             padx=10)
 
         # button to save dataset, unlocks the dropdown

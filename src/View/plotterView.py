@@ -42,18 +42,12 @@ class PlotterView(EventClass):
     def _setup_canvas(self):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.frame)
         self.canvas.draw()
-
-
-<< << << < FilterModuleBranch
-
-== == == =
         self.canvas.mpl_connect(
             "key_press_event",
             lambda event: print(
                 f"you pressed {
                     event.key}"))
         self.canvas.mpl_connect("key_press_event", key_press_handler)
->>>>>> > main
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def _setup_controls(self):
