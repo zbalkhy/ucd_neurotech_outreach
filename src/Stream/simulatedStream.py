@@ -20,13 +20,24 @@ class SimulatedStream(DataStream):
         self.eyesClosed = mat['eyesClosed']
 
     def _stream(self):
-        idx = 0
-        n_trials = self.eyesOpen.shape[0]   # shape is (10,250)
+        idx_open = 0
+        idx_closed = 0
+        n_open = self.eyesOpen.shape[0]   # shape is (10,250)
+        n_closed = self.eyesClosed.shape[0]
+        use_open = True
+
         try:
             while not self.shutdown_event.is_set():
-                trial = self.eyesOpen[idx]
+                if use_open:
+                    trial = self.eyesOpen[idx_open]
+                    idx_open = (idx_open + 1) % n_open
+                else:
+                    trial = self.eyesClosed[idx_closed]
+                    idx_closed = (idx_closed + 1) % n_closed
+
                 self.data.append(trial.tolist())
-                idx = (idx + 1) % n_trials
+                use_open = not use_open
                 sleep(1.0)
+
         except BaseException:
             pass
