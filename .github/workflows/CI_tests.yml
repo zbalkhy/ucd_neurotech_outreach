@@ -64,7 +64,7 @@ jobs:
         if: startsWith(runner.os, 'Linux')
         run: |
           xvfb-run -a python -m unittest
-          xvfb-run -a python -m pytest Tests/* --doctest-modules --junitxml=junit/test-results.xml
+          xvfb-run -a python -m pytest Tests/ --doctest-modules --junitxml=junit/test-results.xml
         working-directory: ./src/
 
       - name: Run all tests (other platforms)
@@ -73,5 +73,5 @@ jobs:
         with:
           run: |
               python -m unittest
-              python -m pytest Tests/* --doctest-modules --junitxml=junit/test-results.xml
+              python -m pytest Tests/ --doctest-modules --junitxml=junit/test-results.xml
           working-directory: ./src/
