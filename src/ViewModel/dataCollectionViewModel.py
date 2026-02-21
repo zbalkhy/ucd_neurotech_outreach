@@ -16,12 +16,13 @@ class dataCollectionViewModel(object):
         self.labelset = np.array([])
         self.dataset = np.array([])
 
-<<<<<<< FilterModuleBranch
-    def start_collecting(self) -> None:
+
+<< << << < FilterModuleBranch
+   def start_collecting(self) -> None:
         self.collecting = True
 
     def get_unique_labels(self) -> list:
-        #sends out ordered list
+        # sends out ordered list
         _, idx = np.unique(self.labelset, return_index=True)
         return self.labelset[np.sort(idx)].tolist()
 
@@ -30,21 +31,21 @@ class dataCollectionViewModel(object):
             stream = self.user_model.get_stream(collection_stream)
             data = np.array(list(stream.get_stream_data()))
             axis = self.dataset.ndim
-            self.labelset = np.append(self.labelset, label) #add label to labelset
+            self.labelset = np.append(self.labelset, label)  # add label to labelset
             if self.dataset.size == 0:
-                #if dataset is empty, populate
+                # if dataset is empty, populate
                 self.dataset = data
                 self.first_trial = True
             elif axis != data.ndim:
-                #add to largest axis
-                self.dataset = np.append(self.dataset, np.array([data]), axis = 0)
+                # add to largest axis
+                self.dataset = np.append(self.dataset, np.array([data]), axis= 0)
             else:
-                #if data set only has one entry, make new axis
-                self.dataset = np.stack([self.dataset, data], axis = 0)
+                # if data set only has one entry, make new axis
+                self.dataset = np.stack([self.dataset, data], axis= 0)
                 self.first_trial = False
-    
-=======
-    def add_dataset(self, collection_stream: str) -> None:
+
+== =====
+   def add_dataset(self, collection_stream: str) -> None:
         stream = self.user_model.get_stream(collection_stream)
         data = np.array(list(stream.get_stream_data()))
         axis = self.dataset.ndim
@@ -60,8 +61,8 @@ class dataCollectionViewModel(object):
             self.dataset = np.stack([self.dataset, data], axis=0)
             self.first_trial = False
 
->>>>>>> main
-    def get_trial_number(self) -> int:
+>>>>>> > main
+   def get_trial_number(self) -> int:
         if self.first_trial:
             return 1
         else:
@@ -72,12 +73,12 @@ class dataCollectionViewModel(object):
         self.collecting = False
         unique_labels = self.get_unique_labels()
         for idx, value in enumerate(unique_labels):
-            #replace str with corresponding number
+            # replace str with corresponding number
             self.labelset[value == self.labelset] = idx
-        #change to integer numpy array
+        # change to integer numpy array
         self.labelset = self.labelset.astype(int)
         self.user_model.add_dataset(name, self.dataset)
-        self.user_model.add_labelset(name, self.labelset) #treats labelset like a dataset
+        self.user_model.add_labelset(name, self.labelset)  # treats labelset like a dataset
 
     def get_streams(self):
         return self.user_model.get_streams()

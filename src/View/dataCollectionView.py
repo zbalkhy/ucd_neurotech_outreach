@@ -18,14 +18,15 @@ class dataCollectionView(EventClass):
             frame, borderwidth=1, relief="solid")
         self.collect_stream_frame.pack(side="top", fill="both", expand=True)
 
-<<<<<<< FilterModuleBranch
-        #bind key to frame and collect trial for each key press
+
+<< << << < FilterModuleBranch
+        # bind key to frame and collect trial for each key press
         self.frame.bind("<Key>", self.collect_trial)
 
-        #create dropdown
-=======
         # create dropdown
->>>>>>> main
+== == == =
+        # create dropdown
+>>>>>> > main
         self.create_dropdown()
 
         self.trial_mod_frame = tk.Frame(frame, borderwidth=1, relief="solid")
@@ -35,17 +36,31 @@ class dataCollectionView(EventClass):
         self.trial_num_str = StringVar(self.trial_mod_frame)
         self.trial_num_str.set("trial#: 0")
 
-<<<<<<< FilterModuleBranch
-        #saving the labeling of the keys into a stringvar
+<< << << < FilterModuleBranch
+        # saving the labeling of the keys into a stringvar
         self.key_labels = StringVar(self.trial_mod_frame)
         self.key_labels.set("")
 
-        #button to start collecting trial
-        tk.Button(self.trial_mod_frame, text = "Start Collection", width=15, height=1, command = self.start_collection).pack(pady=10, padx=10)
-        
-        #button to clear trials, unlocks the dropdown
-        tk.Button(self.trial_mod_frame, text = "Clear Trials", width=15, height=1, command = self.clear_trials).pack(pady=10, padx = 10)
-=======
+        # button to start collecting trial
+        tk.Button(
+    self.trial_mod_frame,
+    text="Start Collection",
+    width=15,
+    height=1,
+    command=self.start_collection).pack(
+        pady=10,
+         padx=10)
+
+        # button to clear trials, unlocks the dropdown
+        tk.Button(
+    self.trial_mod_frame,
+    text="Clear Trials",
+    width=15,
+    height=1,
+    command=self.clear_trials).pack(
+        pady=10,
+         padx=10)
+== == == =
         # button to collect trial, locks the dropdown
         tk.Button(self.trial_mod_frame, text="Collect Trial", width=6,
                   height=1, command=self.collect_trial).pack(pady=10, padx=10)
@@ -53,7 +68,7 @@ class dataCollectionView(EventClass):
         # button to clear trials, unlocks the dropdown
         tk.Button(self.trial_mod_frame, text="Clear Trials", width=6,
                   height=1, command=self.clear_trials).pack(pady=10, padx=10)
->>>>>>> main
+>>>>>> > main
 
         # label with the amount of trials
         self.trial_label = tk.Label(
@@ -62,17 +77,22 @@ class dataCollectionView(EventClass):
             pady=10,
             padx=10)
 
-<<<<<<< FilterModuleBranch
-        #label with the labeling of keys
-        self.trial_label = tk.Label(self.trial_mod_frame, textvariable=self.key_labels).pack(pady=10, padx=10)
+<< << << < FilterModuleBranch
+        # label with the labeling of keys
+        self.trial_label = tk.Label(
+    self.trial_mod_frame,
+    textvariable=self.key_labels).pack(
+        pady=10,
+         padx=10)
 
-        self.save_dataset_frame = tk.Frame(frame, borderwidth=1, relief = "solid")
-        self.save_dataset_frame.pack(side = "top", fill = "both", expand = True)
-=======
+        self.save_dataset_frame = tk.Frame(
+    frame, borderwidth=1, relief="solid")
+        self.save_dataset_frame.pack(side="top", fill="both", expand=True)
+== == == =
         self.save_dataset_frame = tk.Frame(
             frame, borderwidth=1, relief="solid")
         self.save_dataset_frame.pack(side="top", fill="both", expand=True)
->>>>>>> main
+>>>>>> > main
 
         # entry to save dataset name
         self.dataset_name = tk.StringVar(self.save_dataset_frame)
@@ -92,10 +112,17 @@ class dataCollectionView(EventClass):
             pady=10,
             padx=10)
 
-<<<<<<< FilterModuleBranch
-        #button to save dataset, unlocks the dropdown
-        self.save_dataset_button = tk.Button(self.save_dataset_frame, text = "Save Dataset", width=15, height=1, command = self.save_dataset).pack(pady = 10, padx = 10)
-        
+<< << << < FilterModuleBranch
+        # button to save dataset, unlocks the dropdown
+        self.save_dataset_button = tk.Button(
+    self.save_dataset_frame,
+    text="Save Dataset",
+    width=15,
+    height=1,
+    command=self.save_dataset).pack(
+        pady=10,
+         padx=10)
+
     def start_collection(self) -> None:
         self.view_model.start_collecting()
         self.frame.focus_set()

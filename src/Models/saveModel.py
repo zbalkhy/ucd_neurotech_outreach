@@ -12,12 +12,14 @@ import tkinter as tk
 from tkinter import ttk
 
 USER_SAVE_PATH = 'user_save.json'
+
+
 class SaveModel(EventClass):
     def __init__(self):
         super().__init__()
         self.tk = None
 
-    def on_notify(self, eventData: any, event: EventType ) -> None:
+    def on_notify(self, eventData: any, event: EventType) -> None:
         if isinstance(eventData, UserModel):
             match event:
                 case EventType.STREAMUPDATE:
@@ -45,7 +47,7 @@ class SaveModel(EventClass):
         try:
             if not self.save_exists():
                 return UserModel()
-            
+
             with open(USER_SAVE_PATH, 'r') as f:
                 data = json.load(f)
                 return UserModel.from_dict(data)

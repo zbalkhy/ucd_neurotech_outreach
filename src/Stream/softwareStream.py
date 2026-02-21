@@ -22,10 +22,21 @@ class SoftwareStream(DataStream):
                 pi_t_0_03 = 0.03 * np.pi * t
                 pi_t_0_15 = 0.15 * np.pi * t
                 pi_t_0_07 = 0.07 * np.pi * t
-                self.data.append(
-                    [15 * np.sin(pi_t_0_01) + 12 * np.sin(pi_t_0_03) + 1 * np.sin(pi_t_0_15) + 11 * np.sin(pi_t_0_07),
-                     3 * np.sin(pi_t_0_01) + 7 * np.sin(pi_t_0_03) + 5 * np.sin(pi_t_0_15) + 15 * np.sin(pi_t_0_07)]
-                )
+                self.data.append([15 *
+                                  np.sin(pi_t_0_01) +
+                                  12 *
+                                  np.sin(pi_t_0_03) +
+                                  1 *
+                                  np.sin(pi_t_0_15) +
+                                  11 *
+                                  np.sin(pi_t_0_07), 3 *
+                                  np.sin(pi_t_0_01) +
+                                  7 *
+                                  np.sin(pi_t_0_03) +
+                                  5 *
+                                  np.sin(pi_t_0_15) +
+                                  15 *
+                                  np.sin(pi_t_0_07)])
                 t += 1
                 sleep(0.004)
         except BaseException:

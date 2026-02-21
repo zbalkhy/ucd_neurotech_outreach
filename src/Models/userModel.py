@@ -36,11 +36,12 @@ class UserModel(EventClass):
             self.data_streams[stream.stream_name].stop()
             self.data_streams.pop(stream.stream_name)
             print(
-                f"[UserModel] Stream {stream.stream_name} already exists. Overwriting.")
+                f"[UserModel] Stream {
+                    stream.stream_name} already exists. Overwriting.")
 
         self.data_streams[stream.stream_name] = stream
         self.notify(self, EventType.STREAMUPDATE)
- 
+
     def rename_stream(self, old_name: str, new_name: str) -> bool:
         """Rename a stream from old_name to new_name."""
         if old_name not in self.data_streams:
@@ -118,17 +119,17 @@ class UserModel(EventClass):
             return self.data_sets[name]
         else:
             return None
-        
+
     def add_labelset(self, name: str, label_set: ndarray) -> None:
         self.data_sets[name] = label_set
         self.notify(None, EventType.DATASETUPDATE)
-        
+
     def get_labelset(self, name: str) -> ndarray:
         if name in self.label_sets.keys():
             return self.label_sets[name]
         else:
             return None
-        
+
     def rename_dataset(self, old_name: str, new_name: str) -> bool:
         """Rename a dataset from old_name to new_name."""
         if old_name not in self.data_sets:
@@ -206,7 +207,7 @@ class UserModel(EventClass):
 
     @staticmethod
     def from_dict(data: dict) -> 'UserModel':
-        #restore user state from json dictionary
+        # restore user state from json dictionary
         user_model = UserModel()
         if 'data_streams' in data:
             for k, v in data['data_streams'].items():
@@ -223,10 +224,10 @@ class UserModel(EventClass):
         if 'label_sets' in data:
             for k, v in data['label_sets'].items():
                 user_model.label_sets[k] = np.array(v)
-                
+
         if 'features' in data:
             for k, v in data['features'].items():
-                user_model.features[k] = FeatureClass.from_dict(v)       
+                user_model.features[k] = FeatureClass.from_dict(v)
         if 'classifiers' in data:
             for k, v in data['classifiers'].items():
                 user_model.classifiers[k] = Classifier.from_dict(v)
