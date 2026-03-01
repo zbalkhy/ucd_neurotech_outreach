@@ -1,115 +1,109 @@
-import tkinter as tk
-import ctypes
-import re
-import os
-import numpy as np
+from tkinter import *
+from tkinter import ttk
+import ast
+from idlelib.percolator import Percolator
+from idlelib.colorizer import ColorDelegator
+from Classes.eventClass import EventClass, EventType
 
+ERROR_HEIGHT = 50
+PARSE_DELAY_MS = 100
 
-class Editor():
-    def __init__(self, root):
+class EditorClass(EventClass):
+    def __init__(self, root: Tk):
+        super().__init__()
         self.root = root
-        self.frame = tk.Frame(self.root)
+        self._parse_job = None
+        self.error_bar = Frame(root, bg="#2b2b2b", height=0)
+        self.error_bar.pack(side=BOTTOM, fill="x")
+        self.error_bar.pack_propagate(False)
 
-        # Define colors for the variouse types of tokens
-        self.normal = self._from_rgb((234, 234, 234))
-        self.keywords = self._from_rgb((234, 95, 95))
-        self.comments = self._from_rgb((95, 234, 165))
-        self.string = self._from_rgb((234, 162, 95))
-        self.function = self._from_rgb((95, 211, 234))
-        self.background = self._from_rgb((42, 42, 42))
-        self.previousText = ''
-        self.font = 'Consolas 15'
-        self.functions = {}
+        self.errorArea = Text(
+            self.error_bar,
+            height=1,
+            wrap="word",
+            bg="#2b2b2b",
+            fg="#ff1111",
+            state="disabled",
+        )
 
-        # assign colors to text types
-        self.repl = [
-            ['(^| )(False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)($| )', self.keywords],
-            ['".*?"', self.string],
-            ['\'.*?\'', self.string],
-            ['#.*?$', self.comments],]
+        scroll = ttk.Scrollbar(self.error_bar, orient="vertical", command=self.errorArea.yview)
+        self.errorArea.configure(yscrollcommand=scroll.set)
+        self.errorArea.pack(side=LEFT, fill="both", expand=True)
+        scroll.pack(side=RIGHT, fill="y")
 
-        # import keywords are not handled yet but this regex should get us therequit
-        # import_pattern = r'^\s*from\s+(\S+)\s+import\s+(\S+)(?:\s+as\s+(\S+))?'
-
-        # Make the Text Widget
-        # Add a hefty border width so we can achieve a little bit of padding
-        self.editArea = tk.Text(
+        self.editArea = Text(
             root,
-            background=self.background,
-            foreground=self.normal,
-            insertbackground=self.normal,
-            relief=tk.FLAT,
-            borderwidth=30,
-            font=self.font
+            bg="#1e1e1e",
+            fg="#d4d4d4",
+            insertbackground="#d4d4d4",
+            selectbackground="#264f78",
+            undo=True,
         )
+        self.editArea.insert("1.0", "def my_function(t):\n\treturn\n")
+        self.editArea.pack(side=TOP, fill="both", expand=True)
 
-        # Insert some Standard Text into the Edit Area
-        self.editArea.insert('1.0', """def my_function(t):
-                             return""")
-        self.editArea.bind('<KeyRelease>', self.changes)
-
-        # Place the Edit Area with the pack method
-        self.editArea.pack(
-            fill=tk.BOTH,
-            expand=1
+        self.cd = ColorDelegator()
+        self.cd.tagdefs.update(
+            {
+                "COMMENT": {"foreground": "#6a9955"},
+                "KEYWORD": {"foreground": "#569cd6"},
+                "STRING": {"foreground": "#ce9178"},
+                "BUILTIN": {"foreground": "#4ec9b0"},
+                "DEFINITION": {"foreground": "#dcdcaa"},
+            }
         )
+        Percolator(self.editArea).insertfilter(self.cd)
+        self.editArea.bind("<KeyRelease>", self.on_text_change)
 
-        self.button_execute = tk.Button(
-            master=root, text="execute_code", command=self.execute_python)
-        self.button_execute.pack(side=tk.BOTTOM)
-        self.changes()
-        return
+        self.save_btn = Button(root, text="Save Function", command=lambda: self.save_fcn(self.get_text()))
+        self.save_btn.pack(pady=5)
 
-    # Translates an rgb tuple of int to a tkinter friendly color code
-    def _from_rgb(self, rgb):
-        return "#%02x%02x%02x" % rgb
+    def get_text(self) -> str:
+        return self.editArea.get("1.0", "end-1c")
 
-    def execute_python(self):
-        exec(self.get_text())
+    def execute(self):
+        exec(self.get_text(), {})
 
-    def get_text(self):
-        return self.editArea.get('1.0', tk.END)
+    def save_fcn(self, txt: str):
+        self.check_syntax(txt)
+        fcns = {}
+        tree = ast.parse(txt)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                fcns[node.name] = ast.get_source_segment(txt, node)
+                print(node.name)
+        self.notify(fcns, EventType.FUNCTIONUPDATE)
 
-    def search_re(self, pattern, text, groupid=0):
-        matches = []
+    def on_text_change(self, event=None):
+        if self._parse_job is not None:
+            self.root.after_cancel(self._parse_job)
+        self._parse_job = self.root.after(PARSE_DELAY_MS, lambda: self.check_syntax(self.get_text()))
 
-        text = text.splitlines()
-        for i, line in enumerate(text):
-            for match in re.finditer(pattern, line):
+    def check_syntax(self, src: str):
+        try:
+            ast.parse(src)
+            self.clear_error()
+        except SyntaxError as e:
+            lineno = e.lineno or 1
+            msg = e.msg or "Syntax error"
+            self.show_error(f"Line {lineno}: {msg}")
 
-                matches.append(
-                    (f"{i + 1}.{match.start()}", f"{i + 1}.{match.end()}")
-                )
+    def show_error(self, msg: str):
+        self.error_bar.configure(height=ERROR_HEIGHT)
+        self.errorArea.config(state="normal")
+        self.errorArea.delete("1.0", "end")
+        self.errorArea.insert("1.0", msg)
+        self.errorArea.config(state="disabled")
 
-        return matches
-
-    # Register Changes made to the Editor Content
-    def changes(self, event=None):
-
-        # If actually no changes have been made stop / return the function
-        if self.get_text() == self.previousText:
-            return
-
-        # Remove all tags so they can be redrawn
-        for tag in self.editArea.tag_names():
-            self.editArea.tag_remove(tag, "1.0", "end")
-
-        # Add tags where the search_re function found the pattern
-        i = 0
-        for pattern, color in self.repl:
-            for start, end in self.search_re(pattern, self.get_text()):
-                self.editArea.tag_add(f'{i}', start, end)
-                self.editArea.tag_config(f'{i}', foreground=color)
-
-                i += 1
-
-        self.previousText = self.get_text()
-
+    def clear_error(self):
+        self.errorArea.config(state="normal")
+        self.errorArea.delete("1.0", "end")
+        self.errorArea.config(state="disabled")
+        self.error_bar.configure(height=0)
 
 if __name__ == "__main__":
-    # Setup Tkinter
-    root = tk.Tk()
-    root.geometry('500x500')
-
-    editor = Editor(root)
+    root = Tk()
+    root.title("Code Editor")
+    root.geometry("900x600")
+    editor = EditorClass(root)
     root.mainloop()

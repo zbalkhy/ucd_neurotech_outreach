@@ -14,6 +14,7 @@ class EventType(Enum):
     STREAMLISTUPDATE = 7
     CLEARALLPLOTS = 8
     CLASSIFIERUPDATE = 9
+    FUNCTIONUPDATE = 10
 
 
 """ This class implements an event sending / receiving mechanism.
