@@ -16,13 +16,12 @@ class FilterClass():
         self.filters[name].append(value)
 
     def filter_data(self, data: ndarray, fs: int) -> ndarray:
-        for i, x in enumerate(self.filters['filter']):
+        for i, _ in enumerate(self.filters['filter']):
             filter_type = self.filters['filter'][i]
             cutoff_freq = np.array(self.filters['frequency'][i])
             filter_order = self.filters['order'][i]
-            normalized_cutoff = cutoff_freq / (.5 * fs)
             b, a = signal.butter(
-                filter_order, normalized_cutoff, btype=filter_type, analog=False)
+                filter_order, cutoff_freq, btype=filter_type, fs=fs)
             data = signal.filtfilt(b, a, data, axis=-1)
         return data
 
