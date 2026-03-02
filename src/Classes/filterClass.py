@@ -16,8 +16,7 @@ class FilterClass():
         self.filters[name].append(value)
 
     def filter_data(self, data: ndarray, fs: int) -> ndarray:
-        for i, _ in enumerate(self.filters['filter']):
-            filter_type = self.filters['filter'][i]
+        for i, filter_type in enumerate(self.filters['filter']):
             cutoff_freq = np.array(self.filters['frequency'][i])
             filter_order = self.filters['order'][i]
             b, a = signal.butter(
