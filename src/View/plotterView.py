@@ -25,6 +25,7 @@ class PlotterView(EventClass):
         self.view_model = view_model
 
         self.subscribe_to_subject(self.view_model)
+        self._channel_cache = {}  # stream_idx → n_channels
 
         self.fig = Figure(figsize=(6, 8), dpi=100)  # taller for multiple plots
 
@@ -38,6 +39,8 @@ class PlotterView(EventClass):
 
         # Start the plotting thread
         self._start_plot_thread()
+
+        self._start_channel_state_updater()
 
     def _setup_canvas(self):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.frame)
@@ -196,41 +199,102 @@ class PlotterView(EventClass):
                     padx=6,
                     pady=6
                 )
+    
+    def _refresh_channel_states(self):
+        for entry in self.source_selectors:
+            stream_name = entry["stream_var"].get()
+            channel_cb = entry["channel_cb"]
+            channel_var = entry["channel_var"]
+
+            if stream_name == CHOOSE_STREAM:
+                if channel_var.get() != CHOOSE_CHANNEL:
+                    channel_var.set(CHOOSE_CHANNEL)
+                    self._on_source_change()
+                channel_cb.configure(state="disabled")
+                continue
+
+            stream_names = self.view_model.get_stream_names()
+            if stream_name not in stream_names:
+                if channel_var.get() != CHOOSE_CHANNEL:
+                    channel_var.set(CHOOSE_CHANNEL)
+                    self._on_source_change()
+                channel_cb.configure(state="disabled")
+                continue
+
+            stream_idx = stream_names.index(stream_name)
+            stream = self.view_model.streams[stream_idx]
+
+            if not stream.is_alive():
+                if channel_var.get() != CHOOSE_CHANNEL:
+                    channel_var.set(CHOOSE_CHANNEL)
+                    self._on_source_change()
+                channel_cb.configure(state="disabled")
+                continue
+
+            # Stream is alive → enable dropdown
+            data = self.view_model._get_data_for_stream(stream_idx)
+            if data is None or data.ndim != 2:
+                if channel_var.get() != CHOOSE_CHANNEL:
+                    channel_var.set(CHOOSE_CHANNEL)
+                    self._on_source_change()
+                channel_cb.configure(state="disabled")
+                continue
+
+            n_ch = data.shape[1]
+            channel_cb["values"] = [CHOOSE_CHANNEL] + [str(i) for i in range(1, n_ch + 1)]
+            channel_cb.configure(state="readonly")
+
+            if channel_var.get() not in channel_cb["values"]:
+                channel_var.set(CHOOSE_CHANNEL)
+    
+    def _start_channel_state_updater(self):
+        """Periodically refresh the channel dropdown states."""
+        self._refresh_channel_states()
+        # Schedule the next check
+        self.frame.after(200, self._start_channel_state_updater)  # every 200 ms
 
     def _update_channel_choices(self, stream_var, channel_var):
         stream_name = stream_var.get()
 
-        # If default "Choose Stream" is selected, reset channel
+        for entry in self.source_selectors:
+            if entry["stream_var"] is stream_var:
+                channel_cb = entry["channel_cb"]
+
         if stream_name == CHOOSE_STREAM:
-            channel_var.set(CHOOSE_CHANNEL)
-            for entry in self.source_selectors:
-                if entry["stream_var"] is stream_var:
-                    entry["channel_cb"]["values"] = [CHOOSE_CHANNEL]
-            # Update plot immediately
+            if channel_var.get() != CHOOSE_CHANNEL:
+                channel_var.set(CHOOSE_CHANNEL)
+            channel_cb.configure(state="disabled")
             self._on_source_change()
             return
 
-        # Normal stream selected
+        # Get the selected stream
         stream_names = self.view_model.get_stream_names()
-        if stream_name not in stream_names:
-            return
-
         stream_idx = stream_names.index(stream_name)
-        data = self.view_model._get_data_for_stream(stream_idx)
-        if data is None or data.ndim != 2:
+        stream = self.view_model.streams[stream_idx]
+
+        # Check if stream is alive
+        if not stream.is_alive():
+            if channel_var.get() != CHOOSE_CHANNEL:
+                channel_var.set(CHOOSE_CHANNEL)
+
+            channel_cb.configure(state="disabled")
+
+            # clear stale selection
+            self._on_source_change()
             return
 
-        n_ch = data.shape[1]
-        channel_choices = [CHOOSE_CHANNEL] + \
-            [str(i) for i in range(1, n_ch + 1)]
+        # Stream is selected and playing -> enable dropdown
+        n_ch = stream.get_num_channels()
+        channel_choices = [CHOOSE_CHANNEL] + [str(i) for i in range(1, n_ch + 1)]
+        channel_cb.configure(state="readonly")
+        channel_cb["values"] = channel_choices
 
-        for entry in self.source_selectors:
-            if entry["stream_var"] is stream_var:
-                entry["channel_cb"]["values"] = channel_choices
-                # Keep previous selection if valid, else default
-                if channel_var.get() not in channel_choices:
-                    channel_var.set(CHOOSE_CHANNEL)
+        # Keep current selection if valid
+        if channel_var.get() not in channel_choices:
+            channel_var.set(CHOOSE_CHANNEL)
 
+        self._on_source_change()
+        
     def _on_source_change(self):
         sources = []
         stream_names = self.view_model.get_stream_names()
@@ -348,17 +412,17 @@ class PlotterView(EventClass):
 
     def on_notify(self, eventData, event) -> None:
         if event == EventType.STREAMLISTUPDATE:
-            streams = eventData if eventData else []
+            self._channel_cache.clear()  
 
             # Update each slot's stream dropdown
             for entry in self.source_selectors:
-                values = [CHOOSE_STREAM] + streams
+                values = [CHOOSE_STREAM] + eventData
                 entry["stream_cb"]["values"] = values
 
                 if entry["stream_var"].get() not in values:
                     entry["stream_var"].set(CHOOSE_STREAM)
-                    entry["channel_var"].set(CHOOSE_CHANNEL)
-                    entry["channel_cb"]["values"] = [CHOOSE_CHANNEL]
+                entry["channel_var"].set(CHOOSE_CHANNEL)
+                entry["channel_cb"]["values"] = [CHOOSE_CHANNEL]
 
         elif event == EventType.CLEARALLPLOTS:
 
@@ -372,10 +436,12 @@ class PlotterView(EventClass):
             self._clear_graphs()
 
     def _on_play_pause(self):
+        self._channel_cache.clear()   
         is_playing = self.view_model.toggle_plotting()
 
         if is_playing:
             # Force an immediate plot on PLAY
+            self._refresh_channel_states()
             self._on_source_change()
 
             with self.plot_queue.mutex:
@@ -403,34 +469,16 @@ class PlotterView(EventClass):
 
         slot_idx = 0
 
-        for stream_idx, stream_name in enumerate(stream_names):
-            if slot_idx >= len(self.source_selectors):
-                break
+        
 
-            data = self.view_model._get_data_for_stream(stream_idx)
-            if data is None or data.ndim != 2:
-                continue
-
-            n_ch = data.shape[1]
-
-            for ch in range(n_ch):
-                if slot_idx >= len(self.source_selectors):
-                    break
-
-                entry = self.source_selectors[slot_idx]
-
-                # Skip already-filled slots
-                if entry["stream_var"].get() != CHOOSE_STREAM:
-                    continue
-                entry["stream_var"].set(stream_name)
-
-                slot_idx += 1
+        slot_idx += 1
 
         self._on_source_change()
         for entry in self.source_selectors:
-            if entry["stream_var"].get() and not entry["channel_cb"]["values"]:
+            if entry["stream_var"].get() != CHOOSE_STREAM:
                 self._update_channel_choices(
-                    entry["stream_var"], entry["channel_var"])
+                    entry["stream_var"], entry["channel_var"]
+                )
 
     def _on_toggle_amp(self):
         show_amplitude = self.view_model.toggle_amplitude()

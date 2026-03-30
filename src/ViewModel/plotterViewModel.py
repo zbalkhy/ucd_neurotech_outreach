@@ -180,22 +180,17 @@ class PlotterViewModel(EventClass):
         raw = stream.get_stream_data()
         if raw is None:
             return None
-
-        data = np.asarray(raw)
+        data = np.array(raw, copy=True)
+        
 
         # ---- NORMALIZE REAL DATA ----
         if data.ndim == 1:
-            # Single-channel stream → make it (samples, 1)
             data = data.reshape(-1, 1)
-
         elif data.ndim == 2:
-            # Could be (channels, samples) → transpose if needed
-            if data.shape[0] < data.shape[1]:
-                # assume (channels, samples)
+            # Ensure shape is (samples, channels)
+            n_ch = stream.get_num_channels()
+            if data.shape[1] != n_ch:
                 data = data.T
-
-        else:
-            return None
 
         return data
 
@@ -302,6 +297,7 @@ class PlotterViewModel(EventClass):
 
     def toggle_plotting(self):
         self.continue_plotting = not self.continue_plotting
+        self.notify(self.current_stream_index, EventType.STREAMUPDATE)
         return self.continue_plotting
 
     def change_stream(self, selection):
@@ -421,7 +417,10 @@ class PlotterViewModel(EventClass):
 
             band_powers.append(values)
 
-        band_powers = np.array(band_powers).T
+        if band_powers:
+            band_powers = np.array(band_powers).T
+        else:
+            band_powers = np.zeros((len(signals), 0))
         n_subplots = int(self.show_amplitude) + \
             int(self.show_power) + \
             int(show_bands)

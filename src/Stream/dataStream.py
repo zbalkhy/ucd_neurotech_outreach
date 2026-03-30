@@ -62,6 +62,25 @@ class DataStream():
             return False
         else:
             return True
+    
+    # Calculating channels in a stream
+
+    def get_num_channels(self) -> int:
+        """
+        Return the number of channels in the stream.
+        If no data yet, assume 1 channel.
+        """
+        if not self.data or len(self.data) == 0:
+            return 1
+        arr = np.array(self.data)
+        # If arr is 1D, single channel
+        if arr.ndim == 1:
+            return 1
+        # If arr is 2D (samples, channels)
+        if arr.shape[0] < arr.shape[1] and arr.shape[0] <= 64:
+            # likely (channels, samples), transpose
+            return arr.shape[0]
+        return arr.shape[1]
    
     def to_dict(self) -> dict:
         return {

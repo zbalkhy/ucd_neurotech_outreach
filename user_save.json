@@ -1,0 +1,37 @@
+{
+    "data_streams": {
+        "streamtest": {
+            "stream_name": "streamtest",
+            "stream_type": 4
+        },
+        "streamtest2": {
+            "stream_name": "streamtest2",
+            "stream_type": 4
+        }
+    },
+    "filters": {},
+    "data_sets": {},
+    "features": {
+        "Delta Power": {
+            "type": 1,
+            "custom_name": null
+        },
+        "Theta Power": {
+            "type": 2,
+            "custom_name": null
+        },
+        "Alpha Power": {
+            "type": 3,
+            "custom_name": null
+        },
+        "Beta Power": {
+            "type": 4,
+            "custom_name": null
+        },
+        "Gamma Power": {
+            "type": 5,
+            "custom_name": null
+        }
+    },
+    "classifiers": {}
+}
