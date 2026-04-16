@@ -6,6 +6,3 @@ from multiprocessing import Process
 if __name__ == "__main__":
     plotter = Plotter(400, 128)
     plotter.plot()
-   
-
-

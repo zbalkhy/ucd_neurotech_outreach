@@ -4,6 +4,7 @@ from Classes.eventClass import *
 from ViewModel.inventoryViewModel import InventoryViewModel
 from common import create_grid, resource_path
 
+
 class InventoryView(EventClass):
     def __init__(self, frame: tk.Frame, view_model: InventoryViewModel):
         super().__init__()
@@ -17,18 +18,26 @@ class InventoryView(EventClass):
         style = ttk.Style(self.frame)
 
         # Disable highlight on the treeview
-        style.map("Treeview",
-        background=[
-            ('selected', 'invalid', 'yellow'),('pressed', 'focus', 'yellow')
-        ])
+        style.map(
+            "Treeview",
+            background=[
+                ('selected',
+                 'invalid',
+                 'yellow'),
+                ('pressed',
+                 'focus',
+                 'yellow')])
         # grab png image for stream running icon
-        self.stream_running_icon = tk.PhotoImage(file=resource_path("assets/folder.png"))
+        self.stream_running_icon = tk.PhotoImage(
+            file=resource_path("assets/folder.png"))
 
         self.views = [['Streams'], ['Datasets'], ['Classifiers']]
-        self.frames = create_grid(self.inner_frame, len(self.views), 1, self.views, resize=False)
-        
+        self.frames = create_grid(self.inner_frame, len(
+            self.views), 1, self.views, resize=False)
+
         # Stream tree
-        self.stream_tree = ttk.Treeview(self.frames[0][0], show='tree', columns=("start/stop"))
+        self.stream_tree = ttk.Treeview(
+            self.frames[0][0], show='tree', columns=("start/stop"))
         self.stream_tree.column("start/stop", width=50)
         self.bind_context_menu(self.stream_tree)
         self.stream_tree.pack(anchor=tk.NW)
@@ -61,14 +70,20 @@ class InventoryView(EventClass):
     def populate_streams(self) -> None:
         self.stream_names = self.view_model.get_stream_names()
         for i in range(len(self.stream_names)):
-            if self.view_model.user_model.get_stream(self.stream_names[i]).is_alive():
-                self.stream_tree.insert("", "end", image=self.stream_running_icon
-                                        , text=self.stream_names[i], values=("stop"))
+            if self.view_model.user_model.get_stream(
+                    self.stream_names[i]).is_alive():
+                self.stream_tree.insert(
+                    "",
+                    "end",
+                    image=self.stream_running_icon,
+                    text=self.stream_names[i],
+                    values=("stop"))
             else:
-                self.stream_tree.insert("", "end", text=self.stream_names[i], values=("start"))
+                self.stream_tree.insert(
+                    "", "end", text=self.stream_names[i], values=("start"))
 
         return
-    
+
     def populate_datasets(self) -> None:
         self.data_sets_names = self.view_model.get_dataset_names()
         for i in range(len(self.data_sets_names)):
@@ -78,44 +93,49 @@ class InventoryView(EventClass):
     def populate_classifiers(self) -> None:
         self.classifier_names = self.view_model.get_classifier_names()
         for i in range(len(self.classifier_names)):
-            self.classifier_tree.insert("", "end", text=self.classifier_names[i])
-    
+            self.classifier_tree.insert(
+                "", "end", text=self.classifier_names[i])
+
     def on_stream_click(self, event) -> None:
-        item = self.stream_tree.identify('item',event.x,event.y)
+        item = self.stream_tree.identify('item', event.x, event.y)
         item_name = self.stream_tree.item(item, "text")
         self.view_model.toggle_stream(item_name)
         if self.stream_tree.item(item, "image"):
             self.stream_tree.item(item, image="", values=("start"))
         else:
-            self.stream_tree.item(item, image=self.stream_running_icon, values=("stop"))
+            self.stream_tree.item(
+                item, image=self.stream_running_icon, values=("stop"))
         return
-    
+
     def on_classifier_click(self, event) -> None:
-        item = self.classifier_tree.identify('item',event.x,event.y)
+        item = self.classifier_tree.identify('item', event.x, event.y)
         item_name = self.classifier_tree.item(item, "text")
-        #crash fix: check if stream exists before "is_alive()"
+        # crash fix: check if stream exists before "is_alive()"
         stream = self.view_model.user_model.get_stream(item_name)
         if stream is None or not stream.is_alive():
             self.classifier_tree.item(item, image=self.stream_running_icon)
             self.view_model.train_classifier(item_name)
             self.view_model.add_classifier_stream(item_name)
         return
-    
+
     def bind_context_menu(self, widget) -> None:
-        widget.bind("<Button-3>", self._on_stream_context_menu)  # Windows right-click
-        widget.bind("<Button-2>", self._on_stream_context_menu)  # Mac right-click
-        widget.bind("<Control-Button-1>", self._on_stream_context_menu)  # mac Ctrl-click
+        # Windows right-click
+        widget.bind("<Button-3>", self._on_stream_context_menu)
+        # Mac right-click
+        widget.bind("<Button-2>", self._on_stream_context_menu)
+        widget.bind("<Control-Button-1>",
+                    self._on_stream_context_menu)  # mac Ctrl-click
         return
-    
+
     # ------------------------------
     # Right-click context + rename
     # ------------------------------
     def _on_stream_context_menu(self, event):
         """Show a context menu that stays open until Close Menu is clicked."""
         widget = event.widget
-        item_iid = widget.identify('item',event.x,event.y)
+        item_iid = widget.identify('item', event.x, event.y)
         item_name = widget.item(item_iid, 'text')
-        
+
         # Close any existing menu
         self._close_context_menu()
 
@@ -123,22 +143,33 @@ class InventoryView(EventClass):
         menu.wm_overrideredirect(True)
         menu.lift()
         menu.attributes("-topmost", True)
-        menu.geometry(f"+{event.x_root+25}+{event.y_root}")
+        menu.geometry(f"+{event.x_root + 25}+{event.y_root}")
 
         # Keep it open even if focus changes
         menu.grab_set_global()  # keeps events directed here until closed
 
         # Build simple buttons for menu actions
-        btn_rename = tk.Button(menu, text="Rename",
-                            command=lambda: self._open_rename_and_close(menu, widget, item_name))
+        btn_rename = tk.Button(
+            menu,
+            text="Rename",
+            command=lambda: self._open_rename_and_close(
+                menu,
+                widget,
+                item_name))
         btn_rename.pack(fill="x", padx=4, pady=2)
 
-        btn_delete = tk.Button(menu, text="Delete", fg="red",
-                            command=lambda: self._on_delete_and_close(menu, widget, item_name))
+        btn_delete = tk.Button(
+            menu,
+            text="Delete",
+            fg="red",
+            command=lambda: self._on_delete_and_close(
+                menu,
+                widget,
+                item_name))
         btn_delete.pack(fill="x", padx=4, pady=2)
 
         btn_close = tk.Button(menu, text="Close Menu", bg="#ddd",
-                            command=self._close_context_menu)
+                              command=self._close_context_menu)
         btn_close.pack(fill="x", padx=4, pady=2)
 
         # Save reference
@@ -152,7 +183,7 @@ class InventoryView(EventClass):
             except Exception:
                 pass
             self._context_menu = None
-    
+
     def _on_delete_and_close(self, menu, widget, name):
         """Delete the selected stream safely and clear the plot if needed."""
         self._close_context_menu()
@@ -179,23 +210,28 @@ class InventoryView(EventClass):
             if not success:
                 print(f"[Inventory] delete failed for '{name}'")
 
-        tk.Button(btn_frame, text="Delete", fg="red", command=do_delete).pack(side="left", padx=5)
-        tk.Button(btn_frame, text="Cancel", command=confirm.destroy).pack(side="left", padx=5)
-    
+        tk.Button(btn_frame, text="Delete", fg="red",
+                  command=do_delete).pack(side="left", padx=5)
+        tk.Button(btn_frame, text="Cancel", command=confirm.destroy).pack(
+            side="left", padx=5)
+
     def _open_rename_and_close(self, menu, widget, current_display):
         self._close_context_menu()
         self._open_rename_popup(widget, current_display)
-    
+
     def _open_rename_popup(self, widget, old_name):
         """Open rename popup for old_name (display name)."""
         popup = tk.Toplevel(self.frame)
         popup.title(f"Rename Stream: {old_name}")
         popup.transient(self.frame)
 
-        tk.Label(popup, text="Old Name:").grid(row=0, column=0, padx=6, pady=6, sticky="w")
-        tk.Label(popup, text=old_name).grid(row=0, column=1, padx=6, pady=6, sticky="w")
+        tk.Label(popup, text="Old Name:").grid(
+            row=0, column=0, padx=6, pady=6, sticky="w")
+        tk.Label(popup, text=old_name).grid(
+            row=0, column=1, padx=6, pady=6, sticky="w")
 
-        tk.Label(popup, text="New Name:").grid(row=1, column=0, padx=6, pady=6, sticky="w")
+        tk.Label(popup, text="New Name:").grid(
+            row=1, column=0, padx=6, pady=6, sticky="w")
         new_name_entry = tk.Entry(popup)
         new_name_entry.grid(row=1, column=1, padx=6, pady=6, sticky="ew")
         new_name_entry.insert(0, old_name)
@@ -209,15 +245,18 @@ class InventoryView(EventClass):
                 case self.stream_tree:
                     success = self.view_model.rename_stream(old_name, new_name)
                 case self.dataset_tree:
-                    success = self.view_model.rename_dataset(old_name, new_name)
+                    success = self.view_model.rename_dataset(
+                        old_name, new_name)
                 case self.classifier_tree:
-                    success = self.view_model.rename_classifier(old_name, new_name)
+                    success = self.view_model.rename_classifier(
+                        old_name, new_name)
             if not success:
                 print(f"[Inventory] delete failed for '{old_name}'")
             popup.grab_release()
             popup.destroy()
 
-        tk.Button(popup, text="Apply", command=apply_new_name).grid(row=2, column=0, columnspan=2, pady=8)
+        tk.Button(popup, text="Apply", command=apply_new_name).grid(
+            row=2, column=0, columnspan=2, pady=8)
         popup.columnconfigure(1, weight=1)
 
     def on_notify(self, eventData, event) -> None:
@@ -234,4 +273,4 @@ class InventoryView(EventClass):
             for child in self.classifier_tree.get_children():
                 self.classifier_tree.delete(child)
             self.populate_classifiers()
-        return 
+        return

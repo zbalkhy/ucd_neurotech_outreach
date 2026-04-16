@@ -12,26 +12,28 @@ QUEUE_LENGTH = 100
 SAMPLING_FREQ = 250
 
 # float the orb game
-BLACK = (0,0,0)
-WHITE = (255,255,255)
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 SCREEN_WIDTH = 700
 SCREEN_HEIGHT = 700
 GRAVITY = 0.05
 PYGAME_WINDOW_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
 
 # eeg bands
-DELTA = [0.5,4]
-THETA = [4,8]
-ALPHA = [8,12]
-BETA = [13,30]
+DELTA = [0.5, 4]
+THETA = [4, 8]
+ALPHA = [8, 12]
+BETA = [13, 30]
 GAMMA = [30, 45]
 
-def split_dataset(dataset: pd.DataFrame, 
+
+def split_dataset(dataset: pd.DataFrame,
                   nsamples: int, ntrials: int) -> list[np.ndarray]:
     trials = np.zeros((nsamples, len(dataset.columns), ntrials))
     for i in range(ntrials):
-        trials[:,:,i] = dataset[i*nsamples:i*nsamples + nsamples]
+        trials[:, :, i] = dataset[i * nsamples:i * nsamples + nsamples]
     return trials
+
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -43,7 +45,13 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-def create_grid(root, rows: int, cols: int, grid_names: list[list[str]], resize: bool = True, show_labels: bool = True) -> list[list[Frame]]:
+
+def create_grid(root,
+                rows: int,
+                cols: int,
+                grid_names: list[list[str]],
+                resize: bool = True,
+                show_labels: bool = True) -> list[list[Frame]]:
     # Make the grid expandable
     for i in range(rows):
         root.rowconfigure(i, weight=int(resize))

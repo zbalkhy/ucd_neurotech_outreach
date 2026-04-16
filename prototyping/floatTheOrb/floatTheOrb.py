@@ -30,19 +30,19 @@ class FloatTheOrb:
         clock = pygame.time.Clock()
 
         float_factor = 0
-        
+
         # Game loop
         while carryOn:
             # Main event loop
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     carryOn = False
-                elif event.type==pygame.KEYDOWN:
-                    if event.key==pygame.K_x:
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_x:
                         carryOn = False
             # Game logic
             all_sprites_list.update()
-            
+
             # Fill background
             screen.fill(BLACK)
 
@@ -53,6 +53,6 @@ class FloatTheOrb:
             pygame.display.flip()
 
             # Limit to 60 frames per second
-            clock.tick(60) 
+            clock.tick(60)
 
         pygame.quit()

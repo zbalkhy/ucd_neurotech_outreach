@@ -4,6 +4,7 @@ from threading import Thread
 from ViewModel.eegDeviceViewModel import EEGDeviceViewModel
 from Classes.eventClass import *
 
+
 class EEGDeviceView(EventClass):
     def __init__(self, frame: tk.Frame, view_model: EEGDeviceViewModel):
         super().__init__()
@@ -18,22 +19,25 @@ class EEGDeviceView(EventClass):
         # New Device Frame
         self.new_device_frame = tk.Frame(frame, borderwidth=1, relief="solid")
         self.new_device_frame.pack(side="top", fill="both", expand=True)
-        
-        ## Input device IP
-        tk.Label(self.new_device_frame, text="DeviceIP").pack(anchor="w", padx=30)
+
+        # Input device IP
+        tk.Label(self.new_device_frame, text="DeviceIP").pack(
+            anchor="w", padx=30)
         self.IP_entry = tk.Entry(self.new_device_frame)
         self.IP_entry.pack(anchor="w", padx=30)
-        
-        ## Input device port
-        tk.Label(self.new_device_frame, text="Device Port").pack(anchor="w", padx=30)
+
+        # Input device port
+        tk.Label(self.new_device_frame, text="Device Port").pack(
+            anchor="w", padx=30)
         self.port_entry = tk.Entry(self.new_device_frame)
         self.port_entry.pack(anchor="w", padx=30)
-        
-        ## Input device name
-        tk.Label(self.new_device_frame, text="Device Name").pack(anchor="w", padx=30)
+
+        # Input device name
+        tk.Label(self.new_device_frame, text="Device Name").pack(
+            anchor="w", padx=30)
         self.device_name_entry = tk.Entry(self.new_device_frame)
         self.device_name_entry.pack(anchor="w", padx=30)
-        
+
         # Connect Button
         tk.Button(
             self.new_device_frame,
@@ -41,17 +45,18 @@ class EEGDeviceView(EventClass):
             command=self.add_device,
             width=18,
         ).pack(pady=10, padx=30, anchor="w")
-        
+
         # Create frame to hold the device list
-        self.device_list_frame = tk.Frame(self.frame, borderwidth=1, relief="solid")
+        self.device_list_frame = tk.Frame(
+            self.frame, borderwidth=1, relief="solid")
         self.device_list_frame.pack(side="top", fill="both", expand=True)
         self.pack_device_list()
-        
-    def on_notify(self, eventData: any, event: EventType ) -> None:
+
+    def on_notify(self, eventData: any, event: EventType) -> None:
         if event in [EventType.STREAMUPDATE, EventType.STREAMTOGGLED]:
             self.pack_device_list()
         return
-    
+
     def pack_device_list(self):
 
         # clear old device list first
@@ -60,10 +65,11 @@ class EEGDeviceView(EventClass):
 
         # create a canvas and a scroll bar to pack in the frame.
         self.device_list_canvas = tk.Canvas(self.device_list_frame)
-        self.device_list_scrollbar = tk.Scrollbar(self.device_list_frame, 
-                                                  orient="vertical", 
-                                                  command=self.device_list_canvas.yview)
-        
+        self.device_list_scrollbar = tk.Scrollbar(
+            self.device_list_frame,
+            orient="vertical",
+            command=self.device_list_canvas.yview)
+
         # create scrollable frame to hold device list
         self.scrollable_frame = tk.Frame(self.device_list_canvas)
         self.scrollable_frame.bind(
@@ -73,11 +79,12 @@ class EEGDeviceView(EventClass):
             )
         )
 
-        # 
-        self.device_list_canvas.create_window((0, 0), 
-                                              window=self.scrollable_frame, 
+        #
+        self.device_list_canvas.create_window((0, 0),
+                                              window=self.scrollable_frame,
                                               anchor="nw")
-        self.device_list_canvas.configure(yscrollcommand=self.device_list_scrollbar.set)
+        self.device_list_canvas.configure(
+            yscrollcommand=self.device_list_scrollbar.set)
 
         # pack canvas and scrollbar
         self.device_list_canvas.pack(side="left", fill="both", expand=True)
@@ -85,20 +92,23 @@ class EEGDeviceView(EventClass):
 
         # create a two column grid to hold everything
         for i, device in enumerate(self.view_model.get_devices()):
-            label = tk.Label(self.scrollable_frame, text=device.stream_name, anchor="w")
+            label = tk.Label(self.scrollable_frame,
+                             text=device.stream_name, anchor="w")
             label.grid(row=i, column=0, padx=5, pady=5, sticky="w")
-            
+
             button_state = "Stop" if device.is_alive() else "Start"
-            button = tk.Button(self.scrollable_frame, text=button_state + " Stream", 
-                               command=lambda x=device.stream_name: self.view_model.toggle_device_stream(x))
+            button = tk.Button(
+                self.scrollable_frame,
+                text=button_state + " Stream",
+                command=lambda x=device.stream_name: self.view_model.toggle_device_stream(x))
             button.grid(row=i, column=1, padx=5, pady=5, sticky="e")
-        
+
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
 
     def add_device(self) -> None:
         # potentially need to type check the port field to make sure we actually have an int
-        # probably should do an error handler in general if the device failed to connect
-        self.view_model.add_device(self.IP_entry.get(), 
-                                   int(self.port_entry.get()), 
+        # probably should do an error handler in general if the device failed
+        # to connect
+        self.view_model.add_device(self.IP_entry.get(),
+                                   int(self.port_entry.get()),
                                    self.device_name_entry.get())
-

@@ -1,5 +1,7 @@
-import machine, time
+import machine
+import time
 from machine import Pin
+
 
 class Rangefinder:
 
@@ -14,7 +16,11 @@ class Rangefinder:
             cls._DEFAULT_RANGEFINDER_INSTANCE = cls()
         return cls._DEFAULT_RANGEFINDER_INSTANCE
 
-    def __init__(self, trigger_pin: int|str = "RANGE_TRIGGER", echo_pin: int|str = "RANGE_ECHO", timeout_us:int=500*2*30):
+    def __init__(
+            self,
+            trigger_pin: int | str = "RANGE_TRIGGER",
+            echo_pin: int | str = "RANGE_ECHO",
+            timeout_us: int = 500 * 2 * 30):
         """
         A basic class for using the HC-SR04 Ultrasonic Rangefinder.
         The sensor range is between 2cm and 4m.
@@ -45,7 +51,7 @@ class Rangefinder:
         Send the pulse to trigger and listen on echo pin.
         We use the method `machine.time_pulse_us()` to get the microseconds until the echo is received.
         """
-        self._trigger.value(0) # Stabilize the sensor
+        self._trigger.value(0)  # Stabilize the sensor
         self._delay_us(5)
         self._trigger.value(1)
         # Send a 10us pulse.
@@ -61,7 +67,10 @@ class Rangefinder:
         """
         Get the distance in centimeters by measuring the echo pulse time
         """
-        if time.ticks_diff(time.ticks_us(), self.last_echo_time) < self.cache_time_us and not (self.cms == 65535 or self.cms == 0):
+        if time.ticks_diff(
+                time.ticks_us(),
+                self.last_echo_time) < self.cache_time_us and not (
+                self.cms == 65535 or self.cms == 0):
             return self.cms
 
         try:
@@ -71,7 +80,7 @@ class Rangefinder:
         except OSError as exception:
             # We don't want programs to crash if the HC-SR04 doesn't see anything in range
             # So we catch those errors and return 65535 instead
-            if exception.args[0] == 110: # 110 = ETIMEDOUT
+            if exception.args[0] == 110:  # 110 = ETIMEDOUT
                 return self.MAX_VALUE
             raise exception
 
@@ -83,9 +92,9 @@ class Rangefinder:
         self.last_echo_time = time.ticks_us()
         return self.cms
 
-    def _delay_us(self, delay:int):
+    def _delay_us(self, delay: int):
         """
-        Custom implementation of time.sleep_us(), used to get around the bug in MicroPython where time.sleep_us() 
+        Custom implementation of time.sleep_us(), used to get around the bug in MicroPython where time.sleep_us()
         doesn't work properly and causes the IDE to hang when uploading the code
         """
         start = time.ticks_us()

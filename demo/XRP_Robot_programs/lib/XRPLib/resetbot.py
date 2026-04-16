@@ -4,13 +4,16 @@ A simple file for shutting off all of the motors after a program gets interrupte
 Run this file after interrupting a program to stop the robot by running "import XRPLib.resetbot" in the REPL.
 """
 
+
 def reset_motors():
     from XRPLib.encoded_motor import EncodedMotor
-    # using the EncodedMotor since the default drivetrain uses the IMU and takes 3 seconds to init
+    # using the EncodedMotor since the default drivetrain uses the IMU and
+    # takes 3 seconds to init
     for i in range(4):
-        motor = EncodedMotor.get_default_encoded_motor(i+1)
+        motor = EncodedMotor.get_default_encoded_motor(i + 1)
         motor.set_speed(0)
         motor.reset_encoder_position()
+
 
 def reset_led():
     from XRPLib.board import Board
@@ -19,8 +22,9 @@ def reset_led():
     try:
         # Turn off the RGB LED for boards that have it
         Board.get_default_board().set_rgb_led(0, 0, 0)
-    except:
+    except BaseException:
         pass
+
 
 def reset_servos():
     from XRPLib.servo import Servo
@@ -28,16 +32,19 @@ def reset_servos():
     Servo.get_default_servo(1).free()
     Servo.get_default_servo(2).free()
 
+
 def reset_webserver():
     from XRPLib.webserver import Webserver
     # Shut off the webserver and close network connections
     Webserver.get_default_webserver().stop_server()
+
 
 def reset_hard():
     reset_motors()
     reset_led()
     reset_servos()
     reset_webserver()
+
 
 if "XRPLib.encoded_motor" in sys.modules:
     reset_motors()

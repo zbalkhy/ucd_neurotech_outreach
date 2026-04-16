@@ -8,6 +8,7 @@ import json
 
 logging.log_file = "webserverLog.txt"
 
+
 class Webserver:
 
     @classmethod
@@ -22,20 +23,26 @@ class Webserver:
         Host a webserver for the XRP v2 Robot; Register your own callbacks and log your own data to the webserver using the methods below.
         """
 
-        gc.threshold(50000) # garbage collection
+        gc.threshold(50000)  # garbage collection
         self.logged_data = {}
-        self.buttons = {"forwardButton":    lambda: logging.debug("Button not initialized"),
-                        "backButton":       lambda: logging.debug("Button not initialized"),
-                        "leftButton":       lambda: logging.debug("Button not initialized"),
-                        "rightButton":      lambda: logging.debug("Button not initialized"),
-                        "stopButton":       lambda: logging.debug("Button not initialized")}
+        self.buttons = {
+            "forwardButton": lambda: logging.debug("Button not initialized"),
+            "backButton": lambda: logging.debug("Button not initialized"),
+            "leftButton": lambda: logging.debug("Button not initialized"),
+            "rightButton": lambda: logging.debug("Button not initialized"),
+            "stopButton": lambda: logging.debug("Button not initialized")}
         self.FUNCTION_PREFIX = "startfunction"
         self.FUNCTION_SUFFIX = "endfunction"
         self.display_arrows = False
-        # Instantiate self.wlan now so that running stop before start doesn't cause an error
+        # Instantiate self.wlan now so that running stop before start doesn't
+        # cause an error
         self.wlan = network.WLAN(network.STA_IF)
 
-    def start_network(self, ssid:str=None, robot_id:int= None, password:str=None):
+    def start_network(
+            self,
+            ssid: str = None,
+            robot_id: int = None,
+            password: str = None):
         """
         Open an access point from the XRP board to be used as a captive host. The default network information can be set in secrets.json
 
@@ -61,14 +68,19 @@ class Webserver:
                 ssid = f"XRP_{robot_id}"
                 password = "remote.xrp"
         if password is not None and len(password) < 8:
-            logging.warn("Password is less than 8 characters, this may cause issues with some devices")
+            logging.warn(
+                "Password is less than 8 characters, this may cause issues with some devices")
         self.wlan = access_point(ssid, password)
         logging.info(f"Starting Access Point \"{ssid}\"")
         self.ip = self.wlan.ifconfig()[0]
 
-    def connect_to_network(self, ssid:str=None, password:str=None, timeout = 10):
+    def connect_to_network(
+            self,
+            ssid: str = None,
+            password: str = None,
+            timeout=10):
         """
-        Connect to a wifi network with the given ssid and password. 
+        Connect to a wifi network with the given ssid and password.
         If the connection fails, the board will disconnect from the network and return.
 
         :param ssid: The ssid of the network, defaults to value from secrets.json
@@ -79,7 +91,7 @@ class Webserver:
         :type timeout: int, optional
         """
         self.wlan = network.WLAN(network.STA_IF)
-        self.wlan.active(True) # configure board to connect to wifi
+        self.wlan.active(True)  # configure board to connect to wifi
         if ssid is None:
             try:
                 with open("../../secrets.json") as secrets_file:
@@ -89,11 +101,11 @@ class Webserver:
             except (OSError, KeyError, ValueError):
                 print("secrets.json not found or improperly formatted")
                 return False
-        self.wlan.connect(ssid,password)
+        self.wlan.connect(ssid, password)
         start_time = time.time()
         while not self.wlan.isconnected():
             print("Connecting to network, may take a second")
-            if time.time() > start_time+timeout:
+            if time.time() > start_time + timeout:
                 print("Failed to connect to network, please try again")
                 self.wlan.disconnect()
                 return False
@@ -120,7 +132,7 @@ class Webserver:
         if self.wlan.active():
             logging.enable_logging_types(logging.LOG_INFO)
             logging.info("Stopping Webserver and Network Connections")
-            
+
             stop()
             self.wlan.active(False)
 
@@ -143,10 +155,10 @@ class Webserver:
     def _catch_all(self, request):
         # Catch all requests and redirect if necessary
         if request.headers.get("host") != self.DOMAIN:
-            return redirect("http://"+self.DOMAIN+"/")
+            return redirect("http://" + self.DOMAIN + "/")
         return self._index_page(request=request)
-        
-    def log_data(self, label:str, data):
+
+    def log_data(self, label: str, data):
         """
         Register a custom label to be displayed on the webserver
 
@@ -157,7 +169,7 @@ class Webserver:
         """
         self.logged_data[label] = data
 
-    def add_button(self, button_name:str, function):
+    def add_button(self, button_name: str, function):
         """
         Register a custom button to be displayed on the webserver
 
@@ -187,7 +199,7 @@ class Webserver:
         """
         self.display_arrows = True
         self.buttons["backButton"] = function
-    
+
     def registerLeftButton(self, function):
         """
         Assign a function to the left button
@@ -207,11 +219,11 @@ class Webserver:
         """
         self.display_arrows = True
         self.buttons["rightButton"] = function
-    
+
     def registerStopButton(self, function):
         """
-        Assign a function to the stop 
-        
+        Assign a function to the stop
+
         :param function: The function to be called when the button is pressed
         :type function: function
         """
@@ -223,26 +235,28 @@ class Webserver:
         try:
             user_function = self.buttons[text]
             if user_function is None:
-                logging.warning("User function "+text+" not found")
+                logging.warning("User function " + text + " not found")
                 return False
             user_function()
             return True
         except RuntimeError as xcpt:
-            logging.error("User function "+text+" caused an exception: "+str(xcpt))
+            logging.error("User function " + text + " caused an exception: " + str(xcpt))
             return False
 
     def _generateHTML(self):
 
         string = _HTML1
-        
+
         if self.display_arrows:
             string += _HTML_ARROWS
 
         string += f'<h3>Custom Function Bindings:</h3>'
         # add each button's href to html
         for button in self.buttons.keys():
-            if(["forwardButton","backButton","leftButton","rightButton","stopButton"].count(button) > 0):
-                # Slightly cursed solution to not display the arrow buttons as text buttons
+            if (["forwardButton", "backButton", "leftButton",
+                    "rightButton", "stopButton"].count(button) > 0):
+                # Slightly cursed solution to not display the arrow buttons as
+                # text buttons
                 continue
             string += f'<p><form action="{button}" method="post"><input type="submit" class="user-button" name={button} value="{button}" /></form></p>'
             string += "\n"
@@ -257,27 +271,32 @@ class Webserver:
 
         return string
 
+
 """ Use decorators to bind the wifi methods to the requests """
 webserver = Webserver()
 
-@server.route("/", methods=['GET','POST'])
+
+@server.route("/", methods=['GET', 'POST'])
 def index(request):
     return webserver._index_page(request)
+
 
 @server.route("/hotspot-detect.html", methods=["GET"])
 def hotspot(request):
     return webserver._hotspot(request)
 
+
 @server.catchall()
 def catch_all(request):
     return webserver._catch_all(request)
+
 
 _HTML1 = """
         <html>
         <head>
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <meta http-equiv="refresh" content="1">
-            
+
             <style>
                 a { text-decoration: none; }
 
@@ -296,7 +315,7 @@ _HTML1 = """
                     font-size: 20px;
                 }
             </style>
-            
+
         </head>
 
         <body>

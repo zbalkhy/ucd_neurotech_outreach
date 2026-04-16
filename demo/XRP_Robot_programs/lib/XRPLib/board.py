@@ -3,6 +3,7 @@ from neopixel import NeoPixel
 import time
 import sys
 
+
 class Board:
 
     _DEFAULT_BOARD_INSTANCE = None
@@ -16,8 +17,12 @@ class Board:
             cls._DEFAULT_BOARD_INSTANCE = cls()
         return cls._DEFAULT_BOARD_INSTANCE
 
-    def __init__(self, vin_pin="BOARD_VIN_MEASURE", button_pin="BOARD_USER_BUTTON", 
-                 rgb_led_pin = "BOARD_NEOPIXEL", led_pin = "LED"):
+    def __init__(
+            self,
+            vin_pin="BOARD_VIN_MEASURE",
+            button_pin="BOARD_USER_BUTTON",
+            rgb_led_pin="BOARD_NEOPIXEL",
+            led_pin="LED"):
         """
         Implements for extra features on the XRP board. Handles the on/off switch, button, and LED.
 
@@ -28,7 +33,7 @@ class Board:
         """
 
         self.on_switch = ADC(Pin(vin_pin))
-        
+
         self.button = Pin(button_pin, Pin.IN, Pin.PULL_UP)
 
         self.led = Pin(led_pin, Pin.OUT)
@@ -39,7 +44,6 @@ class Board:
         # Leaves the hardware timers for more important uses
         self._virt_timer = Timer(-1)
         self.is_led_blinking = False
-
 
     def are_motors_powered(self) -> bool:
         """
@@ -56,7 +60,7 @@ class Board:
         :rtype: bool
         """
         return not self.button.value()
-    
+
     def wait_for_button(self):
         """
         Halts the program until the button is pressed
@@ -70,7 +74,6 @@ class Board:
         while self.is_button_pressed():
             time.sleep(.01)
 
-    
     def led_on(self):
         """
         Turns the LED on
@@ -89,7 +92,7 @@ class Board:
         self.led.off()
         self._virt_timer.deinit()
 
-    def led_blink(self, frequency: int=0):
+    def led_blink(self, frequency: int = 0):
         """
         Blinks the LED at a given frequency. If the frequency is 0, the LED will stop blinking.
 
@@ -102,14 +105,14 @@ class Board:
         # We set it to twice in input frequency so that
         # the led flashes on and off frequency times per second
         if frequency != 0:
-            self._virt_timer.init(freq=frequency*2, mode=Timer.PERIODIC,
-                callback=lambda t:self.led.toggle())
+            self._virt_timer.init(freq=frequency * 2, mode=Timer.PERIODIC,
+                                  callback=lambda t: self.led.toggle())
             self.is_led_blinking = True
         else:
             self._virt_timer.deinit()
             self.is_led_blinking = False
 
-    def set_rgb_led(self, r:int, g:int, b:int):
+    def set_rgb_led(self, r: int, g: int, b: int):
         """
         Sets the Neopixel RGB LED to a specified color. Throws a NotImplementedError on the XRP Beta
 
@@ -124,4 +127,5 @@ class Board:
             self.rgb_led[0] = (r, g, b)
             self.rgb_led.write()
         else:
-            raise NotImplementedError("Board.set_rgb_led not implemented for the XRP Beta")
+            raise NotImplementedError(
+                "Board.set_rgb_led not implemented for the XRP Beta")

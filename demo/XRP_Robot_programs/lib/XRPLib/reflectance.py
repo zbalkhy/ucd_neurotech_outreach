@@ -1,5 +1,6 @@
 from machine import Pin, ADC
 
+
 class Reflectance:
 
     _DEFAULT_REFLECTANCE_INSTANCE = None
@@ -13,11 +14,12 @@ class Reflectance:
             cls._DEFAULT_REFLECTANCE_INSTANCE = cls()
         return cls._DEFAULT_REFLECTANCE_INSTANCE
 
-    def __init__(self, leftPin: int|str = "LINE_L", rightPin: int|str = "LINE_R"):
+    def __init__(self, leftPin: int | str = "LINE_L",
+                 rightPin: int | str = "LINE_R"):
         """
         Implements for a reflectance sensor using the built in 12-bit ADC.
         Reads from analog in and converts to a float from 0 (white) to 1 (black)
-        
+
         :param leftPin: The pin the left reflectance sensor is connected to
         :type leftPin: int
         :param rightPin: The pin the right reflectance sensor is connected to

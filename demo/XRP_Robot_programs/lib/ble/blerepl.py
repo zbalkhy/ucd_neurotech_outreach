@@ -7,7 +7,7 @@ import micropython
 from micropython import const
 from machine import Timer, Pin, disable_irq, enable_irq, unique_id
 import time
-                    
+
 
 from ble.ble_uart_peripheral import BLEUART
 
@@ -18,17 +18,21 @@ _timer = Timer(-1)
 
 waitingForTimer = False
 
-#_led = Pin("LED", Pin.OUT) //for debugging
+# _led = Pin("LED", Pin.OUT) //for debugging
 
 # Batch writes into 50ms intervals.
+
+
 def schedule_in(handler, delay_ms):
     def _wrap(_arg):
         handler()
-    #using PERIODIC vs ONE_SHOT because sometimes ONE_SHOT didn't fire when IMU timer was going
-    #We deinit() once the timer goes off. So for all means a ONE_SHOT.
+    # using PERIODIC vs ONE_SHOT because sometimes ONE_SHOT didn't fire when IMU timer was going
+    # We deinit() once the timer goes off. So for all means a ONE_SHOT.
     _timer.init(mode=Timer.PERIODIC, period=delay_ms, callback=_wrap)
 
 # Simple buffering stream to support the dupterm requirements.
+
+
 class BLEUARTStream(io.IOBase):
     def __init__(self, uart):
         self._uart = uart
@@ -36,13 +40,12 @@ class BLEUARTStream(io.IOBase):
         self._uart.irq(self._indicate_handler)
         self._tx_buf_index = 0
 
-
     def _indicate_handler(self):
         if waitingForTimer:
             return
         if self._tx_buf:
             self._flush()
-            
+
     def _timer_handler(self):
         waitingForTimer = False
         _timer.deinit()
@@ -84,13 +87,14 @@ class BLEUARTStream(io.IOBase):
             waitingForTimer = True
             schedule_in(self._timer_handler, 50)
 
+
 def background_task():
     ble = bluetooth.BLE()
     x = (''.join(['{:02x}'.format(b) for b in unique_id()]))
-    uart = BLEUART(ble, name="XRP-" + x[11:], rxbuf = 250)
+    uart = BLEUART(ble, name="XRP-" + x[11:], rxbuf=250)
     stream = BLEUARTStream(uart)
-    os.dupterm(stream,0)
+    os.dupterm(stream, 0)
+
 
 # Start the background task
 background_task()
-    

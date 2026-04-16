@@ -1,11 +1,11 @@
 # This implements the Nordic UART Service (NUS).
 
 import bluetooth
-#from .ble_advertising import advertising_payload
+# from .ble_advertising import advertising_payload
 import struct
 from micropython import const
 
-#Advertise info
+# Advertise info
 # org.bluetooth.characteristic.gap.appearance.xml
 _ADV_APPEARANCE_GENERIC_COMPUTER = const(128)
 _ADV_TYPE_FLAGS = const(0x01)
@@ -34,18 +34,21 @@ _UART_SERVICE = (
     (_UART_TX, _UART_RX),
 )
 
+
 class BLEUART:
     def __init__(self, ble, name="mpy-uart", rxbuf=100):
         self._ble = ble
         self._ble.active(True)
         self._ble.irq(self._irq)
-        ((self._tx_handle, self._rx_handle),) = self._ble.gatts_register_services((_UART_SERVICE,))
+        ((self._tx_handle, self._rx_handle),
+         ) = self._ble.gatts_register_services((_UART_SERVICE,))
         # Increase the size of the rx buffer and enable append mode.
         self._ble.gatts_set_buffer(self._rx_handle, rxbuf, True)
         self._connections = set()
         self._rx_buffer = bytearray()
         self._handler = None
-        self._payload = self._advertising_payload(name, _ADV_APPEARANCE_GENERIC_COMPUTER)
+        self._payload = self._advertising_payload(
+            name, _ADV_APPEARANCE_GENERIC_COMPUTER)
         self._advertise()
 
     def irq(self, handler):
@@ -66,14 +69,15 @@ class BLEUART:
             conn_handle, value_handle = data
             if conn_handle in self._connections and value_handle == self._rx_handle:
                 self._rx_buffer += self._ble.gatts_read(self._rx_handle)
-                if(self._rx_buffer.find(b'##XRPSTOP#' + b'#') != -1): #WARNING: This is broken up so it won't restart during an update or this file.
+                # WARNING: This is broken up so it won't restart during an
+                # update or this file.
+                if (self._rx_buffer.find(b'##XRPSTOP#' + b'#') != -1):
                     self._rx_buffer = bytearray()
                     import machine
                     machine.reset()
         elif event == _IRQ_GATTS_INDICATE_DONE:
             if self._handler:
                 self._handler()
-            
 
     def any(self):
         return len(self._rx_buffer)
@@ -86,7 +90,7 @@ class BLEUART:
         return result
 
     def write(self, data):
-        #print("write:" + data)
+        # print("write:" + data)
         for conn_handle in self._connections:
             self._ble.gatts_indicate(conn_handle, self._tx_handle, data)
 
@@ -112,5 +116,5 @@ class BLEUART:
         )
         _append(_ADV_TYPE_NAME, name)
         _append(_ADV_TYPE_APPEARANCE, struct.pack("<h", appearance))
-        
+
         return payload

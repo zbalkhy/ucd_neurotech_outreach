@@ -5,18 +5,19 @@ from .controller import Controller
 PID controller with exit condition
 """
 
+
 class PID(Controller):
 
     def __init__(self,
-                 kp = 1.0,
-                 ki = 0.0,
-                 kd = 0.0,
-                 min_output = 0.0,
-                 max_output = 1.0,
-                 max_derivative = None,
-                 max_integral = None,
-                 tolerance = 0.1,
-                 tolerance_count = 1
+                 kp=1.0,
+                 ki=0.0,
+                 kd=0.0,
+                 min_output=0.0,
+                 max_output=1.0,
+                 max_derivative=None,
+                 max_integral=None,
+                 tolerance=0.1,
+                 tolerance_count=1
                  ):
         """
         :param kp: proportional gain
@@ -54,7 +55,8 @@ class PID(Controller):
             # if error is within tolerance, increment times in tolerance
             self.times += 1
         else:
-            # otherwise, reset times in tolerance, because we need to be in tolerance for numTimesInTolerance consecutive times
+            # otherwise, reset times in tolerance, because we need to be in
+            # tolerance for numTimesInTolerance consecutive times
             self.times = 0
 
     def update(self, error: float, debug: bool = False) -> float:
@@ -75,14 +77,15 @@ class PID(Controller):
         else:
             # get time delta in seconds
             timestep = time.ticks_diff(current_time, self.prev_time) / 1000
-        self.prev_time = current_time # cache time for next update
+        self.prev_time = current_time  # cache time for next update
 
         self._handle_exit_condition(error)
 
         integral = self.prev_integral + error * timestep
-        
+
         if self.max_integral is not None:
-            integral = max(-self.max_integral, min(self.max_integral, integral))
+            integral = max(-self.max_integral,
+                           min(self.max_integral, integral))
 
         derivative = (error - self.prev_error) / timestep
 
@@ -96,7 +99,7 @@ class PID(Controller):
             output = max(self.min_output, output)
         else:
             output = min(-self.min_output, output)
-        
+
         # Bound output by maximum
         output = max(-self.max_output, min(self.max_output, output))
 
@@ -110,17 +113,17 @@ class PID(Controller):
         self.prev_output = output
 
         if debug:
-            print(f"{output}: ({self.kp * error}, {self.ki * integral}, {self.kd * derivative})")
-
+            print(
+                f"{output}: ({self.kp * error}, {self.ki * integral}, {self.kd * derivative})")
         return output
-    
+
     def is_done(self) -> bool:
         """
         :return: if error is within tolerance for numTimesInTolerance consecutive times, or timed out
         :rtype: bool
         """
         return self.times >= self.tolerance_count
-    
+
     def clear_history(self):
         self.prev_error = 0
         self.prev_integral = 0

@@ -1,8 +1,9 @@
 from Models.userModel import UserModel
 from Classes.classifierClass import Classifier
-from Stream.composedStream import ComposedStream 
+from Stream.composedStream import ComposedStream
 from Stream.dataStream import StreamType
 from Stream.xrpControlStream import XRPControlStream
+
 
 class ClassifierViewModel(object):
     def __init__(self, user_model: UserModel):
@@ -17,9 +18,12 @@ class ClassifierViewModel(object):
         filters: list[str]
     ) -> None:
         # get datasets, features, and filters from user model
-        label0_datasets = {ds: self.user_model.get_dataset(ds) for ds in datasets0}
-        label1_datasets = {ds: self.user_model.get_dataset(ds) for ds in datasets1}
-        feature_objs = [self.user_model.get_features()[feat] for feat in features]
+        label0_datasets = {
+            ds: self.user_model.get_dataset(ds) for ds in datasets0}
+        label1_datasets = {
+            ds: self.user_model.get_dataset(ds) for ds in datasets1}
+        feature_objs = [self.user_model.get_features()[feat]
+                        for feat in features]
         filter_objs = [self.user_model.filters[f] for f in filters]
 
         # build and store classifier

@@ -1,9 +1,11 @@
 from .encoded_motor import EncodedMotor
+
+
 class MotorGroup(EncodedMotor):
     def __init__(self, *motors: EncodedMotor):
         """
         A wrapper class for multiple motors, allowing them to be treated as one motor.
-        
+
         :param motors: The motors to add to this group
         :type motors: tuple<EncodedMotor>
         """
@@ -11,21 +13,21 @@ class MotorGroup(EncodedMotor):
         for motor in motors:
             self.add_motor(motor)
 
-    def add_motor(self, motor:EncodedMotor):
+    def add_motor(self, motor: EncodedMotor):
         """
         :param motor: The motor to add to this group
         :type motor: EncodedMotor
         """
         self.motors.append(motor)
 
-    def remove_motor(self, motor:EncodedMotor):
+    def remove_motor(self, motor: EncodedMotor):
         """
         :param motor: The motor to remove from this group
         :type motor: EncodedMotor
         """
         try:
             self.motors.remove(motor)
-        except:
+        except BaseException:
             print("Failed to remove motor from Motor Group")
 
     def set_effort(self, effort: float):
@@ -35,7 +37,7 @@ class MotorGroup(EncodedMotor):
         """
         for motor in self.motors:
             motor.set_effort(effort)
-        
+
     def get_position(self) -> float:
         """
         :return: The average position of all motors in this group, in revolutions, relative to the last time reset was called.
@@ -72,7 +74,6 @@ class MotorGroup(EncodedMotor):
         for motor in self.motors:
             avg += motor.get_speed()
         return avg / len(self.motors)
-
 
     def set_speed(self, target_speed_rpm: float = None):
         """
