@@ -123,12 +123,12 @@ class Classifier:
         if self.model is None:
             raise RuntimeError("Model not trained yet.")
         features = np.array(self.generate_features(sample)).reshape(1, -1)
-        prediction = (features[0] < 7e-7)
-        # prediction = self.model.predict(features)
+        prediction = self.model.predict(features)
         return int(prediction)
 
     def apply(self, data: np.ndarray, fs: int) -> np.ndarray:
         prediction = self.predict_sample(data)
+        print(f"[Classifier] samples={data.shape} | alpha={np.array(self.generate_features(data))[0][0]:.1f} | result={'eyesOpen' if prediction else 'eyesClosed'}")
         print(prediction)
         if prediction:
             return np.array(['eyesOpen'])
