@@ -32,6 +32,8 @@ class SaveModel(EventClass):
                     self.dump(eventData)
                 case EventType.CLASSIFIERUPDATE:
                     self.dump(eventData)
+                case EventType.FUNCTIONUPDATE:
+                    self.dump(eventData)
 
     def dump(self, user_model: UserModel):
         try:
