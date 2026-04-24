@@ -69,6 +69,11 @@ def open_function_editor(root, user_model):
     editor = EditorClass(t)
     editor.add_observer(user_model)
 
+def open_game(root, user_model):
+    t = tk.Toplevel(root)
+    t.wm_title('Float the Orb Game')
+
+    pass
 
 if __name__ == "__main__":
     print("main app starting")
