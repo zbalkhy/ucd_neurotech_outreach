@@ -24,10 +24,8 @@ from ViewModel.featureViewModel import FeatureViewModel
 from Classes.featureClass import FeatureClass, FeatureType
 import pandas as pd
 import numpy as np
-from Stream.lslStream import LslStream
 from Stream.xrpControlStream import XRPControlStream
 from scipy.io import loadmat
-from pylsl import StreamInlet, resolve_streams
 
 # Change to activate different UI based on session
 # Currently switches between 0 and 1

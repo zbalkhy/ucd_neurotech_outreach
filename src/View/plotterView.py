@@ -42,12 +42,6 @@ class PlotterView(EventClass):
     def _setup_canvas(self):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.frame)
         self.canvas.draw()
-        self.canvas.mpl_connect(
-            "key_press_event",
-            lambda event: print(
-                f"you pressed {
-                    event.key}"))
-        self.canvas.mpl_connect("key_press_event", key_press_handler)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def _setup_controls(self):
@@ -218,9 +212,10 @@ class PlotterView(EventClass):
         for entry in self.source_selectors:
             if entry["stream_var"] is stream_var:
                 entry["channel_cb"]["values"] = channel_choices
+                # channel_var.set(CHOOSE_CHANNEL)
                 # Keep previous selection if valid, else default
                 if channel_var.get() not in channel_choices:
-                    channel_var.set(CHOOSE_CHANNEL)
+                   channel_var.set(CHOOSE_CHANNEL)
 
     def _on_source_change(self):
         sources = []

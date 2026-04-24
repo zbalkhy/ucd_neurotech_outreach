@@ -33,12 +33,14 @@ class FeatureViewModel(object):
         # get feature and dataset
         features = [self.get_feature(feature) for feature in feature_names]
         datasets = [self.get_dataset(dataset) for dataset in dataset_names]
-
+        if len(channels) == 0:
+            channels = [0]
         # calculate feature on dataset
         feature_datasets = []
         labels = []
         for i, feature in enumerate(features):
             for j, dataset in enumerate(datasets):
+                assert dataset.ndim == 3
                 feature_dataset = []
                 for k in range(dataset.shape[0]):
                     trial = dataset[k, :]
