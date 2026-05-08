@@ -63,16 +63,22 @@ def open_feature_viewer(root, view_model):
     t.wm_title('Feature Viewer')
     feature_view = FeatureView(t, feature_view_model)
 
+
 def open_function_editor(root, user_model):
     t = tk.Toplevel(root)
     t.wm_title('Function Editor')
     editor = EditorClass(t)
     editor.add_observer(user_model)
 
+
 def open_game(root, user_model):
     t = tk.Toplevel(root)
     t.wm_title('Float the Orb Game')
-    game = InfiniteRunner(size=(800, 600), fps=80, parent=t, user_model=user_model)
+    game = InfiniteRunner(
+        size=(800, 600),
+        fps=80,
+        parent=t,
+        user_model=user_model)
     game.start()
     game_ui = App(game, width=800, height=700, parent_window=t)
     t.protocol("WM_DELETE_WINDOW", game_ui.on_close)
@@ -81,8 +87,8 @@ def open_game(root, user_model):
 if __name__ == "__main__":
     print("main app starting")
     # initialize user model
-    save_model =  SaveModel()
-    user_model =  save_model.load() if save_model.save_exists() else UserModel()
+    save_model = SaveModel()
+    user_model = save_model.load() if save_model.save_exists() else UserModel()
     user_model.add_observer(save_model)
 
     data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
@@ -162,7 +168,6 @@ if __name__ == "__main__":
     actions.add_command(
         label='Play Float the Orb',
         command=lambda: open_game(root, user_model))
-
 
     # clicking (x) on main window prevents program from quiting while commands are being queued.
     # we'll need a quit event to propagate through the program to kill any

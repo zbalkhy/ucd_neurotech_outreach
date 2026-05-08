@@ -185,7 +185,7 @@ class InfiniteRunner:
 class App:
     def __init__(self, game, width=600, height=600, parent_window=None):
         self.game = game
-        
+
         # Game can work independently or via main.py
         if parent_window is None:
             self.root = tk.Tk()
