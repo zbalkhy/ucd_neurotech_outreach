@@ -3,7 +3,7 @@ import tkinter.ttk as ttk
 from Classes.eventClass import *
 from ViewModel.inventoryViewModel import InventoryViewModel
 from common import create_grid, resource_path
-
+import os
 
 class InventoryView(EventClass):
     def __init__(self, frame: tk.Frame, view_model: InventoryViewModel):
@@ -29,7 +29,7 @@ class InventoryView(EventClass):
                  'yellow')])
         # grab png image for stream running icon
         self.stream_running_icon = tk.PhotoImage(
-            file=resource_path("src/assets/folder.png"))
+            file=resource_path(os.path.join("assets","folder.png")))
 
         self.views = [['Streams'], ['Datasets'], ['Classifiers']]
         self.frames = create_grid(self.inner_frame, len(
