@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from View.plotterView import PlotterView, create_plotter
 from ViewModel.plotterViewModel import PlotterViewModel
-from Game.floatTheOrbGame import FloatTheOrb
+from Game.week1_game import InfiniteRunner, App
 from common import create_grid
 from Models.userModel import UserModel
 from Models.saveModel import SaveModel
@@ -72,8 +72,11 @@ def open_function_editor(root, user_model):
 def open_game(root, user_model):
     t = tk.Toplevel(root)
     t.wm_title('Float the Orb Game')
+    game = InfiniteRunner(size=(800, 600), fps=80, parent=t, user_model=user_model)
+    game.start()
+    game_ui = App(game, width=800, height=700, parent_window=t)
+    t.protocol("WM_DELETE_WINDOW", game_ui.on_close)
 
-    pass
 
 if __name__ == "__main__":
     print("main app starting")
@@ -156,9 +159,10 @@ if __name__ == "__main__":
     actions.add_command(
         label='Open Code Editor',
         command=lambda: open_function_editor(root, user_model))
-    # create game
-    # float_the_orb = FloatTheOrb(frames[1][0], user_context, user_context_lock)
-    # float_the_orb.start_pygame()
+    actions.add_command(
+        label='Play Float the Orb',
+        command=lambda: open_game(root, user_model))
+
 
     # clicking (x) on main window prevents program from quiting while commands are being queued.
     # we'll need a quit event to propagate through the program to kill any

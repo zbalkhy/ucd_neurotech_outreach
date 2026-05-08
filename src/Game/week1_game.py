@@ -11,7 +11,10 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"  # Headless Pygame
 # --- Pygame Game Class ---
 
 class InfiniteRunner:
-    def __init__(self, size, fps):
+    def __init__(self, size, fps, parent=None, user_model=None):
+        self.parent = parent
+        self.user_model = user_model
+
         self.width = size[0]
         self.height = size[1]
         self.fps = fps
@@ -35,8 +38,8 @@ class InfiniteRunner:
         self.PLAYER_X = 150
         self.MOVE_SPEED = 20
         self.OBSTACLE_WIDTH = 40
-        self.OBSTACLE_SPEED = 6
-        self.SPAWN_INTERVAL_MS = 1200
+        self.OBSTACLE_SPEED = 1         # og ratio for speed:spawn interval = 6:1200
+        self.SPAWN_INTERVAL_MS = 7200
 
         # Colors
         self.BLACK = (0, 0, 0)
@@ -180,9 +183,17 @@ class InfiniteRunner:
 
 # --- Tkinter App Class ---
 class App:
-    def __init__(self, game, width=600, height=600):
+    def __init__(self, game, width=600, height=600, parent_window=None):
         self.game = game
-        self.root = tk.Tk()
+        
+        # Game can work independently or via main.py
+        if parent_window is None:
+            self.root = tk.Tk()
+            self.running_main = False
+        else:
+            self.root = parent_window
+            self.running_main = True
+
         self.root.title("Cube Infinite Runner")
 
         self.root.geometry(f"{width}x{height}")
@@ -213,7 +224,9 @@ class App:
         self.root.focus_set()
 
         self.update_label()
-        self.root.mainloop()
+
+        if not self.running_main:
+            self.root.mainloop()
 
     def on_space_press(self, event):
         self.game.space_pressed = True
