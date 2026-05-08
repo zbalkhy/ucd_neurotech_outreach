@@ -10,7 +10,6 @@ import os
 MODEL_SAVE_DIR = 'user_classifiers'
 
 
-
 class Classifier:
     def __init__(
         self,
@@ -18,7 +17,7 @@ class Classifier:
         label1_datasets: Dict[str, np.ndarray] = None,
         features: List[FeatureClass] = None,
         filters: List[FilterClass] = None,
-        model = None
+        model=None
     ):
         self.label0_datasets: Dict[str,
                                    np.ndarray] = label0_datasets if label0_datasets is not None else {}
@@ -141,7 +140,11 @@ class Classifier:
             model_filename = f'{self.model.__class__.__name__}.joblib'
             if not os.path.exists(MODEL_SAVE_DIR):
                 os.makedirs(MODEL_SAVE_DIR)
-            joblib.dump(self.model, os.path.join(MODEL_SAVE_DIR, model_filename))
+            joblib.dump(
+                self.model,
+                os.path.join(
+                    MODEL_SAVE_DIR,
+                    model_filename))
         return {
             'label0_datasets': {k: v.tolist() for k, v in self.label0_datasets.items()},
             'label1_datasets': {k: v.tolist() for k, v in self.label1_datasets.items()},
@@ -153,8 +156,12 @@ class Classifier:
     @classmethod
     def from_dict(cls, data: dict) -> 'Classifier':
 
-        label0_datasets = {k: np.array(v) for k, v in data['label0_datasets'].items()}
-        label1_datasets = {k: np.array(v) for k, v in data['label1_datasets'].items()}
+        label0_datasets = {
+            k: np.array(v) for k,
+            v in data['label0_datasets'].items()}
+        label1_datasets = {
+            k: np.array(v) for k,
+            v in data['label1_datasets'].items()}
         features = [FeatureClass.from_dict(f) for f in data['features']]
         filters = [FilterClass.from_dict(f) for f in data['filters']]
         model = None
