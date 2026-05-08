@@ -1,5 +1,5 @@
 from scipy import signal
-from PyQt6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 FILTER_TYPES = ["lowpass", "highpass", "bandpass", "bandstop"]
 

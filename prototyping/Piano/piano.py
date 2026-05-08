@@ -5,7 +5,7 @@ import numpy as np
 import sounddevice as sd
 import soundfile as sf
 import threading
-from PyQt6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from filters import FilterBank
 
 WHITE_KEY_STYLE = """
