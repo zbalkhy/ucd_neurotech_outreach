@@ -22,6 +22,7 @@ from ViewModel.classifierViewModel import ClassifierViewModel
 from View.featureView import FeatureView
 from ViewModel.featureViewModel import FeatureViewModel
 from Classes.featureClass import FeatureClass, FeatureType
+from Classes.editorClass import EditorClass
 import pandas as pd
 import numpy as np
 from Stream.lslStream import LslStream
@@ -33,7 +34,8 @@ from pylsl import StreamInlet, resolve_streams
 # Currently switches between 0 and 1
 # 0 = Default
 # 1 = Plotter UI for Session 1
-SESSION_ID = 1
+# 2 = Plotter UI for Session 2
+SESSION_ID = 0
 
 
 top_grid_names = [[f"Inventory", 'Visualizer']]
@@ -43,7 +45,6 @@ bottom_grid_names = [[f"Data Collector", f"Filter Maker", f"Classifier"]]
 def on_closing():
     # Stop the plotter thread
     plotter_view.stop()
-
     # send shutdown event to each stream thread
     for data_stream in user_model.get_streams():
         data_stream.shutdown_event.set()
@@ -53,6 +54,7 @@ def on_closing():
         if data_stream.is_alive():
             data_stream.join()
     save_model.dump(user_model)
+    print("Saved User")
     root.destroy()
 
 
@@ -60,6 +62,12 @@ def open_feature_viewer(root, view_model):
     t = tk.Toplevel(root)
     t.wm_title('Feature Viewer')
     feature_view = FeatureView(t, feature_view_model)
+
+def open_function_editor(root, user_model):
+    t = tk.Toplevel(root)
+    t.wm_title('Function Editor')
+    editor = EditorClass(t)
+    editor.add_observer(user_model)
 
 
 if __name__ == "__main__":
@@ -140,7 +148,9 @@ if __name__ == "__main__":
             root,
             feature_view_model))
     root.config(menu=menubar)
-
+    actions.add_command(
+        label='Open Code Editor',
+        command=lambda: open_function_editor(root, user_model))
     # create game
     # float_the_orb = FloatTheOrb(frames[1][0], user_context, user_context_lock)
     # float_the_orb.start_pygame()
