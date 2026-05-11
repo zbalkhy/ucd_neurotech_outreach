@@ -452,7 +452,8 @@ class PlotterViewModel(EventClass):
 
     def _generate_simulated_data_for_index(self, stream_idx):
         fs = 250
-        t = np.linspace(0, 2, 2 * fs, endpoint=False)
+        duration = 4
+        t = np.linspace(0, duration, int(duration * fs), endpoint=False)
 
         if stream_idx >= len(self.streams):
             return None
@@ -460,22 +461,102 @@ class PlotterViewModel(EventClass):
         stream_name = getattr(self.streams[stream_idx], "stream_name", "")
 
         if "SimStream1" in stream_name:
-            freq, amp, noise, n_ch = 10, 50, 10, 8
+            base_freq, base_amp, noise, n_ch = 10, 50, 10, 8
         elif "SimStream2" in stream_name:
-            freq, amp, noise, n_ch = 6, 40, 15, 5
+            base_freq, base_amp, noise, n_ch = 6, 40, 15, 5
         elif "SimStream3" in stream_name:
-            freq, amp, noise, n_ch = 20, 30, 10, 2
+            base_freq, base_amp, noise, n_ch = 20, 30, 10, 2
         elif "SimStream4" in stream_name:
-            freq, amp, noise, n_ch = 30, 20, 10, 1
+            base_freq, base_amp, noise, n_ch = 30, 20, 10, 1
         else:
-            freq, amp, noise, n_ch = 8, 25, 10, 1
+            base_freq, base_amp, noise, n_ch = 8, 25, 10, 1
 
-        return np.stack([
-            amp * np.sin(2 * np.pi * (freq + i) * t) + noise * np.random.randn(len(t))
-            for i in range(n_ch)
-        ], axis=1)
+        envelope = 0.2 + 1.0 * (0.5 * (1 + np.sin(0.5 * 2 * np.pi * t)))
 
-        return channels  # Return full multi-channel array
+        signals = []
+
+        for i in range(n_ch):
+            freq = base_freq + i
+
+            signal = (
+                (base_amp * envelope) * np.sin(2 * np.pi * freq * t)
+                + noise * np.random.randn(len(t))
+            )
+
+            # --- Slow drift ---
+            drift = 0.3 * base_amp * np.sin(
+                0.2 * 2 * np.pi * t + np.random.rand() * 2*np.pi
+            )
+            signal += drift
+
+            # =========================================================
+            #  SPIKES (your existing)
+            # =========================================================
+            mask1 = np.random.rand(len(t)) < 0.02
+            spike_vals1 = np.random.uniform(-5*base_amp, 5*base_amp, size=len(t))
+            signal[mask1] += spike_vals1[mask1]
+
+            mask2 = np.random.rand(len(t)) < 0.002
+            spike_vals2 = np.random.uniform(-30*base_amp, 30*base_amp, size=len(t))
+            signal[mask2] += spike_vals2[mask2]
+
+            for mask, spike_vals in [(mask1, spike_vals1), (mask2, spike_vals2)]:
+                for idx in np.where(mask)[0]:
+                    if idx + 1 < len(signal):
+                        signal[idx + 1] += 0.7 * spike_vals[idx]
+                    if idx - 1 >= 0:
+                        signal[idx - 1] += 0.7 * spike_vals[idx]
+
+            # =========================================================
+            #  EYE BLINKS (slow, large deflections)
+            # =========================================================
+            if np.random.rand() < 0.4:  # chance of blink in window
+                blink_center = np.random.randint(0, len(t))
+                blink_width = int(0.2 * fs)  # ~200 ms
+                blink_amp = np.random.uniform(3*base_amp, 6*base_amp)
+
+                for k in range(-blink_width, blink_width):
+                    idx = blink_center + k
+                    if 0 <= idx < len(signal):
+                        # smooth Gaussian-like bump
+                        signal[idx] += blink_amp * np.exp(- (k / (0.3*blink_width))**2)
+
+            # =========================================================
+            #  MUSCLE BURSTS (high-frequency noise packets)
+            # =========================================================
+            if np.random.rand() < 0.5:
+                burst_start = np.random.randint(0, len(t) - int(0.3*fs))
+                burst_len = int(np.random.uniform(0.1, 0.3) * fs)
+
+                hf_noise = np.random.randn(burst_len) * (2 * base_amp)
+
+                # taper edges (so it doesn't look like a hard cut)
+                window = np.hanning(burst_len)
+
+                signal[burst_start:burst_start+burst_len] += hf_noise * window
+
+            # =========================================================
+            # ELECTRODE POPS (step + decay)
+            # =========================================================
+            if np.random.rand() < 0.3:
+                pop_idx = np.random.randint(0, len(t))
+                pop_amp = np.random.uniform(5*base_amp, 15*base_amp)
+
+                decay_len = int(0.5 * fs)
+                for k in range(decay_len):
+                    idx = pop_idx + k
+                    if idx < len(signal):
+                        signal[idx] += pop_amp * np.exp(-k / (0.1 * fs))
+
+            # =========================================================
+            # BASELINE SHIFT (still useful)
+            # =========================================================
+            if np.random.rand() < 0.3:
+                signal += np.random.uniform(-5*base_amp, 5*base_amp)
+
+            signals.append(signal)
+
+        return np.stack(signals, axis=1)
 
     def _get_real_data(self):
         if not self.streams or self.current_stream_index >= len(self.streams):
