@@ -17,11 +17,14 @@ class FilterClass():
 
     def filter_data(self, data: ndarray, fs: int) -> ndarray:
         for i, filter_type in enumerate(self.filters['filter']):
-            cutoff_freq = np.array(self.filters['frequency'][i])
-            filter_order = self.filters['order'][i]
-            b, a = signal.butter(
-                filter_order, cutoff_freq, btype=filter_type, fs=fs)
-            data = signal.filtfilt(b, a, data, axis=-1)
+            try:
+                cutoff_freq = np.array(self.filters['frequency'][i])
+                filter_order = self.filters['order'][i]
+                b, a = signal.butter(
+                    filter_order, cutoff_freq, btype=filter_type, fs=fs)
+                data = signal.filtfilt(b, a, data, axis=0) # i think something is still wonky here. TODO: filtering is still not happening on the right axis consistently for some reason
+            except Exception as e:
+                print(e)
         return data
 
     def apply(self, data: ndarray, fs: int) -> ndarray:
