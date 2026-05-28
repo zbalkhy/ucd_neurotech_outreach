@@ -1,4 +1,4 @@
-from dataStream import DataStream, StreamType
+from Stream.dataStream import DataStream, StreamType
 from common import QUEUE_LENGTH, resource_path
 from scipy.io import loadmat
 from time import sleep

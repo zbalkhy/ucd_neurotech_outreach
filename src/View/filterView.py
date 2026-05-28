@@ -5,13 +5,25 @@ from Classes.eventClass import *
 
 
 class filterView(EventClass):
-    def __init__(self, frame: tk.Frame, view_model: filterViewModel):
+    UNLOCK_SESSION = 5
+    LOCKED_MESSAGE = "Filtering unlocked in session 5"
+
+    def __init__(
+            self,
+            frame: tk.Frame,
+            view_model: filterViewModel,
+            session_id: int = 0):
         super().__init__()
 
         # set class variables
         self.frame: tk.Frame = frame
         self.view_model = view_model
+        self.session_id = session_id
         self.filter_boxes = {'filter': [], 'order': [], 'frequency': []}
+
+        if self.session_id < self.UNLOCK_SESSION and self.session_id > 0:
+            self._build_locked_view()
+            return
 
         self.subscribe_to_subject(self.view_model.user_model)
 
@@ -68,6 +80,17 @@ class filterView(EventClass):
         self.filter_list_frame = tk.Frame(frame, borderwidth=1, relief="solid")
         self.filter_list_frame.pack(side="top", fill="both", expand=True)
         self.update_filter_frame()
+
+    def _build_locked_view(self):
+        self.locked_frame = tk.Frame(self.frame)
+        self.locked_frame.pack(fill="both", expand=True)
+        self.locked_label = tk.Label(
+            self.locked_frame,
+            text=self.LOCKED_MESSAGE,
+            anchor="center",
+            justify="center",
+            wraplength=220)
+        self.locked_label.pack(fill="both", expand=True, padx=12, pady=12)
 
     def add_filter_box(self):
         # add onto filter count
