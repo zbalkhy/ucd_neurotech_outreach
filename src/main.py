@@ -3,7 +3,7 @@ from tkinter import ttk
 from View.plotterView import PlotterView, create_plotter
 from ViewModel.plotterViewModel import PlotterViewModel
 from Game.week1_game import InfiniteRunner, App
-from common import create_grid
+from common import create_grid, MODAL_WIDGET_TITLE
 from Models.userModel import UserModel
 from Models.saveModel import SaveModel
 from View.eegDeviceView import EEGDeviceView
@@ -34,7 +34,7 @@ from scipy.io import loadmat
 # 0 = Default
 # 1 = Plotter UI for Session 1
 # 2 = Plotter UI for Session 2
-SESSION_ID = 0
+SESSION_ID = 2
 
 
 top_grid_names = [[f"Inventory", 'Visualizer']]
@@ -74,8 +74,7 @@ def open_text_entry_modal(root):
     """Open the app's reusable text-entry modal."""
     TextEntryModalView(
         root,
-        title="Text Entry",
-        prompt="Enter text:",
+        title=MODAL_WIDGET_TITLE,
         on_submit=lambda value: print(f"Modal entry submitted: {value}"))
 
 
@@ -182,7 +181,7 @@ if __name__ == "__main__":
         label='Play Float the Orb',
         command=lambda: open_game(root, user_model))
     actions.add_command(
-        label='Open Text Entry',
+        label='Connect EEG Device',
         command=lambda: open_text_entry_modal(root))
 
     # Show the modal once when this application session first starts.
