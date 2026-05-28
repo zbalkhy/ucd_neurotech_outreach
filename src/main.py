@@ -21,14 +21,13 @@ from View.classifierView import ClassifierView
 from ViewModel.classifierViewModel import ClassifierViewModel
 from View.featureView import FeatureView
 from ViewModel.featureViewModel import FeatureViewModel
+from View.modalView import TextEntryModalView
 from Classes.featureClass import FeatureClass, FeatureType
 from Classes.editorClass import EditorClass
 import pandas as pd
 import numpy as np
-from Stream.lslStream import LslStream
 from Stream.xrpControlStream import XRPControlStream
 from scipy.io import loadmat
-from pylsl import StreamInlet, resolve_streams
 
 # Change to activate different UI based on session
 # Currently switches between 0 and 1
@@ -71,6 +70,15 @@ def open_function_editor(root, user_model):
     editor.add_observer(user_model)
 
 
+def open_text_entry_modal(root):
+    """Open the app's reusable text-entry modal."""
+    TextEntryModalView(
+        root,
+        title="Text Entry",
+        prompt="Enter text:",
+        on_submit=lambda value: print(f"Modal entry submitted: {value}"))
+
+
 def open_game(root, user_model):
     t = tk.Toplevel(root)
     t.wm_title('Float the Orb Game')
@@ -105,7 +113,12 @@ if __name__ == "__main__":
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')
-    root.state('zoomed')  # make the window take up the whole screen
+    try:
+        root.state('zoomed')  # make the window take up the whole screen
+    except tk.TclError:
+        # probably on a linux system
+        # root.attributes('-zoomed', True)
+        print(Exception)
 
     # create paned window for each row, this allows them to be adjustable
     inner_paned_window = ttk.PanedWindow(root, orient="vertical")
@@ -168,6 +181,12 @@ if __name__ == "__main__":
     actions.add_command(
         label='Play Float the Orb',
         command=lambda: open_game(root, user_model))
+    actions.add_command(
+        label='Open Text Entry',
+        command=lambda: open_text_entry_modal(root))
+
+    # Show the modal once when this application session first starts.
+    root.after(0, lambda: open_text_entry_modal(root))
 
     # clicking (x) on main window prevents program from quiting while commands are being queued.
     # we'll need a quit event to propagate through the program to kill any
