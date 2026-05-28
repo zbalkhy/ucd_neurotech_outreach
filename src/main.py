@@ -3,7 +3,7 @@ from tkinter import ttk
 from View.plotterView import PlotterView, create_plotter
 from ViewModel.plotterViewModel import PlotterViewModel
 from Game.week1_game import InfiniteRunner, App
-from common import create_grid, MODAL_WIDGET_TITLE
+from common import create_grid, resource_path, MODAL_WIDGET_TITLE
 from Models.userModel import UserModel
 from Models.saveModel import SaveModel
 from View.eegDeviceView import EEGDeviceView
@@ -34,7 +34,7 @@ from scipy.io import loadmat
 # 0 = Default
 # 1 = Plotter UI for Session 1
 # 2 = Plotter UI for Session 2
-SESSION_ID = 1
+SESSION_ID = 2
 
 
 top_grid_names = [[f"Inventory", 'Visualizer']]
@@ -106,7 +106,14 @@ if __name__ == "__main__":
         if type != FeatureType.CUSTOM:
             user_model.add_feature(FeatureClass(type))
 
+    #Change back to ./data.mat
+    if SESSION_ID >= 2:
+        data = loadmat(resource_path("data.mat"))
+        for key in data.keys():
+            if key in ['eyesOpen', 'eyesClosed']:
+                user_model.add_dataset(key, data[key])
     # create root and frame for the main window
+    
     root = tk.Tk()
     root.wm_title('main window')
     try:
