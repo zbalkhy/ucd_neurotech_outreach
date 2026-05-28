@@ -1,22 +1,29 @@
 import tkinter as tk
 from tkinter import ttk
 from typing import Callable
+from common import (
+    MODAL_FIRST_ENTRY_LABEL,
+    MODAL_SECOND_ENTRY_LABEL,
+    MODAL_SEARCHING_FOR_DEVICE_LABEL,
+    MODAL_FOUND_DEVICE_LABEL,
+    MODAL_WIDGET_TITLE,
+)
 
 
 class TextEntryModalView:
-    """A reusable modal dialog with one text entry and submit/cancel actions."""
+    """A reusable modal dialog with text entries and submit/cancel actions."""
 
     def __init__(
             self,
             parent: tk.Misc,
             title: str = "Input",
-            prompt: str = "Enter text:",
-            on_submit: Callable[[str], None] | None = None):
+            on_submit: Callable[[str, str], None] | None = None):
         self.parent = parent.winfo_toplevel()
         self.on_submit = on_submit
         self.parent_bounds = self._get_parent_bounds()
 
         self.window = tk.Toplevel(self.parent)
+        self.window.attributes('-alpha', 0.5)
         self.window.withdraw()
         self.window.title(title)
         self.window.resizable(False, False)
@@ -29,9 +36,10 @@ class TextEntryModalView:
         self.window.bind("<Return>", self.submit)
 
         self.entry_value = tk.StringVar()
-        self._build_widgets(prompt)
+        self.second_entry_value = tk.StringVar()
+        self._build_widgets()
         self._center_over_parent()
-        self.window.deiconify()
+        self.window.deiconify() # bring back to top level after centering
         self._make_modal()
 
     def _get_parent_bounds(self) -> tuple[int, int, int, int]:
@@ -52,8 +60,9 @@ class TextEntryModalView:
             max(height, 1),
         )
 
-    def _build_widgets(self, prompt: str) -> None:
+    def _build_widgets(self) -> None:
         """Build the modal content."""
+        
         border_frame = tk.Frame(
             self.window,
             background="#d0d0d0",
@@ -63,28 +72,66 @@ class TextEntryModalView:
 
         outer_frame = ttk.Frame(border_frame, padding=12)
         outer_frame.grid(row=0, column=0, sticky="nsew", padx=1, pady=1)
+        
+        outer_frame_row = 0
+        title_label = ttk.Label(
+            outer_frame,
+            text=MODAL_WIDGET_TITLE,
+            font=("", 13, "bold"))
+        title_label.grid(
+            row=outer_frame_row,
+            column=0,
+            columnspan=2,
+            sticky="w",
+            pady=(0, 12))
+        outer_frame_row += 1
 
-        prompt_label = ttk.Label(outer_frame, text=prompt)
-        prompt_label.grid(row=0, column=0, columnspan=2, sticky="w")
+        looking_for_device_label = ttk.Label(
+            outer_frame,
+            text=MODAL_SEARCHING_FOR_DEVICE_LABEL,
+            font=("", 12, "bold"))
+        looking_for_device_label.grid(row=outer_frame_row, column=0, columnspan=2, sticky="w")
+        outer_frame_row += 1
 
+        first_entry_label = ttk.Label(
+            outer_frame,
+            text=MODAL_FIRST_ENTRY_LABEL)
+        first_entry_label.grid(row=outer_frame_row, column=0, columnspan=2, sticky="w")
+        outer_frame_row += 1
+        
         self.entry = ttk.Entry(
             outer_frame,
             textvariable=self.entry_value,
             width=36)
-        self.entry.grid(row=1, column=0, columnspan=2,
+        self.entry.grid(row=outer_frame_row, column=0, columnspan=2,
                         sticky="ew", pady=(8, 12))
+        outer_frame_row += 1
+
+        second_entry_label = ttk.Label(
+            outer_frame,
+            text=MODAL_SECOND_ENTRY_LABEL)
+        second_entry_label.grid(row=outer_frame_row, column=0, columnspan=2, sticky="w")
+        outer_frame_row += 1
+        
+        self.second_entry = ttk.Entry(
+            outer_frame,
+            textvariable=self.second_entry_value,
+            width=36)
+        self.second_entry.grid(row=outer_frame_row, column=0, columnspan=2,
+                               sticky="ew", pady=(8, 12))
+        outer_frame_row += 1
 
         enter_button = ttk.Button(
             outer_frame,
             text="Enter",
             command=self.submit)
-        enter_button.grid(row=2, column=0, sticky="e", padx=(0, 6))
+        enter_button.grid(row=outer_frame_row, column=0, sticky="e", padx=(0, 6))
 
         cancel_button = ttk.Button(
             outer_frame,
             text="Cancel",
             command=self.cancel)
-        cancel_button.grid(row=2, column=1, sticky="w")
+        cancel_button.grid(row=outer_frame_row, column=1, sticky="w")
 
         outer_frame.columnconfigure(0, weight=1)
         outer_frame.columnconfigure(1, weight=1)
@@ -119,10 +166,11 @@ class TextEntryModalView:
 
     def submit(self, event: tk.Event | None = None) -> None:
         """Close the modal and send the entry text to the callback."""
-        value = self.entry_value.get()
+        first_value = self.entry_value.get()
+        second_value = self.second_entry_value.get()
         self.close()
         if self.on_submit is not None:
-            self.on_submit(value)
+            self.on_submit(first_value, second_value)
 
     def cancel(self, event: tk.Event | None = None) -> None:
         """Close the modal without submitting text."""
