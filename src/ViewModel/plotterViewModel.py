@@ -98,23 +98,27 @@ class PlotterViewModel(EventClass):
         if self.session_id == 1:
             self.max_visible_channels = 1
 
-            self.allow_amplitude_plot = False
+            self.allow_amplitude_plot = True
             self.allow_power_plot = False
             self.allow_band_plot = True
 
-            self.allow_amp_settings = False
+            self.allow_amp_settings = True
             self.allow_power_settings = False
             self.allow_band_settings = False
 
             self.show_power = False
             self.show_bands = True
-            self.show_amplitude = False
+            self.show_amplitude = True
 
             # Alpha only
             self.bands = {"Sorcery (8–13 Unicorns)": (8, 13)}
             self.band_visibility = {"Sorcery (8–13 Unicorns)": True}
 
             self.labels = {
+                "amplitude": {
+                    "title": "Amplitude vs Time",
+                    "xlabel": "Time (s)",
+                    "ylabel": "Amplitude (µV)"},
                 "bands": {
                     "title": "Cool Magic",
                     "xlabel": "Dragon Flames",
