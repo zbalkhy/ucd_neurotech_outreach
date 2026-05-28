@@ -9,14 +9,26 @@ class InventoryView(EventClass):
     DATASET = "dataset"
     CLASSIFIER = "classifier"
 
-    BACKGROUND = "#f4f5f7"
-    SECTION_BACKGROUND = "#ffffff"
-    CARD_BACKGROUND = "#ffffff"
-    CARD_HOVER_BACKGROUND = "#eef4ff"
-    BORDER = "#d9dee8"
-    HOVER_BORDER = "#7aa7e6"
-    TEXT = "#1f2937"
-    MUTED_TEXT = "#687385"
+    LIGHT_THEME = {
+        "BACKGROUND": "#f4f5f7",
+        "SECTION_BACKGROUND": "#ffffff",
+        "CARD_BACKGROUND": "#ffffff",
+        "CARD_HOVER_BACKGROUND": "#eef4ff",
+        "BORDER": "#d9dee8",
+        "HOVER_BORDER": "#7aa7e6",
+        "TEXT": "#1f2937",
+        "MUTED_TEXT": "#687385",
+    }
+    DARK_THEME = {
+        "BACKGROUND": "#161a20",
+        "SECTION_BACKGROUND": "#20252d",
+        "CARD_BACKGROUND": "#282e38",
+        "CARD_HOVER_BACKGROUND": "#303947",
+        "BORDER": "#3b4452",
+        "HOVER_BORDER": "#77a9ee",
+        "TEXT": "#edf2f7",
+        "MUTED_TEXT": "#a7b1bf",
+    }
     RUNNING = "#2f9e44"
     STOPPED = "#9aa4b2"
     DATASET_ACCENT = "#5b7cfa"
@@ -37,8 +49,27 @@ class InventoryView(EventClass):
         self.card_frames = {}
         self.section_columns = {}
 
+        self._set_theme_colors()
         self._build_layout()
         self.refresh_all()
+
+    def _set_theme_colors(self) -> None:
+        palette = self.DARK_THEME if self._is_dark_theme() else self.LIGHT_THEME
+        for color_name, color_value in palette.items():
+            setattr(self, color_name, color_value)
+
+    def _is_dark_theme(self) -> bool:
+        try:
+            red, green, blue = self.frame.winfo_rgb(
+                self.frame.cget("background"))
+        except tk.TclError:
+            return False
+
+        weighted_red = 0.2126 * red
+        weighted_green = 0.7152 * green
+        weighted_blue = 0.0722 * blue
+        luminance = (weighted_red + weighted_green + weighted_blue) / 65535
+        return luminance < 0.5
 
     def _build_layout(self) -> None:
         """Build a scrollable inventory area with one card grid per section."""
