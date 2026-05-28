@@ -34,7 +34,7 @@ from scipy.io import loadmat
 # 0 = Default
 # 1 = Plotter UI for Session 1
 # 2 = Plotter UI for Session 2
-SESSION_ID = 2
+SESSION_ID = 1
 
 
 top_grid_names = [[f"Inventory", 'Visualizer']]
@@ -80,7 +80,7 @@ def open_text_entry_modal(root):
 
 def open_game(root, user_model):
     t = tk.Toplevel(root)
-    t.wm_title('Float the Orb Game')
+    t.wm_title('EEG RUNNNER')
     game = InfiniteRunner(
         size=(800, 600),
         fps=80,
@@ -98,11 +98,8 @@ if __name__ == "__main__":
     user_model = save_model.load() if save_model.save_exists() else UserModel()
     user_model.add_observer(save_model)
 
-    data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
+    data_stream = SoftwareStream("eeg stream", StreamType.SOFTWARE, 250)
     user_model.add_stream(data_stream)
-
-    data_stream2 = SoftwareStream("streamtest2", StreamType.SOFTWARE, 1000)
-    user_model.add_stream(data_stream2)
 
     # add default features to the user model
     for type in FeatureType:
@@ -138,17 +135,23 @@ if __name__ == "__main__":
     # create data collection frame
     dataCollection_frame_viewmodel = dataCollectionViewModel(user_model)
     dataCollection_module = dataCollectionView(
-        bottom_grid_frames[0][0], dataCollection_frame_viewmodel)
+        bottom_grid_frames[0][0],
+        dataCollection_frame_viewmodel,
+        session_id=SESSION_ID)
 
     # create filter frame
     filter_frame_viewmodel = filterViewModel(user_model)
     filter_module = filterView(
-        bottom_grid_frames[0][1], filter_frame_viewmodel)
+        bottom_grid_frames[0][1],
+        filter_frame_viewmodel,
+        session_id=SESSION_ID)
 
     # create classifier
     classifier_view_model = ClassifierViewModel(user_model)
     classifier_view = ClassifierView(
-        bottom_grid_frames[0][2], classifier_view_model)
+        bottom_grid_frames[0][2],
+        classifier_view_model,
+        session_id=SESSION_ID)
 
     # create inventory
     inventory_viewmodel = InventoryViewModel(user_model)
@@ -178,7 +181,7 @@ if __name__ == "__main__":
         label='Open Code Editor',
         command=lambda: open_function_editor(root, user_model))
     actions.add_command(
-        label='Play Float the Orb',
+        label='Play EEG RUNNER',
         command=lambda: open_game(root, user_model))
     actions.add_command(
         label='Connect EEG Device',

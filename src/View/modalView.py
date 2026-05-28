@@ -23,7 +23,6 @@ class TextEntryModalView:
         self.parent_bounds = self._get_parent_bounds()
 
         self.window = tk.Toplevel(self.parent)
-        self.window.attributes('-alpha', 0.5)
         self.window.withdraw()
         self.window.title(title)
         self.window.resizable(False, False)
