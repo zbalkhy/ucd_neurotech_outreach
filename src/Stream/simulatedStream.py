@@ -19,25 +19,33 @@ class SimulatedStream(DataStream):
         self.eyesOpen = mat['eyesOpen']
         self.eyesClosed = mat['eyesClosed']
 
+    # Store incoming data in a list for any amount of channels
+    def make_channels_list(sample):
+        try:
+            return [float(sample)]
+
+        except TypeError:
+            return [float(n) for n in sample]
+
     def _stream(self):
-        idx_open = 0
-        idx_closed = 0
-        n_open = self.eyesOpen.shape[0]   # shape is (10,250)
-        n_closed = self.eyesClosed.shape[0]
-        use_open = True
+        # shape is (10,250) --> (10 trials, 250 samples)
+        n_trials = [self.eyesOpen.shape[0], self.eyesClosed.shape[0]]
+        sources = [self.eyesOpen, self.eyesClosed]
+        source_type = 0  # 0 for eyesOpen trial, 1 for eyesClosed trial
+        trial_idx = [0, 0]
+        dt = 1 / 250  # Sampling at 250 Hz(?)
 
         try:
             while not self.shutdown_event.is_set():
-                if use_open:
-                    trial = self.eyesOpen[idx_open]
-                    idx_open = (idx_open + 1) % n_open
-                else:
-                    trial = self.eyesClosed[idx_closed]
-                    idx_closed = (idx_closed + 1) % n_closed
+                trial = sources[source_type][trial_idx[source_type]]
 
-                self.data.append(trial.tolist())
-                use_open = not use_open
-                sleep(1.0)
+                for sample in trial:
+                    self.data.append(self.make_channels_list(sample))
+                    sleep(dt)
+
+                trial_idx[source_type] = (
+                    trial_idx[source_type] + 1) % n_trials[source_type]
+                source_type = 0 if source_type else 1
 
         except BaseException:
             pass
