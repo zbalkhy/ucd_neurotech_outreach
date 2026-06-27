@@ -34,7 +34,7 @@ from scipy.io import loadmat
 # 0 = Default
 # 1 = Plotter UI for Session 1
 # 2 = Plotter UI for Session 2
-SESSION_ID = 1
+SESSION_ID = 2
 
 
 top_grid_names = [[f"Inventory", 'Visualizer']]
