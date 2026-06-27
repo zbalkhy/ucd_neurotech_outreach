@@ -3,7 +3,7 @@ from tkinter import ttk
 from View.plotterView import PlotterView, create_plotter
 from ViewModel.plotterViewModel import PlotterViewModel
 from Game.week1_game import InfiniteRunner, App
-from common import create_grid
+from common import create_grid, resource_path, MODAL_WIDGET_TITLE, ALPHA
 from Models.userModel import UserModel
 from Models.saveModel import SaveModel
 from View.eegDeviceView import EEGDeviceView
@@ -21,21 +21,20 @@ from View.classifierView import ClassifierView
 from ViewModel.classifierViewModel import ClassifierViewModel
 from View.featureView import FeatureView
 from ViewModel.featureViewModel import FeatureViewModel
+from View.modalView import TextEntryModalView
 from Classes.featureClass import FeatureClass, FeatureType
 from Classes.editorClass import EditorClass
 import pandas as pd
 import numpy as np
-from Stream.lslStream import LslStream
 from Stream.xrpControlStream import XRPControlStream
 from scipy.io import loadmat
-from pylsl import StreamInlet, resolve_streams
 
 # Change to activate different UI based on session
 # Currently switches between 0 and 1
 # 0 = Default
 # 1 = Plotter UI for Session 1
 # 2 = Plotter UI for Session 2
-SESSION_ID = 0
+SESSION_ID = 2
 
 
 top_grid_names = [[f"Inventory", 'Visualizer']]
@@ -71,9 +70,17 @@ def open_function_editor(root, user_model):
     editor.add_observer(user_model)
 
 
+def open_text_entry_modal(root):
+    """Open the app's reusable text-entry modal."""
+    TextEntryModalView(
+        root,
+        title=MODAL_WIDGET_TITLE,
+        on_submit=lambda value: print(f"Modal entry submitted: {value}"))
+
+
 def open_game(root, user_model):
     t = tk.Toplevel(root)
-    t.wm_title('Float the Orb Game')
+    t.wm_title('EEG RUNNNER')
     game = InfiniteRunner(
         size=(800, 600),
         fps=80,
@@ -91,21 +98,38 @@ if __name__ == "__main__":
     user_model = save_model.load() if save_model.save_exists() else UserModel()
     user_model.add_observer(save_model)
 
-    data_stream = SoftwareStream("streamtest", StreamType.SOFTWARE, 300)
+    data_stream = SoftwareStream("eeg stream", StreamType.SOFTWARE, 250)
     user_model.add_stream(data_stream)
-
-    data_stream2 = SoftwareStream("streamtest2", StreamType.SOFTWARE, 1000)
-    user_model.add_stream(data_stream2)
 
     # add default features to the user model
     for type in FeatureType:
         if type != FeatureType.CUSTOM:
             user_model.add_feature(FeatureClass(type))
+    
+    # temp load gold standard data.mat
+    if SESSION_ID >= 2:
+        data = loadmat(resource_path("data.mat"))
+        for key in data.keys():
+            if key in ['eyesOpen', 'eyesClosed']:
+                user_model.add_dataset(key, data[key])
+    
+    # make alpha filter stream
+    if SESSION_ID <= 2:
+        user_model.add_filter("alpha", "bandpass", 4, ALPHA)
+        filter_obj = user_model.get_filter("alpha")
+        filtered_stream = ComposedStream(user_model.get_stream(
+            "eeg stream"), [filter_obj], "alpha eeg stream", StreamType.FILTER, 250)
+        user_model.add_stream(filtered_stream)
 
     # create root and frame for the main window
     root = tk.Tk()
     root.wm_title('main window')
-    root.state('zoomed')  # make the window take up the whole screen
+    try:
+        root.state('zoomed')  # make the window take up the whole screen
+    except tk.TclError:
+        # probably on a linux system
+        # root.attributes('-zoomed', True)
+        print(Exception)
 
     # create paned window for each row, this allows them to be adjustable
     inner_paned_window = ttk.PanedWindow(root, orient="vertical")
@@ -126,17 +150,23 @@ if __name__ == "__main__":
     # create data collection frame
     dataCollection_frame_viewmodel = dataCollectionViewModel(user_model)
     dataCollection_module = dataCollectionView(
-        bottom_grid_frames[0][0], dataCollection_frame_viewmodel)
+        bottom_grid_frames[0][0],
+        dataCollection_frame_viewmodel,
+        session_id=SESSION_ID)
 
     # create filter frame
     filter_frame_viewmodel = filterViewModel(user_model)
     filter_module = filterView(
-        bottom_grid_frames[0][1], filter_frame_viewmodel)
+        bottom_grid_frames[0][1],
+        filter_frame_viewmodel,
+        session_id=SESSION_ID)
 
     # create classifier
     classifier_view_model = ClassifierViewModel(user_model)
     classifier_view = ClassifierView(
-        bottom_grid_frames[0][2], classifier_view_model)
+        bottom_grid_frames[0][2],
+        classifier_view_model,
+        session_id=SESSION_ID)
 
     # create inventory
     inventory_viewmodel = InventoryViewModel(user_model)
@@ -166,8 +196,14 @@ if __name__ == "__main__":
         label='Open Code Editor',
         command=lambda: open_function_editor(root, user_model))
     actions.add_command(
-        label='Play Float the Orb',
+        label='Play EEG RUNNER',
         command=lambda: open_game(root, user_model))
+    actions.add_command(
+        label='Connect EEG Device',
+        command=lambda: open_text_entry_modal(root))
+
+    # Show the modal once when this application session first starts.
+    root.after(0, lambda: open_text_entry_modal(root))
 
     # clicking (x) on main window prevents program from quiting while commands are being queued.
     # we'll need a quit event to propagate through the program to kill any

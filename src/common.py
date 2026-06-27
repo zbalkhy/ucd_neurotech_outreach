@@ -26,6 +26,15 @@ ALPHA = [8, 12]
 BETA = [13, 30]
 GAMMA = [30, 45]
 
+# connect an eeg device window config
+MODAL_WIDGET_TITLE = "Connect an EEG Device"
+MODAL_FIRST_ENTRY_LABEL = "Wifi Network Name"
+MODAL_SECOND_ENTRY_LABEL = "Wifi Network Password"
+MODAL_SEARCHING_FOR_DEVICE_LABEL = "Searching for EEG device..."
+MODAL_FOUND_DEVICE_LABEL = "Found EEG device, enter wifi information below for wireless connection"
+
+
+
 
 def split_dataset(dataset: pd.DataFrame,
                   nsamples: int, ntrials: int) -> list[np.ndarray]:
