@@ -127,12 +127,11 @@ class Classifier:
 
     def apply(self, data: np.ndarray, fs: int) -> np.ndarray:
         prediction = self.predict_sample(data)
-        print(f"[Classifier] samples={data.shape} | alpha={np.array(self.generate_features(data))[0][0]:.1f} | result={'eyesOpen' if prediction else 'eyesClosed'}")
         print(prediction)
         if prediction:
-            return np.array(['eyesOpen'])
+            return np.array([1])
         else:
-            return np.array(['eyesClosed'])
+            return np.array([0])
 
     def to_dict(self) -> dict:
         model_filename = None

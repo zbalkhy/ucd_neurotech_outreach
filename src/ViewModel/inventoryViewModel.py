@@ -32,10 +32,10 @@ class InventoryViewModel(object):
 
     def add_classifier_stream(self, name: str) -> None:
         # this will need a major refactor, this is hacky, dont use this
-        openbci = self.user_model.get_stream('openbci')
+        openbci = self.user_model.get_stream('eeg stream')
         classifier = self.user_model.get_classifier(name)
         classifier_stream = ComposedStream(
-            openbci, [classifier], name + "_stream", StreamType.CONTROL, 1)
+            openbci, [classifier], name + "_stream", StreamType.SOFTWARE, 1)
         self.user_model.add_stream(classifier_stream)
 
         xrp_stream = XRPControlStream(

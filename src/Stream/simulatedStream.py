@@ -35,7 +35,7 @@ class SimulatedStream(DataStream):
                     trial = self.eyesClosed[idx_closed]
                     idx_closed = (idx_closed + 1) % n_closed
 
-                self.data.append(trial.tolist())
+                self.data = trial.tolist()
                 use_open = not use_open
                 sleep(1.0)
 

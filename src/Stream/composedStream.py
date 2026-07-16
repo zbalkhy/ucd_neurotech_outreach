@@ -30,7 +30,10 @@ class ComposedStream(DataStream):
                 for transformation in self.transformations:
                     new_data = transformation.apply(new_data, SAMPLING_FREQ)
                 self.data.extend(list(new_data))
-                sleep(1 / SAMPLING_FREQ)
+                if any(isinstance(transformation, Classifier) for transformation in self.transformations):
+                    sleep(1) #this value is associated with refresh rate of classifier stream
+                else:
+                    sleep(1 / SAMPLING_FREQ)
         except Exception as e:
             print(e)
             pass

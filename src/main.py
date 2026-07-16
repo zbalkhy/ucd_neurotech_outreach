@@ -13,6 +13,7 @@ from ViewModel.inventoryViewModel import InventoryViewModel
 from Stream.dataStream import DataStream, StreamType
 from Stream.softwareStream import SoftwareStream
 from Stream.composedStream import ComposedStream
+from Stream.simulatedStream import SimulatedStream
 from ViewModel.filterViewModel import filterViewModel
 from View.filterView import filterView
 from ViewModel.dataCollectionViewModel import dataCollectionViewModel
@@ -34,7 +35,7 @@ from scipy.io import loadmat
 # 0 = Default
 # 1 = Plotter UI for Session 1
 # 2 = Plotter UI for Session 2
-SESSION_ID = 2
+SESSION_ID = 5
 
 
 top_grid_names = [[f"Inventory", 'Visualizer']]
@@ -98,7 +99,8 @@ if __name__ == "__main__":
     user_model = save_model.load() if save_model.save_exists() else UserModel()
     user_model.add_observer(save_model)
 
-    data_stream = SoftwareStream("eeg stream", StreamType.SOFTWARE, 250)
+    #data_stream = SoftwareStream("eeg stream", StreamType.SOFTWARE, 250)
+    data_stream = SimulatedStream("eeg stream", StreamType.SOFTWARE, 250)
     user_model.add_stream(data_stream)
 
     # add default features to the user model
