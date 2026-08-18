@@ -43,6 +43,8 @@ class PlotterView(EventClass):
         self.plot_queue = queue.Queue(maxsize=2)
         self.plot_thread = None
         self.stop_thread = threading.Event()
+        self._plot_queue_after_id = None
+        self._channel_state_after_id = None
 
         self._setup_canvas()
         self._setup_controls()
@@ -219,8 +221,12 @@ class PlotterView(EventClass):
                 channel_var.set(CHOOSE_CHANNEL)
 
     def _start_channel_state_updater(self):
+        if self.stop_thread.is_set():
+            return
         self._refresh_channel_states()
-        self.frame.after(200, self._start_channel_state_updater)
+        self._channel_state_after_id = self.frame.after(
+            200,
+            self._start_channel_state_updater)
 
     def _update_channel_choices(self, stream_var, channel_var):
         stream_name = stream_var.get()
@@ -335,7 +341,9 @@ class PlotterView(EventClass):
             print(f"Error processing plot queue: {e}")
 
         if not self.stop_thread.is_set():
-            self.frame.after(50, self._process_plot_queue)
+            self._plot_queue_after_id = self.frame.after(
+                50,
+                self._process_plot_queue)
 
     def _render_plot_data(self, plot_data):
         signals = plot_data.get("signals", [])
@@ -357,6 +365,14 @@ class PlotterView(EventClass):
 
     def stop(self):
         self.stop_thread.set()
+        for after_id in [self._plot_queue_after_id, self._channel_state_after_id]:
+            if after_id is not None:
+                try:
+                    self.frame.after_cancel(after_id)
+                except tk.TclError:
+                    pass
+        self._plot_queue_after_id = None
+        self._channel_state_after_id = None
         if self.plot_thread and self.plot_thread.is_alive():
             self.plot_thread.join(timeout=1.0)
 
@@ -690,4 +706,3 @@ def create_plotter(frame: tk.Frame, user_model, session_id: int = 0):
     view_model = PlotterViewModel(user_model, session_id=session_id)
     view = PlotterView(frame, view_model)
     return view_model, view
-
