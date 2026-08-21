@@ -28,8 +28,10 @@ class EventClass(object):
         self.subjects = deque()
 
     def __del__(self):
-        for subject in self.subjects:
-            subject.remove_observer(self)
+        try:
+            self.dispose()
+        except Exception:
+            pass
 
     def add_observer(self, observer: EventClass) -> None:
         self.observers.append(observer)
@@ -44,6 +46,15 @@ class EventClass(object):
     def unsubscribe_from_subject(self, subject: EventClass) -> None:
         self.subjects.remove(subject)
         subject.remove_observer(self)
+
+    def dispose(self) -> None:
+        for subject in list(self.subjects):
+            try:
+                subject.remove_observer(self)
+            except ValueError:
+                pass
+        self.subjects.clear()
+        self.observers.clear()
 
     def on_notify(self, eventData: any, event: EventType) -> None:
         # This function is meant to be implemented by the inheriting class.
