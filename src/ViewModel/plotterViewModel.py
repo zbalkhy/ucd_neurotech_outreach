@@ -1,10 +1,19 @@
 import numpy as np
+from collections import deque
 from Classes.eventClass import *
 from Models.userModel import UserModel
 from Stream.dataStream import DataStream, StreamType
 
 
 class PlotterViewModel(EventClass):
+    # Stream types that can appear in the plotter's stream list
+    PLOTTABLE_TYPES = (
+        StreamType.FILTER,
+        StreamType.DEVICE,
+        StreamType.SOFTWARE,
+        StreamType.SIMULATED,
+    )
+
     def __init__(self, user_model: UserModel, session_id: int = 0):
         super().__init__()
         self._stream_version = 0
@@ -28,10 +37,9 @@ class PlotterViewModel(EventClass):
             ]
         else:
             self.streams = [
-                s for s in self.user_model.get_streams() if s.stream_type in [
-                    StreamType.FILTER,
-                    StreamType.DEVICE,
-                    StreamType.SOFTWARE]]
+                s for s in self.user_model.get_streams()
+                if s.stream_type in self.PLOTTABLE_TYPES
+            ]
 
         # Track user-defined names separately
         self.custom_names = {}
@@ -81,7 +89,6 @@ class PlotterViewModel(EventClass):
         """
         Configure feature availability based on session_id
         """
-        
 
         # ---- DEFAULT (full-feature mode) ----
         self.max_visible_channels = 4
@@ -124,7 +131,7 @@ class PlotterViewModel(EventClass):
                     "xlabel": "Dragon Flames",
                     "ylabel": "Phoenix Tears"},
             }
-        
+
         # ---- SESSION 2 ----
         elif self.session_id == 2:
             self.max_visible_channels = 1
@@ -135,14 +142,14 @@ class PlotterViewModel(EventClass):
 
             self.allow_amp_settings = True
             self.allow_power_settings = False
-            
+
             self.allow_band_settings = False
 
             self.show_amplitude = True
             self.show_power = False
             self.show_bands = True
 
-            #Only alpha
+            # Only alpha
             self.bands = {"alpha (8–13 Hz)": (8, 13)}
             self.band_visibility = {"alpha (8–13 Hz)": True}
 
@@ -185,7 +192,6 @@ class PlotterViewModel(EventClass):
         if raw is None:
             return None
         data = np.array(raw, copy=True)
-        
 
         # ---- NORMALIZE REAL DATA ----
         if data.ndim == 1:
@@ -197,6 +203,18 @@ class PlotterViewModel(EventClass):
                 data = data.T
 
         return data
+
+    def _get_trial_type(self):
+        """
+        Return the trial label ('eyesOpen' / 'eyesClosed') of the first
+        selected simulated stream, or None if there isn't one.
+        """
+        for stream_idx, _ in self.selected_sources:
+            if 0 <= stream_idx < len(self.streams):
+                stream = self.streams[stream_idx]
+                if stream.stream_type == StreamType.SIMULATED:
+                    return getattr(stream, "currentTrialType", None)
+        return None
 
     def _get_display_name(self, stream):
         """Return user-customized name if available, else inherent name."""
@@ -287,10 +305,9 @@ class PlotterViewModel(EventClass):
     def refresh_stream_list(self):
         if not self.simulated:
             self.streams = [
-                s for s in self.user_model.get_streams() if s.stream_type in [
-                    StreamType.FILTER,
-                    StreamType.DEVICE,
-                    StreamType.SOFTWARE]]
+                s for s in self.user_model.get_streams()
+                if s.stream_type in self.PLOTTABLE_TYPES
+            ]
         self.stream_names = [self._get_display_name(s) for s in self.streams]
         return self.stream_names
 
@@ -348,6 +365,7 @@ class PlotterViewModel(EventClass):
         return False
 
     def get_plot_data(self):
+
         if not self.selected_sources:
             return {"has_data": False}
 
@@ -371,6 +389,11 @@ class PlotterViewModel(EventClass):
 
             sig = np.asarray(data[:, ch_idx]).flatten()
             if sig.size < 8:
+                s = self.streams[stream_idx]
+                print(f"DEBUG skip: {s.stream_name!r} type={s.stream_type} "
+                      f"alive={s.is_alive()} len(data)={len(s.data)} "
+                      f"maxlen={s.data.maxlen}")
+    
                 continue
 
             t = np.arange(len(sig)) / fs
@@ -452,6 +475,9 @@ class PlotterViewModel(EventClass):
             "show_amplitude": self.show_amplitude,
             "show_power": self.show_power,
             "show_bands": show_bands,
+
+            # Annotation for simulated streams (None otherwise)
+            "trial_type": self._get_trial_type(),
         }
 
     def _generate_simulated_data_for_index(self, stream_idx):
@@ -489,7 +515,7 @@ class PlotterViewModel(EventClass):
 
             # --- Slow drift ---
             drift = 0.3 * base_amp * np.sin(
-                0.2 * 2 * np.pi * t + np.random.rand() * 2*np.pi
+                0.2 * 2 * np.pi * t + np.random.rand() * 2 * np.pi
             )
             signal += drift
 
@@ -497,11 +523,11 @@ class PlotterViewModel(EventClass):
             #  SPIKES (your existing)
             # =========================================================
             mask1 = np.random.rand(len(t)) < 0.02
-            spike_vals1 = np.random.uniform(-5*base_amp, 5*base_amp, size=len(t))
+            spike_vals1 = np.random.uniform(-5 * base_amp, 5 * base_amp, size=len(t))
             signal[mask1] += spike_vals1[mask1]
 
             mask2 = np.random.rand(len(t)) < 0.002
-            spike_vals2 = np.random.uniform(-30*base_amp, 30*base_amp, size=len(t))
+            spike_vals2 = np.random.uniform(-30 * base_amp, 30 * base_amp, size=len(t))
             signal[mask2] += spike_vals2[mask2]
 
             for mask, spike_vals in [(mask1, spike_vals1), (mask2, spike_vals2)]:
@@ -517,19 +543,19 @@ class PlotterViewModel(EventClass):
             if np.random.rand() < 0.4:  # chance of blink in window
                 blink_center = np.random.randint(0, len(t))
                 blink_width = int(0.2 * fs)  # ~200 ms
-                blink_amp = np.random.uniform(3*base_amp, 6*base_amp)
+                blink_amp = np.random.uniform(3 * base_amp, 6 * base_amp)
 
                 for k in range(-blink_width, blink_width):
                     idx = blink_center + k
                     if 0 <= idx < len(signal):
                         # smooth Gaussian-like bump
-                        signal[idx] += blink_amp * np.exp(- (k / (0.3*blink_width))**2)
+                        signal[idx] += blink_amp * np.exp(- (k / (0.3 * blink_width)) ** 2)
 
             # =========================================================
             #  MUSCLE BURSTS (high-frequency noise packets)
             # =========================================================
             if np.random.rand() < 0.5:
-                burst_start = np.random.randint(0, len(t) - int(0.3*fs))
+                burst_start = np.random.randint(0, len(t) - int(0.3 * fs))
                 burst_len = int(np.random.uniform(0.1, 0.3) * fs)
 
                 hf_noise = np.random.randn(burst_len) * (2 * base_amp)
@@ -537,14 +563,14 @@ class PlotterViewModel(EventClass):
                 # taper edges (so it doesn't look like a hard cut)
                 window = np.hanning(burst_len)
 
-                signal[burst_start:burst_start+burst_len] += hf_noise * window
+                signal[burst_start:burst_start + burst_len] += hf_noise * window
 
             # =========================================================
             # ELECTRODE POPS (step + decay)
             # =========================================================
             if np.random.rand() < 0.3:
                 pop_idx = np.random.randint(0, len(t))
-                pop_amp = np.random.uniform(5*base_amp, 15*base_amp)
+                pop_amp = np.random.uniform(5 * base_amp, 15 * base_amp)
 
                 decay_len = int(0.5 * fs)
                 for k in range(decay_len):
@@ -556,7 +582,7 @@ class PlotterViewModel(EventClass):
             # BASELINE SHIFT (still useful)
             # =========================================================
             if np.random.rand() < 0.3:
-                signal += np.random.uniform(-5*base_amp, 5*base_amp)
+                signal += np.random.uniform(-5 * base_amp, 5 * base_amp)
 
             signals.append(signal)
 

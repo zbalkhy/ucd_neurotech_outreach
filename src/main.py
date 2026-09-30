@@ -12,6 +12,7 @@ from Models.saveModel import SaveModel
 from Models.userModel import UserModel
 from Stream.composedStream import ComposedStream
 from Stream.dataStream import StreamType
+from Stream.simulatedStream import SimulatedStream
 from Stream.softwareStream import SoftwareStream
 from View.classifierView import ClassifierView
 from View.dataCollectionView import dataCollectionView
@@ -38,6 +39,9 @@ SESSION_OPTIONS = [
     ("Session 3", 3),
     ("Session 4", 4),
 ]
+
+# Name of the simulated (data.mat eyesOpen/eyesClosed) test stream
+SIMULATED_STREAM_NAME = "simulated eeg"
 
 top_grid_names = [["Inventory", "Visualizer"]]
 bottom_grid_names = [["Data Collector", "Filter Maker", "Classifier"]]
@@ -78,12 +82,36 @@ def open_game(root, user_model):
     t.protocol("WM_DELETE_WINDOW", game_ui.on_close)
 
 
+def get_simulated_stream(user_model):
+    for s in user_model.get_streams():
+        if s.stream_name == SIMULATED_STREAM_NAME:
+            return s
+    return None
+
+
+def set_simulated_stream_running(user_model, run):
+    stream = get_simulated_stream(user_model)
+    if stream is None:
+        return
+    if run:
+        stream.start()
+    else:
+        stream.stop()
+
+
 def initialize_user_model(save_model, session_id):
     user_model = save_model.load() if save_model.save_exists() else UserModel()
     user_model.add_observer(save_model)
 
     data_stream = SoftwareStream("eeg stream", StreamType.SOFTWARE, 250)
     user_model.add_stream(data_stream)
+
+    
+    # Always make sure the real SimulatedStream is registered, even if the save
+    # file restored a plain DataStream under the same name (add_stream overwrites).
+    if not isinstance(get_simulated_stream(user_model), SimulatedStream):
+        user_model.add_stream(
+            SimulatedStream(SIMULATED_STREAM_NAME, StreamType.SIMULATED))
 
     for feature_type in FeatureType:
         if feature_type != FeatureType.CUSTOM:
@@ -227,6 +255,16 @@ def create_menu(root, user_model, context, current_session, reload_session):
     actions.add_command(
         label="Connect EEG Device",
         command=lambda: open_text_entry_modal(root))
+    actions.add_separator()
+
+    sim_stream = get_simulated_stream(user_model)
+    sim_running_var = tk.BooleanVar(
+        value=bool(sim_stream and sim_stream.is_alive()))
+    actions.add_checkbutton(
+        label="Run Simulated Stream",
+        variable=sim_running_var,
+        command=lambda: set_simulated_stream_running(
+            user_model, sim_running_var.get()))
 
     root.config(menu=menubar)
     return session_var
