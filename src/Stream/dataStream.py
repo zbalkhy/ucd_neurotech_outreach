@@ -10,6 +10,7 @@ class StreamType(Enum):
     FILTER = 2
     CONTROL = 3
     SOFTWARE = 4
+    SIMULATED = 5
 
 
 class DataStream():
