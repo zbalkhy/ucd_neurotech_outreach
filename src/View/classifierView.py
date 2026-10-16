@@ -9,7 +9,7 @@ from common import create_grid
 
 class ClassifierView(EventClass):
     UNLOCK_SESSION = 5
-    LOCKED_MESSAGE = "Calssifier unlocked in session 5"
+    LOCKED_MESSAGE = "Classifier unlocked in session 5"
 
     def __init__(
             self,
