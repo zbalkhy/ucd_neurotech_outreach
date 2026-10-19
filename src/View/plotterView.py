@@ -700,6 +700,19 @@ class PlotterView(EventClass):
 
             self._apply_ylim(ax, "bands", new_lo, new_hi)
 
+        # -------- TRIAL-TYPE ANNOTATION (simulated streams) --------
+        trial_type = plot_data.get("trial_type")
+        if trial_type and self.fig.axes:
+            self.fig.axes[0].annotate(
+                trial_type,
+                xy=(0.02, 0.95),
+                xycoords="axes fraction",
+                va="top",
+                ha="left",
+                fontsize=11,
+                bbox=dict(boxstyle="round", fc="white", alpha=0.8),
+            )
+
 
 # Factory function
 def create_plotter(frame: tk.Frame, user_model, session_id: int = 0):
