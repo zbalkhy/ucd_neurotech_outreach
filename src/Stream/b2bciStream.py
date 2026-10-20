@@ -96,6 +96,8 @@ class B2BCIStream(DataStream):
 
     def _stream(self) -> None:
         device = None
+        self._last_frame = -1
+        self.data.clear()
         try:
             port = self.com_port or find_b2bci_port()  # blocking: stream thread
             device = DeviceSession.connect(
