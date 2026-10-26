@@ -4,6 +4,11 @@ from typing import Callable
 from common import (
     MODAL_FIRST_ENTRY_LABEL,
     MODAL_SECOND_ENTRY_LABEL,
+    MODAL_THIRD_ENTRY_LABEL,
+    MODAL_MODE_LABEL,
+    MODAL_MODE_UART,
+    MODAL_MODE_WIFI,
+    MODAL_MODE_ENTERPRISE,
     MODAL_SEARCHING_FOR_DEVICE_LABEL,
     MODAL_FOUND_DEVICE_LABEL,
     MODAL_WIDGET_TITLE,
@@ -17,7 +22,7 @@ class TextEntryModalView:
             self,
             parent: tk.Misc,
             title: str = "Input",
-            on_submit: Callable[[str, str], None] | None = None):
+            on_submit: Callable[[str, str, str, str], None] | None = None):
         self.parent = parent.winfo_toplevel()
         self.on_submit = on_submit
         self.parent_bounds = self._get_parent_bounds()
@@ -36,6 +41,8 @@ class TextEntryModalView:
 
         self.entry_value = tk.StringVar()
         self.second_entry_value = tk.StringVar()
+        self.third_entry_value = tk.StringVar()
+        self.mode_value = tk.StringVar(value=MODAL_MODE_UART)
         self._build_widgets()
         self._center_over_parent()
         self.window.deiconify() # bring back to top level after centering
@@ -92,6 +99,20 @@ class TextEntryModalView:
         looking_for_device_label.grid(row=outer_frame_row, column=0, columnspan=2, sticky="w")
         outer_frame_row += 1
 
+        ttk.Label(outer_frame, text=MODAL_MODE_LABEL).grid(
+            row=outer_frame_row, column=0, columnspan=2, sticky="w")
+        outer_frame_row += 1
+
+        self.mode_combo = ttk.Combobox(
+            outer_frame,
+            textvariable=self.mode_value,
+            values=[MODAL_MODE_UART, MODAL_MODE_WIFI, MODAL_MODE_ENTERPRISE],
+            state="readonly")
+        self.mode_combo.grid(row=outer_frame_row, column=0, columnspan=2,
+                             sticky="ew", pady=(8, 12))
+        self.mode_combo.bind("<<ComboboxSelected>>", self._on_mode_change)
+        outer_frame_row += 1
+
         first_entry_label = ttk.Label(
             outer_frame,
             text=MODAL_FIRST_ENTRY_LABEL)
@@ -115,10 +136,31 @@ class TextEntryModalView:
         self.second_entry = ttk.Entry(
             outer_frame,
             textvariable=self.second_entry_value,
+            show="*",
             width=36)
         self.second_entry.grid(row=outer_frame_row, column=0, columnspan=2,
                                sticky="ew", pady=(8, 12))
         outer_frame_row += 1
+
+        third_entry_label = ttk.Label(
+            outer_frame,
+            text=MODAL_THIRD_ENTRY_LABEL)
+        third_entry_label.grid(row=outer_frame_row, column=0, columnspan=2, sticky="w")
+        outer_frame_row += 1
+
+        self.third_entry = ttk.Entry(
+            outer_frame,
+            textvariable=self.third_entry_value,
+            width=36)
+        self.third_entry.grid(row=outer_frame_row, column=0, columnspan=2,
+                              sticky="ew", pady=(8, 12))
+        outer_frame_row += 1
+
+        # widgets each connection type needs; the rest are hidden
+        self._name_widgets = [first_entry_label, self.entry]
+        self._password_widgets = [second_entry_label, self.second_entry]
+        self._username_widgets = [third_entry_label, self.third_entry]
+        self._show_fields_for_mode()
 
         enter_button = ttk.Button(
             outer_frame,
@@ -134,6 +176,27 @@ class TextEntryModalView:
 
         outer_frame.columnconfigure(0, weight=1)
         outer_frame.columnconfigure(1, weight=1)
+
+    def _show_fields_for_mode(self) -> None:
+        """UART needs no fields, WiFi a name + password, Enterprise adds a username."""
+        name = self._name_widgets
+        user = self._username_widgets
+        password = self._password_widgets
+        wanted = {
+            MODAL_MODE_UART: [],
+            MODAL_MODE_WIFI: name + password,
+            MODAL_MODE_ENTERPRISE: name + user + password,
+        }[self.mode_value.get()]
+        for widget in name + user + password:
+            if widget in wanted:
+                widget.grid()
+            else:
+                widget.grid_remove()
+
+    def _on_mode_change(self, event: tk.Event | None = None) -> None:
+        self._show_fields_for_mode()
+        self.window.geometry("")  # let the window shrink/grow to the new rows
+        self._center_over_parent()
 
     def _center_over_parent(self) -> None:
         """Place the dialog near the center of the parent window."""
@@ -161,15 +224,18 @@ class TextEntryModalView:
         # Recenter after mapping. This handles override-redirect timing on X11.
         self._center_over_parent()
 
-        self.entry.focus_force()
+        self.mode_combo.focus_force()
 
     def submit(self, event: tk.Event | None = None) -> None:
         """Close the modal and send the entry text to the callback."""
+        mode = {MODAL_MODE_UART: "uart", MODAL_MODE_WIFI: "personal",
+                MODAL_MODE_ENTERPRISE: "enterprise"}[self.mode_value.get()]
         first_value = self.entry_value.get()
         second_value = self.second_entry_value.get()
+        third_value = self.third_entry_value.get()
         self.close()
         if self.on_submit is not None:
-            self.on_submit(first_value, second_value)
+            self.on_submit(mode, first_value, second_value, third_value)
 
     def cancel(self, event: tk.Event | None = None) -> None:
         """Close the modal without submitting text."""

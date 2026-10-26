@@ -30,6 +30,11 @@ GAMMA = [30, 45]
 MODAL_WIDGET_TITLE = "Connect an EEG Device"
 MODAL_FIRST_ENTRY_LABEL = "Wifi Network Name"
 MODAL_SECOND_ENTRY_LABEL = "Wifi Network Password"
+MODAL_THIRD_ENTRY_LABEL = "Username"
+MODAL_MODE_LABEL = "Connection type"
+MODAL_MODE_UART = "UART (USB cable)"
+MODAL_MODE_WIFI = "WiFi"
+MODAL_MODE_ENTERPRISE = "Enterprise WiFi"
 MODAL_SEARCHING_FOR_DEVICE_LABEL = "Searching for EEG device..."
 MODAL_FOUND_DEVICE_LABEL = "Found EEG device, enter wifi information below for wireless connection"
 

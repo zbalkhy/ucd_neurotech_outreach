@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
 from scipy.io import loadmat
 
@@ -10,6 +10,7 @@ from common import ALPHA, MODAL_WIDGET_TITLE, create_grid, resource_path
 from Game.week1_game import App, InfiniteRunner
 from Models.saveModel import SaveModel
 from Models.userModel import UserModel
+from Stream.b2bciStream import B2BCIStream, config_from_form
 from Stream.composedStream import ComposedStream
 from Stream.dataStream import StreamType
 from Stream.softwareStream import SoftwareStream
@@ -56,13 +57,24 @@ def open_function_editor(root, user_model):
     editor.add_observer(user_model)
 
 
-def open_text_entry_modal(root):
+def connect_b2bci(user_model, mode, ssid, password, username):
+    """UART uses the USB cable; the WiFi modes send the credentials over USB."""
+    try:
+        config = config_from_form(mode, ssid, password, username)
+        config.command()  # validate now so the user sees the problem
+        user_model.add_stream(B2BCIStream(None, config))  # None = auto-detect
+    except Exception as e:
+        print(f"[B2BCI] could not add device: {e}")
+        messagebox.showerror("Connect an EEG Device", str(e))
+
+
+def open_text_entry_modal(root, user_model):
     """Open the app's reusable text-entry modal."""
     TextEntryModalView(
         root,
         title=MODAL_WIDGET_TITLE,
-        on_submit=lambda first, second: print(
-            f"Modal entry submitted: {first}, {second}"))
+        on_submit=lambda mode, ssid, password, username: connect_b2bci(
+            user_model, mode, ssid, password, username))
 
 
 def open_game(root, user_model):
@@ -226,7 +238,7 @@ def create_menu(root, user_model, context, current_session, reload_session):
         command=lambda: open_game(root, user_model))
     actions.add_command(
         label="Connect EEG Device",
-        command=lambda: open_text_entry_modal(root))
+        command=lambda: open_text_entry_modal(root, user_model))
 
     root.config(menu=menubar)
     return session_var
@@ -298,7 +310,7 @@ if __name__ == "__main__":
         lambda: shutdown_app(root, user_model, save_model, current_context))
 
     # Show the modal once when this application session first starts.
-    root.after(0, lambda: open_text_entry_modal(root))
+    root.after(0, lambda: open_text_entry_modal(root, user_model))
 
     # clicking (x) on main window prevents program from quiting while commands are queued.
     # we'll need a quit event to propagate through the program to kill any
