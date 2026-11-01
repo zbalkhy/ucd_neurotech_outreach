@@ -38,6 +38,9 @@ class DataStream():
 
     # start the streaming thread
     def start(self) -> None:
+        if self._stream_thread is not None and not self._stream_thread.is_alive():
+            self._stream_thread.join()
+            self._stream_thread = None
         if self._stream_thread is None and not self.shutdown_event.is_set():
             self._stream_thread = Thread(target=self._stream)
             self._stream_thread.start()
@@ -56,12 +59,7 @@ class DataStream():
 
     # check if thread is alive
     def is_alive(self) -> bool:
-        if self._stream_thread is None:
-            return False
-        elif not (self._stream_thread.is_alive() or self._stream_thread.ident is not None):
-            return False
-        else:
-            return True
+        return self._stream_thread is not None and self._stream_thread.is_alive()
     
     # Calculating channels in a stream
 
