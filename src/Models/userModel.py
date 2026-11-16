@@ -16,6 +16,8 @@ class UserModel(EventClass):
         self.features: dict[str, FeatureClass] = {}
         self.classifiers: dict[str, Classifier] = {}
         self.functions: dict[str, str] = {} #fcn name, fcn text
+        # stream currently shown in the plotter (set by PlotterViewModel)
+        self.active_stream_name: str | None = None
         super().__init__()
 
     def on_notify(self, eventData: any, event: EventType ) -> None:
