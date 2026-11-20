@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter import ttk
 
 from Classes.eventClass import *
+from Classes.classifierClass import MODEL_CHOICES, DEFAULT_MODEL
 from ViewModel.classifierViewModel import ClassifierViewModel
 from common import create_grid
 
@@ -105,15 +106,60 @@ class ClassifierView(EventClass):
         self.classifier_listbox.grid(
             row=5, column=1, padx=5, pady=5, sticky="we")
 
+        # Source stream selector; follows the plotter until changed
+        tk.Label(self.grid_frames[0][1], text="Source stream:").grid(
+            row=6, column=0, padx=5, pady=5, sticky="w")
+        self.source_stream = StringVar(self.frame)
+        self._source_touched = False
+        self.source_combobox = ttk.Combobox(
+            self.grid_frames[0][1],
+            textvariable=self.source_stream,
+            state="readonly",
+            postcommand=self._sync_source)
+        self.source_combobox.grid(
+            row=6, column=1, padx=5, pady=5, sticky="we")
+        self.source_combobox.bind(
+            "<<ComboboxSelected>>", self._on_source_selected)
+
+        # Model selector
+        tk.Label(self.grid_frames[0][1], text="Model:").grid(
+            row=7, column=0, padx=5, pady=5, sticky="w")
+        self.model_name = StringVar(self.frame, value=DEFAULT_MODEL)
+        self.model_combobox = ttk.Combobox(
+            self.grid_frames[0][1],
+            textvariable=self.model_name,
+            values=list(MODEL_CHOICES),
+            state="readonly")
+        self.model_combobox.grid(row=7, column=1, padx=5, pady=5, sticky="we")
+
         # Create classifier button
         self.create_button = tk.Button(
             self.grid_frames[0][1],
             text="Create Classifier",
             bg="yellow",
             command=self.create_classifier)
-        self.create_button.grid(row=6, column=0, columnspan=2, pady=10)
+        self.create_button.grid(row=8, column=0, columnspan=2, pady=10)
 
         self.refresh_lists()
+
+    def _on_source_selected(self, _event=None):
+        self._source_touched = True
+
+    def _sync_source(self):
+        """Refresh the stream list; until the user picks one, follow the
+        stream shown in the plotter."""
+        names = self.view_model.get_source_stream_names()
+        self.source_combobox.configure(values=names)
+        if self._source_touched and self.source_stream.get() in names:
+            return
+        self._source_touched = False
+        active = self.view_model.get_active_stream_name()
+        if active in names:
+            self.source_stream.set(active)
+        elif names:
+            self.source_stream.set(names[0])
+        else:
+            self.source_stream.set("")
 
     def _build_locked_view(self):
         self.locked_frame = tk.Frame(self.frame)
@@ -136,6 +182,7 @@ class ClassifierView(EventClass):
         self.feature_listbox.delete(0, END)
         self.filter_listbox.delete(0, END)
         self.classifier_listbox.delete(0, END)
+        self._sync_source()
 
         datasets = list(self.view_model.user_model.get_datasets().keys())
         for ds in datasets:
@@ -159,6 +206,7 @@ class ClassifierView(EventClass):
         name = self.classifier_name.get()
         if not name:
             return
+        self._sync_source()
 
         label0_idxs = self.label0_listbox.curselection()
         label1_idxs = self.label1_listbox.curselection()
@@ -171,7 +219,8 @@ class ClassifierView(EventClass):
         filters = [self.filter_listbox.get(i) for i in filter_idxs]
 
         self.view_model.create_classifier(
-            name, datasets0, datasets1, features, filters)
+            name, datasets0, datasets1, features, filters,
+            self.model_name.get(), self.source_stream.get() or None)
 
         self.classifier_name.set("")
 

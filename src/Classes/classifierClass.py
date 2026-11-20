@@ -2,12 +2,33 @@ from typing import Dict, List, Tuple
 import numpy as np
 from Classes.featureClass import FeatureClass
 from Classes.filterClass import FilterClass
+from sklearn.discriminant_analysis import (
+    LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis)
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
 from common import SAMPLING_FREQ
 import joblib
 import os
 
 MODEL_SAVE_DIR = 'user_classifiers'
+
+# display name -> factory for a fresh, untrained model
+MODEL_CHOICES = {
+    'Logistic Regression': lambda: LogisticRegression(random_state=0),
+    'LDA': LinearDiscriminantAnalysis,
+    'QDA': QuadraticDiscriminantAnalysis,
+    'Random Forest': lambda: RandomForestClassifier(random_state=0),
+    'Naive Bayes': GaussianNB,
+    'k-NN': KNeighborsClassifier,
+    'SVM': lambda: SVC(random_state=0),
+}
+DEFAULT_MODEL = 'Logistic Regression'
+
+# Only this channel of a multi-channel stream is classified (0 = channel 1)
+CLASSIFIER_CHANNEL = 0
 
 
 class Classifier:
@@ -17,7 +38,9 @@ class Classifier:
         label1_datasets: Dict[str, np.ndarray] = None,
         features: List[FeatureClass] = None,
         filters: List[FilterClass] = None,
-        model=None
+        model=None,
+        model_name: str = DEFAULT_MODEL,
+        source_stream: str | None = None
     ):
         self.label0_datasets: Dict[str,
                                    np.ndarray] = label0_datasets if label0_datasets is not None else {}
@@ -27,6 +50,9 @@ class Classifier:
         ]
         self.filters: List[FilterClass] = filters if filters is not None else []
         self.model = model
+        self.model_name = model_name
+        # name of the stream this classifier reads live data from
+        self.source_stream = source_stream
 
     # -----------------------
     # Datasets
@@ -93,15 +119,43 @@ class Classifier:
         # flatten into single vector
         return feature_vectors  # np.concatenate(feature_vectors, axis=0)
 
+    @staticmethod
+    def _trials(data: np.ndarray) -> np.ndarray:
+        """(trials, samples) for the classifier channel; a dataset from a
+        multi-channel stream is (trials, channels, samples)."""
+        return data[:, CLASSIFIER_CHANNEL, :] if data.ndim == 3 else data
+
+    def _window_len(self) -> int | None:
+        """Samples per training trial, used as the live window length."""
+        for data in (*self.label0_datasets.values(),
+                     *self.label1_datasets.values()):
+            return data.shape[-1]
+        return None
+
+    def select_window(self, data: np.ndarray) -> np.ndarray | None:
+        """Live (samples, channels) -> (window, 1) for the classifier
+        channel, or None until enough samples have arrived."""
+        if data.ndim == 1:
+            data = data.reshape(-1, 1)
+        window = self._window_len()
+        if window is not None:
+            if data.shape[0] < window:
+                return None
+            data = data[-window:]
+        ch = min(CLASSIFIER_CHANNEL, data.shape[1] - 1)
+        return data[:, ch:ch + 1]
+
     def prepare_training_data(self) -> Tuple[np.ndarray, np.ndarray]:
         X, y = [], []
 
         for _, data in self.label0_datasets.items():
+            data = self._trials(data)
             for i in range(data.shape[0]):
                 X.append(self.generate_features(data[i, :]))
                 y.append(0)
 
         for _, data in self.label1_datasets.items():
+            data = self._trials(data)
             for i in range(data.shape[0]):
                 X.append(self.generate_features(data[i, :]))
                 y.append(1)
@@ -110,9 +164,7 @@ class Classifier:
 
     def train_model(self) -> None:
         X, y = self.prepare_training_data()
-        self.model = LogisticRegression(
-            random_state=0
-        )
+        self.model = MODEL_CHOICES[self.model_name]()
         self.model.fit(np.array(X).reshape(-1, 1), y)
 
     # -----------------------
@@ -126,6 +178,9 @@ class Classifier:
         return int(prediction)
 
     def apply(self, data: np.ndarray, fs: int) -> np.ndarray:
+        data = self.select_window(data)
+        if data is None:
+            return np.array([])
         prediction = self.predict_sample(data)
         print(f"[Classifier] samples={data.shape} | alpha={np.array(self.generate_features(data))[0][0]:.1f} | result={'eyesOpen' if prediction else 'eyesClosed'}")
         print(prediction)
@@ -150,7 +205,9 @@ class Classifier:
             'label1_datasets': {k: v.tolist() for k, v in self.label1_datasets.items()},
             'features': [f.to_dict() for f in self.features],
             'filters': [f.to_dict() for f in self.filters],
-            'model_filename': model_filename
+            'model_filename': model_filename,
+            'model_name': self.model_name,
+            'source_stream': self.source_stream
         }
 
     @classmethod
@@ -177,5 +234,7 @@ class Classifier:
             label1_datasets=label1_datasets,
             features=features,
             filters=filters,
-            model=model
+            model=model,
+            model_name=data.get('model_name', DEFAULT_MODEL),
+            source_stream=data.get('source_stream')
         )
