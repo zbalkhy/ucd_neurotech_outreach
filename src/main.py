@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
 from scipy.io import loadmat
 
@@ -9,8 +9,12 @@ from Classes.featureClass import FeatureClass, FeatureType
 from common import ALPHA, MODAL_WIDGET_TITLE, create_grid, resource_path
 from Models.saveModel import SaveModel
 from Models.userModel import UserModel
+<<<<<<< HEAD
 from b2bci.b2bci_client import StreamConfig
 from Stream.b2bciStream import B2BCIStream
+=======
+from Stream.b2bciStream import B2BCIStream, config_from_form
+>>>>>>> main
 from Stream.composedStream import ComposedStream
 from Stream.dataStream import StreamType
 from Stream.softwareStream import SoftwareStream
@@ -44,6 +48,7 @@ SESSION_OPTIONS = [
 
 top_grid_names = [["Inventory", "Visualizer"]]
 bottom_grid_names = [["Data Collector", "Filter Maker", "Classifier"]]
+is_shutting_down = False
 
 
 def open_feature_viewer(root, view_model):
@@ -59,6 +64,7 @@ def open_function_editor(root, user_model):
     editor.add_observer(user_model)
 
 
+<<<<<<< HEAD
 def connect_b2bci(user_model, ssid, password):
     """Empty WiFi name = USB/UART; otherwise provision WiFi over USB."""
     try:
@@ -67,6 +73,17 @@ def connect_b2bci(user_model, ssid, password):
         user_model.add_stream(B2BCIStream(None, config))  # None = auto-detect
     except Exception as e:
         print(f"[B2BCI] could not add device: {e}")
+=======
+def connect_b2bci(user_model, mode, ssid, password, username):
+    """UART uses the USB cable; the WiFi modes send the credentials over USB."""
+    try:
+        config = config_from_form(mode, ssid, password, username)
+        config.command()  # validate now so the user sees the problem
+        user_model.add_stream(B2BCIStream(None, config))  # None = auto-detect
+    except Exception as e:
+        print(f"[B2BCI] could not add device: {e}")
+        messagebox.showerror("Connect an EEG Device", str(e))
+>>>>>>> main
 
 
 def open_text_entry_modal(root, user_model):
@@ -74,8 +91,13 @@ def open_text_entry_modal(root, user_model):
     TextEntryModalView(
         root,
         title=MODAL_WIDGET_TITLE,
+<<<<<<< HEAD
         on_submit=lambda ssid, password: connect_b2bci(
             user_model, ssid, password))
+=======
+        on_submit=lambda mode, ssid, password, username: connect_b2bci(
+            user_model, mode, ssid, password, username))
+>>>>>>> main
 
 
 def open_game(root, user_model):
@@ -85,8 +107,20 @@ def open_game(root, user_model):
         existing.root.focus_set()
         return existing
     t = tk.Toplevel(root)
+<<<<<<< HEAD
     root.runner_view = RunnerView(t, RunnerViewModel(user_model))
     return root.runner_view
+=======
+    t.wm_title("EEG RUNNER")
+    game = InfiniteRunner(
+        size=(800, 600),
+        fps=80,
+        parent=t,
+        user_model=user_model)
+    game.start()
+    game_ui = App(game, width=800, height=700, parent_window=t)
+    t.protocol("WM_DELETE_WINDOW", game_ui.on_close)
+>>>>>>> main
 
 
 def initialize_user_model(save_model, session_id):
@@ -242,24 +276,28 @@ def create_menu(root, user_model, context, current_session, reload_session):
     root.config(menu=menubar)
     return session_var
 
-
 def shutdown_app(root, user_model, save_model, context):
+<<<<<<< HEAD
     runner_view = getattr(root, "runner_view", None)
     if runner_view is not None:
         runner_view.on_close()
+=======
+    global is_shutting_down
+    if is_shutting_down:
+        return
+
+    is_shutting_down = True
+>>>>>>> main
     teardown_main_content(context)
 
-    # send shutdown event to each stream thread
     for data_stream in user_model.get_streams():
         data_stream.shutdown_event.set()
 
-    # wait for each thread to exit before shutdown
     for data_stream in user_model.get_streams():
         if data_stream.is_alive():
             data_stream.join()
 
     save_model.dump(user_model)
-    print("Saved User")
     root.destroy()
 
 
@@ -268,9 +306,9 @@ def create_root():
     root.wm_title("main window")
     try:
         root.state("zoomed")  # make the window take up the whole screen
-    except tk.TclError:
+    except tk.TclError as e:
         # probably on a linux system
-        print(Exception)
+        print(f"Error setting window state: {e}. Continuing without zooming.")
     return root
 
 
@@ -314,7 +352,7 @@ if __name__ == "__main__":
     # Show the modal once when this application session first starts.
     root.after(0, lambda: open_text_entry_modal(root, user_model))
 
-    # clicking (x) on main window prevents program from quiting while commands are queued.
+    # clicking (x) on main window prevents program from quitting while commands are queued.
     # we'll need a quit event to propagate through the program to kill any
     # future queued commands.
     root.mainloop()

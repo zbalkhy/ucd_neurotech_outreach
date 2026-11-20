@@ -307,6 +307,8 @@ class PlotterViewModel(EventClass):
     def change_stream(self, selection):
         if selection in self.stream_names:
             self.current_stream_index = self.stream_names.index(selection)
+            self.user_model.active_stream_name = (
+                self.streams[self.current_stream_index].stream_name)
             self._stream_version += 1
             return True
         return False
