@@ -1,10 +1,7 @@
 import os
 import tempfile
 import time
-<<<<<<< HEAD
-=======
 from enum import Enum
->>>>>>> main
 from pathlib import Path
 import serial
 from serial.tools import list_ports
@@ -14,8 +11,6 @@ from b2bci.b2bci_client import DeviceSession, StreamConfig
 from b2bci.b2bci_reliable import RecordingLink, BatchDecoder, reliable_record
 
 
-<<<<<<< HEAD
-=======
 class StreamState(Enum):
     IDLE = "idle"
     FINDING_PORT = "finding port"
@@ -31,7 +26,6 @@ class StreamCancelled(Exception):
 
 SETTLE_SEC = 0.5  # let the OS release the serial port before a restart
 
->>>>>>> main
 # Espressif native USB, Silicon Labs CP210x, WCH CH340
 ESP32_USB_VIDS = {0x303A, 0x10C4, 0x1A86}
 
@@ -48,21 +42,14 @@ def _answers_identify(device: str) -> bool:
     return False
 
 
-<<<<<<< HEAD
-def find_b2bci_port() -> str:
-=======
 def find_b2bci_port(cancel=None) -> str:
->>>>>>> main
     """B2BCI_PORT env var, else the USB port that answers IDENTIFY."""
     port = os.environ.get("B2BCI_PORT")
     if port:
         return port
     for p in list_ports.comports():
-<<<<<<< HEAD
-=======
         if cancel is not None and cancel.is_set():
             raise StreamCancelled()
->>>>>>> main
         if p.vid not in ESP32_USB_VIDS:  # skips Bluetooth/debug ports
             continue
         try:
@@ -74,8 +61,6 @@ def find_b2bci_port(cancel=None) -> str:
         "B2BCI board not found. Check USB and close Serial Monitor.")
 
 
-<<<<<<< HEAD
-=======
 def config_from_form(mode, ssid, password, username):
     """StreamConfig for the connect dialog; mode is uart, personal or enterprise."""
     if mode == "uart":
@@ -88,7 +73,6 @@ def config_from_form(mode, ssid, password, username):
     raise ValueError(f"Unknown connection type: {mode}")
 
 
->>>>>>> main
 def make_tap_link(stream):
     """RecordingLink that also copies verified batches into `stream`."""
     class TapLink(RecordingLink):
@@ -107,10 +91,7 @@ def make_tap_link(stream):
             # The recorder turns one KeyboardInterrupt into STOP + drain.
             if stream.shutdown_event.is_set() and not self.stop_sent:
                 self.stop_sent = True
-<<<<<<< HEAD
-=======
                 stream.set_state(StreamState.STOPPING)
->>>>>>> main
                 raise KeyboardInterrupt()
             chunk = super().read()
             for kind, event in self._decoder.feed(chunk):
@@ -130,8 +111,6 @@ class B2BCIStream(DataStream):
         self.com_port = com_port
         self.config = config
         self._last_frame = -1
-<<<<<<< HEAD
-=======
         self.state = StreamState.IDLE
         self.error = ""
 
@@ -142,7 +121,6 @@ class B2BCIStream(DataStream):
     def _check_cancel(self) -> None:
         if self.shutdown_event.is_set():
             raise StreamCancelled()
->>>>>>> main
 
     def get_num_channels(self) -> int:
         # Base heuristic misreads (samples, channels) while fewer than 8
@@ -158,15 +136,6 @@ class B2BCIStream(DataStream):
                 self.data.append(list(row[2:]))
 
     def _stream(self) -> None:
-<<<<<<< HEAD
-        device = None
-        self._last_frame = -1
-        self.data.clear()
-        try:
-            port = self.com_port or find_b2bci_port()  # blocking: stream thread
-            device = DeviceSession.connect(
-                port, self.config, config_file=None)
-=======
         """IDLE -> FINDING_PORT -> CONNECTING -> STREAMING -> IDLE | ERROR.
 
         Stop is honored between every phase, and the serial port is always
@@ -187,19 +156,11 @@ class B2BCIStream(DataStream):
                 port, self.config, config_file=None)
             self._check_cancel()
             self.set_state(StreamState.STREAMING)
->>>>>>> main
             output = Path(tempfile.gettempdir()) / \
                 f"b2bci_{time.time_ns()}.csv"
             reliable_record(device.serial, device.info, output,
                             seconds=None, progress=None,
                             link_factory=make_tap_link(self))
-<<<<<<< HEAD
-        except BaseException as e:
-            print(f"[B2BCIStream] {e}")
-        finally:
-            if device is not None:
-                device.close()
-=======
             self.set_state(StreamState.IDLE)
         except StreamCancelled:
             self.set_state(StreamState.IDLE)
@@ -209,4 +170,3 @@ class B2BCIStream(DataStream):
             if device is not None:
                 device.close()
                 time.sleep(SETTLE_SEC)
->>>>>>> main

@@ -9,12 +9,7 @@ from Classes.featureClass import FeatureClass, FeatureType
 from common import ALPHA, MODAL_WIDGET_TITLE, create_grid, resource_path
 from Models.saveModel import SaveModel
 from Models.userModel import UserModel
-<<<<<<< HEAD
-from b2bci.b2bci_client import StreamConfig
-from Stream.b2bciStream import B2BCIStream
-=======
 from Stream.b2bciStream import B2BCIStream, config_from_form
->>>>>>> main
 from Stream.composedStream import ComposedStream
 from Stream.dataStream import StreamType
 from Stream.softwareStream import SoftwareStream
@@ -64,16 +59,6 @@ def open_function_editor(root, user_model):
     editor.add_observer(user_model)
 
 
-<<<<<<< HEAD
-def connect_b2bci(user_model, ssid, password):
-    """Empty WiFi name = USB/UART; otherwise provision WiFi over USB."""
-    try:
-        config = (StreamConfig("personal", ssid, password, 9000) if ssid
-                  else StreamConfig("uart"))
-        user_model.add_stream(B2BCIStream(None, config))  # None = auto-detect
-    except Exception as e:
-        print(f"[B2BCI] could not add device: {e}")
-=======
 def connect_b2bci(user_model, mode, ssid, password, username):
     """UART uses the USB cable; the WiFi modes send the credentials over USB."""
     try:
@@ -83,7 +68,6 @@ def connect_b2bci(user_model, mode, ssid, password, username):
     except Exception as e:
         print(f"[B2BCI] could not add device: {e}")
         messagebox.showerror("Connect an EEG Device", str(e))
->>>>>>> main
 
 
 def open_text_entry_modal(root, user_model):
@@ -91,13 +75,8 @@ def open_text_entry_modal(root, user_model):
     TextEntryModalView(
         root,
         title=MODAL_WIDGET_TITLE,
-<<<<<<< HEAD
-        on_submit=lambda ssid, password: connect_b2bci(
-            user_model, ssid, password))
-=======
         on_submit=lambda mode, ssid, password, username: connect_b2bci(
             user_model, mode, ssid, password, username))
->>>>>>> main
 
 
 def open_game(root, user_model):
@@ -107,20 +86,8 @@ def open_game(root, user_model):
         existing.root.focus_set()
         return existing
     t = tk.Toplevel(root)
-<<<<<<< HEAD
     root.runner_view = RunnerView(t, RunnerViewModel(user_model))
     return root.runner_view
-=======
-    t.wm_title("EEG RUNNER")
-    game = InfiniteRunner(
-        size=(800, 600),
-        fps=80,
-        parent=t,
-        user_model=user_model)
-    game.start()
-    game_ui = App(game, width=800, height=700, parent_window=t)
-    t.protocol("WM_DELETE_WINDOW", game_ui.on_close)
->>>>>>> main
 
 
 def initialize_user_model(save_model, session_id):
@@ -277,17 +244,9 @@ def create_menu(root, user_model, context, current_session, reload_session):
     return session_var
 
 def shutdown_app(root, user_model, save_model, context):
-<<<<<<< HEAD
     runner_view = getattr(root, "runner_view", None)
     if runner_view is not None:
         runner_view.on_close()
-=======
-    global is_shutting_down
-    if is_shutting_down:
-        return
-
-    is_shutting_down = True
->>>>>>> main
     teardown_main_content(context)
 
     for data_stream in user_model.get_streams():

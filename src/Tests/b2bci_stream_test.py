@@ -1,13 +1,8 @@
 import zlib
-<<<<<<< HEAD
-import Stream.b2bciStream as mod
-from Stream.b2bciStream import B2BCIStream, make_tap_link, find_b2bci_port
-=======
 import pytest
 import Stream.b2bciStream as mod
 from Stream.b2bciStream import (B2BCIStream, StreamState, config_from_form,
                                 make_tap_link, find_b2bci_port)
->>>>>>> main
 from b2bci.b2bci_client import StreamConfig
 
 SESSION = "0123456789abcdef"
@@ -91,8 +86,6 @@ def test_find_port_skips_non_usb_and_picks_identify_reply(monkeypatch):
     monkeypatch.setattr(mod.serial, "SerialException", OSError, raising=False)
     assert find_b2bci_port() == "/dev/cu.esp"
     assert "/dev/cu.Bluetooth-Incoming-Port" not in opened
-<<<<<<< HEAD
-=======
 
 
 def test_restart_accepts_frames_numbered_from_one_again(monkeypatch):
@@ -167,4 +160,3 @@ def test_config_from_form_builds_the_handshake_command(
 def test_config_from_form_rejects_bad_input(mode, ssid, password, username):
     with pytest.raises(ValueError):
         config_from_form(mode, ssid, password, username).command()
->>>>>>> main
