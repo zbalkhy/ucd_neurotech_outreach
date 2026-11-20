@@ -41,6 +41,7 @@ SESSION_OPTIONS = [
 
 top_grid_names = [["Inventory", "Visualizer"]]
 bottom_grid_names = [["Data Collector", "Filter Maker", "Classifier"]]
+is_shutting_down = False
 
 
 def open_feature_viewer(root, view_model):
@@ -67,7 +68,7 @@ def open_text_entry_modal(root):
 
 def open_game(root, user_model):
     t = tk.Toplevel(root)
-    t.wm_title("EEG RUNNNER")
+    t.wm_title("EEG RUNNER")
     game = InfiniteRunner(
         size=(800, 600),
         fps=80,
@@ -231,21 +232,22 @@ def create_menu(root, user_model, context, current_session, reload_session):
     root.config(menu=menubar)
     return session_var
 
-
 def shutdown_app(root, user_model, save_model, context):
+    global is_shutting_down
+    if is_shutting_down:
+        return
+
+    is_shutting_down = True
     teardown_main_content(context)
 
-    # send shutdown event to each stream thread
     for data_stream in user_model.get_streams():
         data_stream.shutdown_event.set()
 
-    # wait for each thread to exit before shutdown
     for data_stream in user_model.get_streams():
         if data_stream.is_alive():
             data_stream.join()
 
     save_model.dump(user_model)
-    print("Saved User")
     root.destroy()
 
 
@@ -254,9 +256,9 @@ def create_root():
     root.wm_title("main window")
     try:
         root.state("zoomed")  # make the window take up the whole screen
-    except tk.TclError:
+    except tk.TclError as e:
         # probably on a linux system
-        print(Exception)
+        print(f"Error setting window state: {e}. Continuing without zooming.")
     return root
 
 
@@ -300,7 +302,7 @@ if __name__ == "__main__":
     # Show the modal once when this application session first starts.
     root.after(0, lambda: open_text_entry_modal(root))
 
-    # clicking (x) on main window prevents program from quiting while commands are queued.
+    # clicking (x) on main window prevents program from quitting while commands are queued.
     # we'll need a quit event to propagate through the program to kill any
     # future queued commands.
     root.mainloop()
