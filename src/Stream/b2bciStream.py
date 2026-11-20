@@ -75,7 +75,7 @@ class B2BCIStream(DataStream):
 
     def __init__(self, com_port, config: StreamConfig,  # com_port None = auto
                  stream_name: str = "B2BCI device",
-                 queue_length: int = 2000):
+                 queue_length: int = 500):
         super().__init__(stream_name, StreamType.DEVICE, queue_length)
         self.com_port = com_port
         self.config = config
