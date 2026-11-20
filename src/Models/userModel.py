@@ -203,7 +203,8 @@ class UserModel(EventClass):
 
     def to_dict(self) -> dict:
         return {
-            'data_streams': {k: v.to_dict() for k, v in self.data_streams.items()},
+            'data_streams': {k: v.to_dict() for k, v in self.data_streams.items()
+                             if v.stream_type != StreamType.DEVICE},
             'filters': {k: v.to_dict() for k, v in self.filters.items()},
             'data_sets': {k: v.tolist() for k, v in self.data_sets.items()},
             'features': {k: v.to_dict() for k, v in self.features.items()},
