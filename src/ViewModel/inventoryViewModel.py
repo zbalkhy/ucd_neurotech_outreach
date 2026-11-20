@@ -25,9 +25,8 @@ class InventoryViewModel(object):
         self.user_model.notify(stream_name, EventType.STREAMTOGGLED)
 
     def get_source_stream(self, classifier) -> DataStream | None:
-        # classifiers saved before source_stream existed read 'openbci'
         return self.user_model.get_stream(
-            classifier.source_stream or 'openbci')
+            classifier.source_stream)
 
     def train_classifier(self, name: str) -> None:
         classifier = self.user_model.get_classifier(name)
@@ -40,13 +39,14 @@ class InventoryViewModel(object):
         self.add_classifier_stream(name)
 
     def add_classifier_stream(self, name: str) -> None:
-        # this will need a major refactor, this is hacky, dont use this
+        # this probably needs a refactor
         classifier = self.user_model.get_classifier(name)
         source = self.get_source_stream(classifier)
         classifier_stream = ComposedStream(
             source, [classifier], name + "_stream", StreamType.CONTROL, 1)
         self.user_model.add_stream(classifier_stream)
 
+        ##TODO: we don't always want to add an XRP control stream, but it's not yet defined where this should actually happen.
         xrp_stream = XRPControlStream(
             classifier_stream,
             "/dev/tty.usbmodem1301",
