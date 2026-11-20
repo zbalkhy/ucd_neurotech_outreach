@@ -1,104 +1,123 @@
-from time import sleep
-from PIL import Image, ImageTk
+"""Offscreen runner engine; input is read through a game-independent snapshot."""
+
 import random
-import pygame
 import threading
-import tkinter as tk
-import os
-os.environ["SDL_VIDEODRIVER"] = "dummy"  # Headless Pygame
 
+import pygame
 
-# --- Pygame Game Class ---
+if __name__ == "__main__":
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from Classes.controllerState import KeyboardController
+
 
 class InfiniteRunner:
-    def __init__(self, size, fps, parent=None, user_model=None):
-        self.parent = parent
-        self.user_model = user_model
-
-        self.width = size[0]
-        self.height = size[1]
+    def __init__(self, size, fps, parent=None, user_model=None,
+                 read_controller=None):
+        self.width, self.height = size
         self.fps = fps
         self.screen = None
-        self.running = True
-        self.clock = pygame.time.Clock()
         self.font = None
-
-        # Game state
         self.player = None
         self.obstacles = []
         self.score = 0
         self.game_over = False
+        self.upper_lane = False
+        self.paused = False
+        self.error = None
+        self.running = False
+        self.thread = None
+        self._stop_event = threading.Event()
+        self._restart_event = threading.Event()
+        self._frame_lock = threading.Lock()
+        self._frame = None
+        self.keyboard = KeyboardController() if read_controller is None else None
+        self.read_controller = read_controller or self.keyboard.read_state
 
-        # Keyboard state (controlled by Tkinter)
-        self.space_pressed = False
-        self.r_pressed = False
-
-        # Settings
         self.PLAYER_SIZE = 40
         self.PLAYER_X = 150
         self.MOVE_SPEED = 20
         self.OBSTACLE_WIDTH = 40
-        self.OBSTACLE_SPEED = 1         # og ratio for speed:spawn interval = 6:1200
+        self.OBSTACLE_SPEED = 1
         self.SPAWN_INTERVAL_MS = 7200
-
-        # Colors
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
-
-        # Lane positions
         self.TOP_LANE_Y = self.height // 4 - self.PLAYER_SIZE // 2
         self.BOTTOM_LANE_Y = (3 * self.height) // 4 - self.PLAYER_SIZE // 2
-
-        # Timer
+        self.active_time_ms = 0
         self.last_spawn_time = 0
 
     def start(self):
-        """Start the Pygame loop in a separate thread."""
+        if self.thread is not None:
+            return
+        self.running = True
         self.thread = threading.Thread(target=self.run, daemon=True)
         self.thread.start()
 
+    def stop(self):
+        self._stop_event.set()
+        if self.thread is not None:
+            self.thread.join()
+        self.running = False
+
+    def request_restart(self):
+        self._restart_event.set()
+
+    def read_frame(self):
+        with self._frame_lock:
+            return self._frame
+
     def run(self):
-        """Pygame main loop."""
-        pygame.init()
-        self.screen = pygame.display.set_mode((self.width, self.height))
-        self.font = pygame.font.SysFont("consolas", 32)
+        try:
+            # Tk displays the image; a second SDL window is unnecessary.
+            pygame.font.init()
+            self.screen = pygame.Surface((self.width, self.height))
+            self.font = pygame.font.SysFont("consolas", 32)
+            self.player = self.Player(self)
+            clock = pygame.time.Clock()
+            while not self._stop_event.is_set():
+                elapsed_ms = clock.tick(self.fps)
+                self.step(elapsed_ms)
+                self.draw()
+                frame = pygame.image.tobytes(self.screen, "RGB")
+                with self._frame_lock:
+                    self._frame = frame
+        except Exception as error:
+            self.error = str(error)
+        finally:
+            self.running = False
 
-        # Initialize game
-        self.player = self.Player(self)
-        self.last_spawn_time = pygame.time.get_ticks()
-
-        while self.running:
-            self.clock.tick(self.fps)
-            current_time = pygame.time.get_ticks()
-
-            # Handle restart with R key
-            if self.game_over and self.r_pressed:
-                self.reset_game()
-                self.r_pressed = False  # Reset the flag
-
-            # Spawn obstacles at intervals
-            if not self.game_over and current_time - \
-                    self.last_spawn_time > self.SPAWN_INTERVAL_MS:
-                lane_type = random.choice(["top", "bottom"])
-                self.obstacles.append(self.Obstacle(self, lane_type))
-                self.last_spawn_time = current_time
-
-            if not self.game_over:
-                self.player.update()
-
-                for obs in self.obstacles:
-                    obs.update()
-                    if self.player.rect.colliderect(obs.rect):
-                        self.game_over = True
-                    if not obs.scored and obs.rect.right < self.player.rect.left:
-                        obs.scored = True
-                        self.score += 1
-
-                self.obstacles = [
-                    obs for obs in self.obstacles if not obs.is_off_screen()]
-
-            self.draw()
-            pygame.display.flip()
+    def step(self, elapsed_ms):
+        """Advance active game time only while the selected input is ready."""
+        if self._restart_event.is_set():
+            self._restart_event.clear()
+            self.reset_game()
+        state = self.read_controller()
+        was_paused = self.paused
+        self.paused = not state.ready
+        if self.paused or self.game_over:
+            return
+        self.upper_lane = state.upper_lane
+        # Exclude the interval that straddled an input recovery.
+        if not was_paused:
+            self.active_time_ms += elapsed_ms
+        if self.active_time_ms - self.last_spawn_time >= self.SPAWN_INTERVAL_MS:
+            lane = random.choice(["top", "bottom"])
+            self.obstacles.append(self.Obstacle(self, lane))
+            self.last_spawn_time = self.active_time_ms
+        self.player.update()
+        for obstacle in self.obstacles:
+            obstacle.update()
+            if self.player.rect.colliderect(obstacle.rect):
+                self.game_over = True
+            if not obstacle.scored and obstacle.rect.right < self.player.rect.left:
+                obstacle.scored = True
+                self.score += 1
+        self.obstacles = [obstacle for obstacle in self.obstacles
+                          if not obstacle.is_off_screen()]
 
     def reset_game(self):
         """Reset the game state."""
@@ -106,6 +125,8 @@ class InfiniteRunner:
         self.obstacles = []
         self.score = 0
         self.game_over = False
+        self.active_time_ms = 0
+        self.last_spawn_time = 0
 
     def draw(self):
         """Draw all game elements."""
@@ -123,6 +144,10 @@ class InfiniteRunner:
         # Draw score
         self.draw_text(f"Score: {self.score}",
                        self.width // 2, self.height - 30, center=True)
+
+        if self.paused:
+            self.draw_text("INPUT PAUSED", self.width // 2,
+                           self.height // 2 - 70, center=True)
 
         # Draw game over text
         if self.game_over:
@@ -150,8 +175,8 @@ class InfiniteRunner:
             self.target_y = game.BOTTOM_LANE_Y
 
         def update(self):
-            # Check the game's space_pressed flag instead of pygame keys
-            self.target_y = self.game.TOP_LANE_Y if self.game.space_pressed else self.game.BOTTOM_LANE_Y
+            self.target_y = (self.game.TOP_LANE_Y if self.game.upper_lane
+                             else self.game.BOTTOM_LANE_Y)
 
             if self.rect.y < self.target_y:
                 self.rect.y = min(
@@ -181,86 +206,12 @@ class InfiniteRunner:
             return self.rect.right < 0
 
 
-# --- Tkinter App Class ---
-class App:
-    def __init__(self, game, width=600, height=600, parent_window=None):
-        self.game = game
-
-        # Game can work independently or via main.py
-        if parent_window is None:
-            self.root = tk.Tk()
-            self.running_main = False
-        else:
-            self.root = parent_window
-            self.running_main = True
-
-        self.root.title("Cube Infinite Runner")
-
-        self.root.geometry(f"{width}x{height}")
-        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
-
-        self.title_label = tk.Label(self.root, text="Cube Infinite Runner",
-                                    font=("Arial", 16, "bold"))
-        self.title_label.pack(pady=10)
-
-        self.label = tk.Label(self.root)
-        self.label.pack()
-
-        self.info_label = tk.Label(
-            self.root,
-            text="Press SPACE to jump | Press R to restart",
-            font=(
-                "Arial",
-                10))
-        self.info_label.pack(pady=5)
-
-        # Bind keyboard events
-        self.root.bind("<KeyPress-space>", self.on_space_press)
-        self.root.bind("<KeyRelease-space>", self.on_space_release)
-        self.root.bind("<KeyPress-r>", self.on_r_press)
-        self.root.bind("<KeyRelease-r>", self.on_r_release)
-
-        # Make sure the window can receive focus
-        self.root.focus_set()
-
-        self.update_label()
-
-        if not self.running_main:
-            self.root.mainloop()
-
-    def on_space_press(self, event):
-        self.game.space_pressed = True
-
-    def on_space_release(self, event):
-        self.game.space_pressed = False
-
-    def on_r_press(self, event):
-        self.game.r_pressed = True
-
-    def on_r_release(self, event):
-        self.game.r_pressed = False
-
-    def on_close(self):
-        self.game.running = False
-        self.root.destroy()
-
-    def update_label(self):
-        if self.game.screen is not None:
-            raw_data = pygame.image.tobytes(self.game.screen, "RGB")
-            image = Image.frombytes(
-                "RGB", (self.game.width, self.game.height), raw_data)
-            image_tk = ImageTk.PhotoImage(image)
-
-            self.label.config(image=image_tk)
-            self.label.image = image_tk
-
-        # Schedule next update
-        self.root.after(1, self.update_label)
-
-
-# --- Main ---
 if __name__ == "__main__":
-    game = InfiniteRunner(size=(800, 600), fps=60)
-    game.start()  # Run Pygame in its own thread
-    sleep(0.5)  # Give Pygame time to initialize
-    app = App(game, width=850, height=700)
+    from Models.userModel import UserModel
+    from View.runnerView import RunnerView
+    from ViewModel.runnerViewModel import RunnerViewModel
+    import tkinter as tk
+
+    root = tk.Tk()
+    RunnerView(root, RunnerViewModel(UserModel()))
+    root.mainloop()

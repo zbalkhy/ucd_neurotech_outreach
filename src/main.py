@@ -7,7 +7,6 @@ from Classes.editorClass import EditorClass
 from Classes.eventClass import EventClass
 from Classes.featureClass import FeatureClass, FeatureType
 from common import ALPHA, MODAL_WIDGET_TITLE, create_grid, resource_path
-from Game.week1_game import App, InfiniteRunner
 from Models.saveModel import SaveModel
 from Models.userModel import UserModel
 from Stream.b2bciStream import B2BCIStream, config_from_form
@@ -21,11 +20,13 @@ from View.filterView import filterView
 from View.inventoryView import InventoryView
 from View.modalView import TextEntryModalView
 from View.plotterView import create_plotter
+from View.runnerView import RunnerView
 from ViewModel.classifierViewModel import ClassifierViewModel
 from ViewModel.dataCollectionViewModel import dataCollectionViewModel
 from ViewModel.featureViewModel import FeatureViewModel
 from ViewModel.filterViewModel import filterViewModel
 from ViewModel.inventoryViewModel import InventoryViewModel
+from ViewModel.runnerViewModel import RunnerViewModel
 
 
 # 0 = Default
@@ -79,16 +80,14 @@ def open_text_entry_modal(root, user_model):
 
 
 def open_game(root, user_model):
+    existing = getattr(root, "runner_view", None)
+    if existing is not None and not existing.closed:
+        existing.root.lift()
+        existing.root.focus_set()
+        return existing
     t = tk.Toplevel(root)
-    t.wm_title("EEG RUNNER")
-    game = InfiniteRunner(
-        size=(800, 600),
-        fps=80,
-        parent=t,
-        user_model=user_model)
-    game.start()
-    game_ui = App(game, width=800, height=700, parent_window=t)
-    t.protocol("WM_DELETE_WINDOW", game_ui.on_close)
+    root.runner_view = RunnerView(t, RunnerViewModel(user_model))
+    return root.runner_view
 
 
 def initialize_user_model(save_model, session_id):
@@ -245,11 +244,9 @@ def create_menu(root, user_model, context, current_session, reload_session):
     return session_var
 
 def shutdown_app(root, user_model, save_model, context):
-    global is_shutting_down
-    if is_shutting_down:
-        return
-
-    is_shutting_down = True
+    runner_view = getattr(root, "runner_view", None)
+    if runner_view is not None:
+        runner_view.on_close()
     teardown_main_content(context)
 
     for data_stream in user_model.get_streams():
